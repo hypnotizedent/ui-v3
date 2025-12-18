@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useKV } from '@github/spark/hooks';
 import { Package, Users, ChartLine, ArrowLeft } from '@phosphor-icons/react';
-import { Order, Customer, Transaction, View } from '@/lib/types';
+import { Transaction, View, OrderStatus, ImprintMethod } from '@/lib/types';
+import { useOrders, useCustomers } from '@/lib/hooks';
+import { type OrderStatus as ApiOrderStatus } from '@/lib/api-adapter';
 import { Dashboard } from '@/components/dashboard/Dashboard';
 import { OrdersList } from '@/components/orders/OrdersList';
 import { OrderDetail } from '@/components/orders/OrderDetail';
@@ -9,14 +10,98 @@ import { CustomersList } from '@/components/customers/CustomersList';
 import { CustomerDetail } from '@/components/customers/CustomerDetail';
 import { Button } from '@/components/ui/button';
 
+// Map API status to component status
+function mapApiStatus(status: ApiOrderStatus): OrderStatus {
+  const statusMap: Record<ApiOrderStatus, OrderStatus> = {
+    'quote': 'QUOTE',
+    'pending_approval': 'NEW',
+    'artwork_approved': 'ART APPROVAL',
+    'in_production': 'IN PRODUCTION',
+    'shipped': 'SHIPPED',
+    'ready_for_pickup': 'COMPLETE',
+    'delivered': 'COMPLETE',
+    'on_hold': 'NEW',
+    'cancelled': 'COMPLETE'
+  };
+  return statusMap[status] || 'NEW';
+}
+
+// Map API imprint type to component imprint method
+function mapImprintType(type: string): ImprintMethod {
+  const typeMap: Record<string, ImprintMethod> = {
+    'screen_print': 'screen-print',
+    'dtg': 'dtg',
+    'embroidery': 'embroidery',
+    'vinyl': 'vinyl',
+    'digital_transfer': 'digital-transfer'
+  };
+  return typeMap[type] || 'screen-print';
+}
+
 function App() {
-  const [ordersData] = useKV<Order[]>('orders', []);
-  const [customersData] = useKV<Customer[]>('customers', []);
-  const [transactionsData] = useKV<Transaction[]>('transactions', []);
+  const { orders: apiOrders, loading: ordersLoading } = useOrders({ limit: 100 });
+  const { customers: apiCustomers, loading: customersLoading } = useCustomers({ limit: 100 });
   
-  const orders = ordersData ?? [];
-  const customers = customersData ?? [];
-  const transactions = transactionsData ?? [];
+  // Transform API orders to match component types
+  const orders = apiOrders.map(o => ({
+    id: o.id,
+    visual_id: o.visual_id,
+    customer_id: o.customer_id,
+    customer_name: o.customer?.name || 'Unknown',
+    status: mapApiStatus(o.status),
+    line_items: o.line_items.map(li => ({
+      id: li.id,
+      order_id: o.id,
+      product_name: li.product.name,
+      product_sku: li.product.sku,
+      product_color: li.product.color,
+      sizes: {
+        XS: li.sizes.find(s => s.size === 'XS')?.quantity || 0,
+        S: li.sizes.find(s => s.size === 'S')?.quantity || 0,
+        M: li.sizes.find(s => s.size === 'M')?.quantity || 0,
+        L: li.sizes.find(s => s.size === 'L')?.quantity || 0,
+        XL: li.sizes.find(s => s.size === 'XL')?.quantity || 0,
+        '2XL': li.sizes.find(s => s.size === '2XL')?.quantity || 0,
+        '3XL': li.sizes.find(s => s.size === '3XL')?.quantity || 0,
+      },
+      quantity: li.quantity,
+      unit_price: li.unit_price,
+      subtotal: li.subtotal,
+      imprints: li.imprints.map(imp => ({
+        id: imp.id,
+        line_item_id: li.id,
+        location: imp.location as 'Front' | 'Back' | 'Left Chest' | 'Right Sleeve' | 'Left Sleeve' | 'Neck',
+        method: mapImprintType(imp.type),
+        colors: imp.colors,
+        width: imp.width,
+        height: imp.height,
+        artwork: null,
+        setup_fee: 0
+      }))
+    })),
+    subtotal: o.subtotal,
+    tax: o.sales_tax,
+    total: o.total,
+    due_date: o.due_date,
+    created_at: o.created_at,
+    production_notes: o.production_note,
+    nickname: o.nickname
+  }));
+
+  // Transform API customers to match component types
+  const customers = apiCustomers.map(c => ({
+    id: c.id,
+    name: c.name,
+    email: c.email,
+    phone: c.phone,
+    company: c.company,
+    address: c.address || { street: '', city: '', state: '', zip: '' },
+    tier: c.tier || 'bronze' as const,
+    orders_count: c.orders_count || 0,
+    total_revenue: c.total_revenue || 0
+  }));
+
+  const transactions: Transaction[] = [];
   
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
