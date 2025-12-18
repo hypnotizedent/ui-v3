@@ -445,11 +445,17 @@ export async function fetchDashboardStats(): Promise<{
 
   const activeStatuses: OrderStatus[] = ['pending_approval', 'artwork_approved', 'in_production']
   const activeOrders = ordersResult.orders.filter(o => activeStatuses.includes(o.status)).length
-  
-  const totalRevenue = ordersResult.orders.reduce((sum, o) => sum + o.total, 0)
-  
-  const needsAttention = ordersResult.orders.filter(o => 
-    o.status === 'pending_approval' || 
+
+  // Calculate revenue as total - outstanding (actual payments collected)
+  const totalRevenue = ordersResult.orders.reduce((sum, o) => {
+    const total = o.total || 0
+    const outstanding = o.amount_outstanding || 0
+    const paid = total - outstanding
+    return sum + (paid > 0 ? paid : 0)
+  }, 0)
+
+  const needsAttention = ordersResult.orders.filter(o =>
+    o.status === 'pending_approval' ||
     (o.due_date && new Date(o.due_date) < new Date())
   ).length
 
@@ -462,8 +468,42 @@ export async function fetchDashboardStats(): Promise<{
 }
 
 // =============================================================================
+// PAYMENTS
+// =============================================================================
+
+function mapPaymentMethod(method: string): Payment['method'] {
+  const m = (method || '').toLowerCase()
+  if (m.includes('card') || m.includes('credit')) return 'credit_card'
+  if (m.includes('check')) return 'check'
+  if (m.includes('cash')) return 'cash'
+  if (m.includes('paypal')) return 'paypal'
+  if (m.includes('venmo')) return 'venmo'
+  if (m.includes('invoice') || m.includes('net')) return 'invoice_net_30'
+  return 'other'
+}
+
+export async function fetchOrderPayments(orderId: string): Promise<Payment[]> {
+  if (USE_DEV_DATA) {
+    const { getOrderById } = await import('@/data')
+    const order = getOrderById(orderId)
+    return order?.payments || []
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/payments`)
+  if (!response.ok) return []
+
+  const data = await response.json()
+  return (data.payments || []).map((p: any) => ({
+    id: String(p.id),
+    amount: parseFloat(p.amount) || 0,
+    method: mapPaymentMethod(p.paymentMethod || p.payment_method),
+    date: p.paymentDate || p.payment_date || p.createdAt || '',
+    note: p.notes || p.note || ''
+  }))
+}
+
+// =============================================================================
 // EXPORTS
 // =============================================================================
 
 export { STATUSES }
-export type { Status }

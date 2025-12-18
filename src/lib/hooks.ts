@@ -14,8 +14,10 @@ import {
   fetchDashboardStats,
   fetchOrderById,
   fetchCustomerById,
+  fetchOrderPayments,
   type Order,
-  type Customer
+  type Customer,
+  type Payment
 } from './api-adapter'
 
 // =============================================================================
@@ -180,4 +182,38 @@ export function useCustomer(id: string | null) {
   }, [load])
 
   return { customer, loading, error, refetch: load }
+}
+
+// =============================================================================
+// useOrderPayments - Fetch payments for a specific order
+// =============================================================================
+
+export function useOrderPayments(orderId: string | null) {
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    if (!orderId) {
+      setPayments([])
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await fetchOrderPayments(orderId)
+      setPayments(result)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch payments'))
+    } finally {
+      setLoading(false)
+    }
+  }, [orderId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { payments, loading, error, refetch: load }
 }
