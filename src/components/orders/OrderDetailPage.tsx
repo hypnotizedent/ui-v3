@@ -14,9 +14,34 @@ import {
   Phone,
   Envelope,
   Buildings,
-  Package
+  Package,
+  Printer
 } from '@phosphor-icons/react';
-import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
+import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel, getMethodLabel } from '@/lib/helpers';
+import { SizeBreakdown, ImprintMethod } from '@/lib/types';
+
+// Map API size keys to SizeBreakdown format
+function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): SizeBreakdown {
+  return {
+    XS: sizes.xs || 0,
+    S: sizes.s || 0,
+    M: sizes.m || 0,
+    L: sizes.l || 0,
+    XL: sizes.xl || 0,
+    '2XL': sizes.xxl || 0,
+    '3XL': sizes.xxxl || 0,
+  };
+}
+
+// Infer imprint method from order status/category
+function inferImprintMethod(status: string): ImprintMethod {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('embroid')) return 'embroidery';
+  if (normalized.includes('dtg')) return 'dtg';
+  if (normalized.includes('vinyl')) return 'vinyl';
+  if (normalized.includes('digital') || normalized.includes('transfer')) return 'digital-transfer';
+  return 'screen-print';
+}
 
 interface OrderDetailPageProps {
   visualId: string;
@@ -148,7 +173,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                 </p>
               ) : (
                 order.lineItems.map((item, index) => (
-                  <LineItemCard key={item.id} item={item} index={index} />
+                  <LineItemCard key={item.id} item={item} index={index} orderStatus={order.status} />
                 ))
               )}
             </CardContent>
@@ -331,11 +356,21 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
   );
 }
 
-function LineItemCard({ item, index }: { item: OrderDetailLineItem; index: number }) {
-  // Calculate total from sizes
-  const sizeBreakdown = Object.entries(item.sizes)
-    .filter(([_, qty]) => qty > 0)
-    .map(([size, qty]) => ({ size: size.toUpperCase(), qty }));
+interface LineItemCardProps {
+  item: OrderDetailLineItem;
+  index: number;
+  orderStatus: string;
+}
+
+const SIZE_LABELS: (keyof SizeBreakdown)[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+
+function LineItemCard({ item, index, orderStatus }: LineItemCardProps) {
+  const sizes = mapSizesToGrid(item.sizes);
+  const total = item.totalQuantity;
+  const hasOtherSizes = (item.sizes.xxxxl || 0) + (item.sizes.xxxxxl || 0) + (item.sizes.other || 0) > 0;
+
+  // Infer imprint method from order status
+  const imprintMethod = inferImprintMethod(orderStatus);
 
   return (
     <div className="p-4 bg-secondary/30 rounded-lg space-y-4">
@@ -369,19 +404,66 @@ function LineItemCard({ item, index }: { item: OrderDetailLineItem; index: numbe
         </div>
       </div>
 
-      {/* Size breakdown */}
-      {sizeBreakdown.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {sizeBreakdown.map(({ size, qty }) => (
+      {/* Size Grid */}
+      <div className="overflow-x-auto">
+        <div className="inline-flex gap-1 text-xs">
+          {SIZE_LABELS.map(size => (
             <div
               key={size}
-              className="px-2 py-1 bg-muted rounded text-xs font-medium"
+              className="flex flex-col items-center min-w-[40px]"
             >
-              {size}: {qty}
+              <span className="text-muted-foreground font-medium px-2 py-1">
+                {size}
+              </span>
+              <span
+                className={`px-2 py-1 rounded ${
+                  sizes[size] > 0
+                    ? 'bg-primary/20 text-primary font-medium'
+                    : 'text-muted-foreground/50'
+                }`}
+              >
+                {sizes[size]}
+              </span>
             </div>
           ))}
+          <div className="flex flex-col items-center min-w-[50px] border-l border-border pl-1 ml-1">
+            <span className="text-muted-foreground font-medium px-2 py-1">
+              Total
+            </span>
+            <span className="px-2 py-1 font-semibold">
+              {total}
+            </span>
+          </div>
         </div>
-      )}
+        {hasOtherSizes && (
+          <p className="text-xs text-muted-foreground mt-1">
+            + other sizes included
+          </p>
+        )}
+      </div>
+
+      {/* Imprints Section */}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+          <Printer className="w-3 h-3" weight="bold" />
+          Imprint
+        </p>
+        <div className="p-3 bg-card rounded border border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                Front
+              </Badge>
+              <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
+                {getMethodLabel(imprintMethod)}
+              </Badge>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Standard placement
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
