@@ -194,9 +194,9 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
                     <td className="px-4 py-3">
                       <Badge
                         variant="secondary"
-                        className={`${getAPIStatusColor(order.status)} font-medium text-xs uppercase tracking-wide`}
+                        className={`${getAPIStatusColor(order.printavo_status_name)} font-medium text-xs`}
                       >
-                        {getAPIStatusLabel(order.status)}
+                        {order.printavo_status_name}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
