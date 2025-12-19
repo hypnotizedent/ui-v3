@@ -1,10 +1,10 @@
 /**
  * Print Shop OS - Data Hooks
- * 
+ *
  * React hooks that connect UI components to data (dev data or real API)
- * 
+ *
  * Usage:
- *   import { useOrders, useCustomers, useDashboardStats } from '@/lib/hooks'
+ *   import { useOrders, useCustomers, useDashboardStats, useProductionStats } from '@/lib/hooks'
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -19,6 +19,70 @@ import {
   type Customer,
   type Payment
 } from './api-adapter'
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface ProductionStats {
+  quote: number
+  art: number
+  screenprint: number
+  embroidery: number
+  dtg: number
+  fulfillment: number
+  complete: number
+  total: number
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works'
+
+// =============================================================================
+// useProductionStats - Fetch production stats from API
+// =============================================================================
+
+export function useProductionStats() {
+  const [stats, setStats] = useState<ProductionStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/production-stats`)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+      // API returns strings, convert to numbers
+      setStats({
+        quote: parseInt(data.quote, 10) || 0,
+        art: parseInt(data.art, 10) || 0,
+        screenprint: parseInt(data.screenprint, 10) || 0,
+        embroidery: parseInt(data.embroidery, 10) || 0,
+        dtg: parseInt(data.dtg, 10) || 0,
+        fulfillment: parseInt(data.fulfillment, 10) || 0,
+        complete: parseInt(data.complete, 10) || 0,
+        total: parseInt(data.total, 10) || 0,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch production stats'))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { stats, loading, error, refetch: load }
+}
 
 // =============================================================================
 // useOrders - Fetch and manage orders list
