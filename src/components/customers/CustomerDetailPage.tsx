@@ -224,7 +224,7 @@ export function CustomerDetailPage({ customerId, onViewOrder }: CustomerDetailPa
                   {orders.map((order) => (
                     <div
                       key={order.id}
-                      onClick={() => onViewOrder(order.visual_id)}
+                      onClick={() => onViewOrder(String(order.id))}
                       className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
                     >
                       <div className="flex items-center gap-3">

@@ -177,7 +177,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
                 {filteredOrders.map((order) => (
                   <tr
                     key={order.id}
-                    onClick={() => onViewOrder(order.visual_id)}
+                    onClick={() => onViewOrder(String(order.id))}
                     className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3">
