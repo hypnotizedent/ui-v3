@@ -1,0 +1,387 @@
+import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  User,
+  Calendar,
+  FileText,
+  CreditCard,
+  Image,
+  Warning,
+  ArrowClockwise,
+  Phone,
+  Envelope,
+  Buildings,
+  Package
+} from '@phosphor-icons/react';
+import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
+
+interface OrderDetailPageProps {
+  visualId: string;
+  onViewCustomer: (customerId: string) => void;
+}
+
+export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPageProps) {
+  const { order, loading, error, refetch } = useOrderDetail(visualId);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-48 mb-2" />
+          <div className="h-4 bg-muted rounded w-32" />
+        </div>
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="bg-card border-border">
+              <CardContent className="py-8">
+                <div className="animate-pulse space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-24 bg-muted rounded" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="bg-card border-border">
+                <CardContent className="py-6">
+                  <div className="animate-pulse h-20 bg-muted rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Order Details</h2>
+        </div>
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6 text-center">
+            <Warning size={48} className="mx-auto mb-4 text-destructive" />
+            <h3 className="text-lg font-semibold mb-2">Failed to Load Order</h3>
+            <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
+            <Button onClick={() => refetch()} variant="outline" className="gap-2">
+              <ArrowClockwise size={16} />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="space-y-6">
+        <Card className="max-w-md mx-auto">
+          <CardContent className="pt-6 text-center">
+            <Package size={48} className="mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Order Not Found</h3>
+            <p className="text-sm text-muted-foreground">
+              Could not find order #{visualId}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const balance = order.amountOutstanding;
+  const paid = order.totalAmount - order.amountOutstanding;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Order #{order.orderNumber}
+            </h2>
+            <Badge
+              variant="secondary"
+              className={`${getAPIStatusColor(order.status)} font-medium text-xs uppercase tracking-wide`}
+            >
+              {getAPIStatusLabel(order.status)}
+            </Badge>
+          </div>
+          {order.orderNickname && (
+            <p className="text-muted-foreground mt-1">{order.orderNickname}</p>
+          )}
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-semibold">{formatCurrency(order.totalAmount)}</div>
+          <p className="text-sm text-muted-foreground">
+            Balance:{' '}
+            <span className={balance > 0 ? 'text-yellow-400' : 'text-green-400'}>
+              {formatCurrency(balance)}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Line Items */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <FileText className="w-4 h-4" weight="bold" />
+                Line Items ({order.lineItems.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {order.lineItems.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-4">
+                  No line items
+                </p>
+              ) : (
+                order.lineItems.map((item, index) => (
+                  <LineItemCard key={item.id} item={item} index={index} />
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Artwork Files */}
+          {order.artworkFiles.length > 0 && (
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <Image className="w-4 h-4" weight="bold" />
+                  Artwork Files ({order.artworkFiles.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2">
+                  {order.artworkFiles.map((file) => (
+                    <a
+                      key={file.id}
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors"
+                    >
+                      <Image className="w-5 h-5 text-muted-foreground" weight="bold" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">{file.source}</p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Production Notes */}
+          {order.productionNotes && (
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-base font-medium">Production Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div
+                  className="text-sm text-muted-foreground prose prose-sm prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: order.productionNotes }}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Order Notes */}
+          {order.notes && (
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-base font-medium">Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {order.notes}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Customer */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <User className="w-4 h-4" weight="bold" />
+                Customer
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <button
+                onClick={() => onViewCustomer(String(order.customer.id))}
+                className="text-primary hover:underline font-medium text-left"
+              >
+                {order.customer.name}
+              </button>
+              {order.customer.company && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Buildings className="w-4 h-4" />
+                  {order.customer.company}
+                </div>
+              )}
+              {order.customer.email && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Envelope className="w-4 h-4" />
+                  <a href={`mailto:${order.customer.email}`} className="hover:text-foreground">
+                    {order.customer.email}
+                  </a>
+                </div>
+              )}
+              {order.customer.phone && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="w-4 h-4" />
+                  <a href={`tel:${order.customer.phone}`} className="hover:text-foreground">
+                    {order.customer.phone}
+                  </a>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dates */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <Calendar className="w-4 h-4" weight="bold" />
+                Dates
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {order.createdAt && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Created</span>
+                  <span>{formatDate(order.createdAt)}</span>
+                </div>
+              )}
+              {order.dueDate && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Due Date</span>
+                  <span
+                    className={
+                      new Date(order.dueDate) < new Date() &&
+                      order.status.toLowerCase() !== 'complete' &&
+                      order.status.toLowerCase() !== 'shipped'
+                        ? 'text-destructive'
+                        : ''
+                    }
+                  >
+                    {formatDate(order.dueDate)}
+                  </span>
+                </div>
+              )}
+              {order.customerPo && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Customer PO</span>
+                  <span>{order.customerPo}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Payment Summary */}
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <CreditCard className="w-4 h-4" weight="bold" />
+                Payment
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-sm space-y-2">
+                <div className="flex justify-between font-medium">
+                  <span>Total</span>
+                  <span>{formatCurrency(order.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-green-400">
+                  <span>Paid</span>
+                  <span>{formatCurrency(paid)}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between font-medium">
+                  <span>Balance Due</span>
+                  <span className={balance > 0 ? 'text-yellow-400' : 'text-green-400'}>
+                    {formatCurrency(balance)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LineItemCard({ item, index }: { item: OrderDetailLineItem; index: number }) {
+  // Calculate total from sizes
+  const sizeBreakdown = Object.entries(item.sizes)
+    .filter(([_, qty]) => qty > 0)
+    .map(([size, qty]) => ({ size: size.toUpperCase(), qty }));
+
+  return (
+    <div className="p-4 bg-secondary/30 rounded-lg space-y-4">
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-muted px-2 py-0.5 rounded">#{index + 1}</span>
+            <h4 className="font-medium truncate">
+              {item.description || item.styleNumber || 'Line Item'}
+            </h4>
+          </div>
+          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
+            {item.styleNumber && <span>{item.styleNumber}</span>}
+            {item.styleNumber && item.color && <span>•</span>}
+            {item.color && <span>{item.color}</span>}
+            {item.category && (
+              <>
+                <span>•</span>
+                <Badge variant="outline" className="text-xs">
+                  {item.category}
+                </Badge>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="text-right ml-4">
+          <div className="font-medium">{formatCurrency(item.totalCost)}</div>
+          <div className="text-sm text-muted-foreground">
+            {item.totalQuantity} × {formatCurrency(item.unitCost)}
+          </div>
+        </div>
+      </div>
+
+      {/* Size breakdown */}
+      {sizeBreakdown.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {sizeBreakdown.map(({ size, qty }) => (
+            <div
+              key={size}
+              className="px-2 py-1 bg-muted rounded text-xs font-medium"
+            >
+              {size}: {qty}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

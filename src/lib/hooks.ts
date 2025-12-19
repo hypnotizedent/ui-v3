@@ -190,6 +190,164 @@ export function useOrdersList(options?: {
 }
 
 // =============================================================================
+// Order Detail Types
+// =============================================================================
+
+export interface OrderDetailLineItem {
+  id: number
+  styleNumber: string | null
+  description: string | null
+  color: string | null
+  category: string | null
+  unitCost: number
+  totalQuantity: number
+  totalCost: number
+  sizes: {
+    xs: number
+    s: number
+    m: number
+    l: number
+    xl: number
+    xxl: number
+    xxxl: number
+    xxxxl: number
+    xxxxxl: number
+    other: number
+  }
+}
+
+export interface OrderDetailCustomer {
+  id: number
+  name: string
+  email: string | null
+  phone: string | null
+  company: string | null
+}
+
+export interface OrderDetailArtwork {
+  id: string
+  url: string
+  name: string
+  source: string
+}
+
+export interface OrderDetail {
+  id: number
+  orderNumber: string
+  orderNickname: string | null
+  status: string
+  printavoStatusName: string
+  totalAmount: number
+  amountOutstanding: number
+  dueDate: string | null
+  createdAt: string
+  updatedAt: string
+  customer: OrderDetailCustomer
+  customerPo: string | null
+  notes: string | null
+  productionNotes: string | null
+  artworkCount: number
+  artworkFiles: OrderDetailArtwork[]
+  lineItems: OrderDetailLineItem[]
+}
+
+// =============================================================================
+// useOrderDetail - Fetch single order by visual_id
+// =============================================================================
+
+export function useOrderDetail(visualId: string | null) {
+  const [order, setOrder] = useState<OrderDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    if (!visualId) {
+      setOrder(null)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${visualId}`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Order not found')
+        }
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      // Map API response to our type
+      const orderDetail: OrderDetail = {
+        id: data.id,
+        orderNumber: data.orderNumber || data.visual_id || String(data.id),
+        orderNickname: data.orderNickname || data.order_nickname || null,
+        status: data.status || 'unknown',
+        printavoStatusName: data.printavoStatusName || data.printavo_status_name || data.status || '',
+        totalAmount: parseFloat(data.totalAmount) || parseFloat(data.total_amount) || 0,
+        amountOutstanding: parseFloat(data.amountOutstanding) || parseFloat(data.amount_outstanding) || 0,
+        dueDate: data.dueDate || data.due_date || null,
+        createdAt: data.createdAt || data.created_at || '',
+        updatedAt: data.updatedAt || data.updated_at || '',
+        customer: {
+          id: data.customer?.id || 0,
+          name: data.customer?.name || 'Unknown',
+          email: data.customer?.email || null,
+          phone: data.customer?.phone || null,
+          company: data.customer?.company || null,
+        },
+        customerPo: data.customerPo || data.customer_po || null,
+        notes: data.notes || null,
+        productionNotes: data.productionNotes || data.production_notes || null,
+        artworkCount: data.artworkCount || data.artwork_count || 0,
+        artworkFiles: (data.artworkFiles || data.artwork_files || []).map((a: any) => ({
+          id: a.id,
+          url: a.url,
+          name: a.name,
+          source: a.source,
+        })),
+        lineItems: (data.lineItems || data.line_items || []).map((li: any) => ({
+          id: li.id,
+          styleNumber: li.styleNumber || li.style_number || null,
+          description: li.description || li.style_description || null,
+          color: li.color || null,
+          category: li.category || null,
+          unitCost: parseFloat(li.unitCost) || parseFloat(li.unit_cost) || 0,
+          totalQuantity: li.totalQuantity || li.total_quantity || 0,
+          totalCost: parseFloat(li.totalCost) || parseFloat(li.total_cost) || 0,
+          sizes: {
+            xs: li.sizes?.xs || li.size_xs || 0,
+            s: li.sizes?.s || li.size_s || 0,
+            m: li.sizes?.m || li.size_m || 0,
+            l: li.sizes?.l || li.size_l || 0,
+            xl: li.sizes?.xl || li.size_xl || 0,
+            xxl: li.sizes?.xxl || li.size_2_xl || 0,
+            xxxl: li.sizes?.xxxl || li.size_3_xl || 0,
+            xxxxl: li.sizes?.xxxxl || li.size_4_xl || 0,
+            xxxxxl: li.sizes?.xxxxxl || li.size_5_xl || 0,
+            other: li.sizes?.other || li.size_other || 0,
+          },
+        })),
+      }
+
+      setOrder(orderDetail)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch order'))
+    } finally {
+      setLoading(false)
+    }
+  }, [visualId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { order, loading, error, refetch: load }
+}
+
+// =============================================================================
 // useCustomers - Fetch and manage customers list
 // =============================================================================
 

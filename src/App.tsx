@@ -5,7 +5,7 @@ import { useOrders, useCustomers } from '@/lib/hooks';
 import { type OrderStatus as ApiOrderStatus } from '@/lib/api-adapter';
 import { Dashboard } from '@/components/dashboard/Dashboard';
 import { OrdersList } from '@/components/orders/OrdersList';
-import { OrderDetail } from '@/components/orders/OrderDetail';
+import { OrderDetailPage } from '@/components/orders/OrderDetailPage';
 import { CustomersList } from '@/components/customers/CustomersList';
 import { CustomerDetail } from '@/components/customers/CustomerDetail';
 import { Button } from '@/components/ui/button';
@@ -170,10 +170,9 @@ function App() {
           />
         );
       case 'order-detail':
-        return selectedOrder ? (
-          <OrderDetail 
-            order={selectedOrder}
-            transactions={orderTransactions}
+        return selectedOrderId ? (
+          <OrderDetailPage
+            visualId={selectedOrderId}
             onViewCustomer={handleViewCustomer}
           />
         ) : null;
