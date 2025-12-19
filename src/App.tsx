@@ -6,8 +6,8 @@ import { type OrderStatus as ApiOrderStatus } from '@/lib/api-adapter';
 import { Dashboard } from '@/components/dashboard/Dashboard';
 import { OrdersList } from '@/components/orders/OrdersList';
 import { OrderDetailPage } from '@/components/orders/OrderDetailPage';
-import { CustomersList } from '@/components/customers/CustomersList';
-import { CustomerDetail } from '@/components/customers/CustomerDetail';
+import { CustomersListPage } from '@/components/customers/CustomersListPage';
+import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
 import { Button } from '@/components/ui/button';
 
 // Map API status to component status
@@ -178,16 +178,14 @@ function App() {
         ) : null;
       case 'customers':
         return (
-          <CustomersList 
-            customers={customers}
+          <CustomersListPage
             onViewCustomer={handleViewCustomer}
           />
         );
       case 'customer-detail':
-        return selectedCustomer ? (
-          <CustomerDetail 
-            customer={selectedCustomer}
-            orders={orders.filter(o => o.customer_id === selectedCustomer.id)}
+        return selectedCustomerId ? (
+          <CustomerDetailPage
+            customerId={selectedCustomerId}
             onViewOrder={handleViewOrder}
           />
         ) : null;

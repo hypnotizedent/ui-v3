@@ -379,6 +379,165 @@ export function useCustomers(options?: { limit?: number; search?: string }) {
 }
 
 // =============================================================================
+// Customer List Types
+// =============================================================================
+
+export interface CustomerListItem {
+  id: number
+  name: string
+  email: string | null
+  phone: string | null
+  company: string | null
+  city: string | null
+  state: string | null
+  orders_count: number
+  created_at: string
+}
+
+// =============================================================================
+// useCustomersList - Fetch customers directly from API with pagination
+// =============================================================================
+
+export function useCustomersList(options?: {
+  limit?: number
+  offset?: number
+  search?: string
+}) {
+  const [customers, setCustomers] = useState<CustomerListItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      let url: string
+      if (options?.search && options.search.trim()) {
+        // Use search endpoint
+        url = `${API_BASE_URL}/api/customers/search?q=${encodeURIComponent(options.search)}`
+      } else {
+        // Use list endpoint with pagination
+        const params = new URLSearchParams()
+        if (options?.limit) params.set('limit', String(options.limit))
+        if (options?.offset) params.set('offset', String(options.offset))
+        url = `${API_BASE_URL}/api/customers?${params}`
+      }
+
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      const mappedCustomers: CustomerListItem[] = (data.customers || []).map((c: any) => ({
+        id: c.id,
+        name: c.name || 'Unknown',
+        email: c.email || null,
+        phone: c.phone || null,
+        company: c.company || null,
+        city: c.city || null,
+        state: c.state || null,
+        orders_count: c.orders_count || 0,
+        created_at: c.created_at || '',
+      }))
+
+      setCustomers(mappedCustomers)
+      setTotal(data.total || mappedCustomers.length)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch customers'))
+    } finally {
+      setLoading(false)
+    }
+  }, [options?.limit, options?.offset, options?.search])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { customers, total, loading, error, refetch: load }
+}
+
+// =============================================================================
+// useCustomerDetail - Fetch single customer by searching
+// =============================================================================
+
+export function useCustomerDetail(customerId: string | null) {
+  const [customer, setCustomer] = useState<CustomerListItem | null>(null)
+  const [orders, setOrders] = useState<OrderListItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    if (!customerId) {
+      setCustomer(null)
+      setOrders([])
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      // Fetch all customers and find by ID (since there's no direct endpoint)
+      const response = await fetch(`${API_BASE_URL}/api/customers?limit=5000`)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      const found = (data.customers || []).find((c: any) => String(c.id) === customerId)
+      if (!found) {
+        throw new Error('Customer not found')
+      }
+
+      const customerData: CustomerListItem = {
+        id: found.id,
+        name: found.name || 'Unknown',
+        email: found.email || null,
+        phone: found.phone || null,
+        company: found.company || null,
+        city: found.city || null,
+        state: found.state || null,
+        orders_count: found.orders_count || 0,
+        created_at: found.created_at || '',
+      }
+      setCustomer(customerData)
+
+      // Fetch orders and filter by customer name
+      const ordersResponse = await fetch(`${API_BASE_URL}/api/orders?limit=100&search=${encodeURIComponent(customerData.name)}`)
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json()
+        const customerOrders: OrderListItem[] = (ordersData.orders || [])
+          .filter((o: any) => o.customer_name === customerData.name)
+          .map((o: any) => ({
+            id: o.id,
+            visual_id: o.visual_id || String(o.id),
+            order_nickname: o.order_nickname || o.nickname || null,
+            status: o.status || 'unknown',
+            printavo_status_name: o.printavo_status_name || o.status || '',
+            customer_name: o.customer_name || 'Unknown',
+            total_amount: parseFloat(o.total_amount) || parseFloat(o.total) || 0,
+            due_date: o.due_date || null,
+            artwork_count: o.artwork_count || 0,
+          }))
+        setOrders(customerOrders)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch customer'))
+    } finally {
+      setLoading(false)
+    }
+  }, [customerId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { customer, orders, loading, error, refetch: load }
+}
+
+// =============================================================================
 // useDashboardStats - Fetch dashboard statistics
 // =============================================================================
 
