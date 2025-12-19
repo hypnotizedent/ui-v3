@@ -93,9 +93,9 @@ export function CustomerDetail({ customer, orders, onViewOrder }: CustomerDetail
               ) : (
                 <div className="space-y-2">
                   {orders.map((order) => (
-                    <div 
+                    <div
                       key={order.id}
-                      onClick={() => onViewOrder(order.id)}
+                      onClick={() => onViewOrder(order.visual_id)}
                       className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
                     >
                       <div className="flex items-center gap-3">

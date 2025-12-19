@@ -270,7 +270,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
               orders.slice(0, 5).map((order) => (
                 <div
                   key={order.id}
-                  onClick={() => onViewOrder(order.id)}
+                  onClick={() => onViewOrder(order.visual_id)}
                   className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -313,7 +313,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
               ordersNeedingAttention.slice(0, 5).map((order) => (
                 <div
                   key={order.id}
-                  onClick={() => onViewOrder(order.id)}
+                  onClick={() => onViewOrder(order.visual_id)}
                   className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
                 >
                   <div>
