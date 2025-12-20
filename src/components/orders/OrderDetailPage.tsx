@@ -704,7 +704,7 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
                     </button>
                   )
                 ))}
-              </div>
+                Front
             )}
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
@@ -713,10 +713,3 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
               <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
                 {getMethodLabel(imprintMethod)}
               </Badge>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
