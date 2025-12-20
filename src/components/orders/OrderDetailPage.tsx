@@ -25,6 +25,12 @@ import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel, getMe
 import { SizeBreakdown, ImprintMethod } from '@/lib/types';
 import { ImageModal } from '@/components/shared/ImageModal';
 
+// Helper to check if URL is a PDF
+function isPdfUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.toLowerCase().endsWith('.pdf');
+}
+
 // Helper to get file extension
 function getFileExtension(filename: string): string {
   const parts = filename.split('.');
@@ -493,19 +499,30 @@ function LineItemCard({ item, index, orderStatus, imprintMockup, onImageClick }:
       <div className="flex items-start gap-4">
         {/* Mockup Thumbnail */}
         {item.mockup ? (
-          <button
-            onClick={() => onImageClick?.([item.mockup!], 0)}
-            className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
-          >
-            <img
-              src={item.mockup.url}
-              alt={item.mockup.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </button>
+          isPdfUrl(item.mockup.url) ? (
+            <a
+              href={item.mockup.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 w-20 h-20 rounded-lg bg-card border border-border hover:border-primary transition-colors flex items-center justify-center"
+            >
+              <FilePdf size={32} className="text-red-400" weight="fill" />
+            </a>
+          ) : (
+            <button
+              onClick={() => onImageClick?.([item.mockup!], 0)}
+              className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
+            >
+              <img
+                src={item.mockup.url}
+                alt={item.mockup.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </button>
+          )
         ) : (
           <div className="flex-shrink-0 w-20 h-20 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
             <Image className="w-6 h-6 text-muted-foreground/50" weight="duotone" />
@@ -591,19 +608,30 @@ function LineItemCard({ item, index, orderStatus, imprintMockup, onImageClick }:
           <div className="flex items-center gap-3">
             {/* Imprint Mockup Thumbnail */}
             {imprintMockup && (
-              <button
-                onClick={() => onImageClick?.([imprintMockup], 0)}
-                className="flex-shrink-0 cursor-pointer"
-              >
-                <img
-                  src={imprintMockup.url}
-                  alt="Imprint mockup"
-                  className="w-12 h-12 object-cover rounded border border-border hover:opacity-80 transition-opacity"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </button>
+              isPdfUrl(imprintMockup.url) ? (
+                <a
+                  href={imprintMockup.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 w-12 h-12 rounded border border-border hover:border-primary transition-colors flex items-center justify-center bg-muted/50"
+                >
+                  <FilePdf size={24} className="text-red-400" weight="fill" />
+                </a>
+              ) : (
+                <button
+                  onClick={() => onImageClick?.([imprintMockup], 0)}
+                  className="flex-shrink-0 cursor-pointer"
+                >
+                  <img
+                    src={imprintMockup.url}
+                    alt="Imprint mockup"
+                    className="w-12 h-12 object-cover rounded border border-border hover:opacity-80 transition-opacity"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </button>
+              )
             )}
             <div className="flex items-center justify-between flex-1">
               <div className="flex items-center gap-2">
@@ -615,12 +643,23 @@ function LineItemCard({ item, index, orderStatus, imprintMockup, onImageClick }:
                 </Badge>
               </div>
               {imprintMockup && (
-                <button
-                  onClick={() => onImageClick?.([imprintMockup], 0)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  View mockup
-                </button>
+                isPdfUrl(imprintMockup.url) ? (
+                  <a
+                    href={imprintMockup.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Open PDF
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => onImageClick?.([imprintMockup], 0)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    View mockup
+                  </button>
+                )
               )}
             </div>
           </div>
