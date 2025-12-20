@@ -408,41 +408,41 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                   orderStatus={order.status}
                   imprintMockups={imprintMockups}
                   onImageClick={openImageModal}
-                />
+            })()
               ));
             })()
-          )}
-        </CardContent>
       </Card>
+        </CardContent>
+      </Card>/}
 
       {/* Production Files - Collapsible */}
-      {(() => {
+      {(() => {s.filter(f => isImageFile(f.name));
         const productionFiles = order.artworkFiles.filter(f => f.source === 'productionFile');
         const imageFiles = productionFiles.filter(f => isImageFile(f.name));
         const nonImageFiles = productionFiles.filter(f => !isImageFile(f.name));
         
         return productionFiles.length > 0 && (
-          <Card className="bg-card border-border">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
+                  </p>
                 <FileText className="w-4 h-4" weight="bold" />
                 Production Files ({productionFiles.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Image Files with Previews */}
+                      <button
+                        key={file.id}
+                        onClick={() => openImageModal(imageFiles, idx)}
+              {/* Image Files with Previews */}ded-lg overflow-hidden bg-muted border border-border hover:border-primary transition-colors cursor-pointer"
               {imageFiles.length > 0 && (
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
                     Images ({imageFiles.length})
-                  </p>
+                  </p>-full object-cover"
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                     {imageFiles.map((file, idx) => (
                       <button
                         key={file.id}
                         onClick={() => openImageModal(imageFiles, idx)}
                         className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-border hover:border-primary transition-colors cursor-pointer"
-                      >
+                      >ite" weight="bold" />
                         <img
                           src={file.url}
                           alt={file.name}
@@ -454,23 +454,23 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <FileImage className="w-6 h-6 text-white" weight="bold" />
-                        </div>
-                      </button>
+                        </div>e tracking-wide mb-2">
+                      </button>gth})
                     ))}
                   </div>
-                </div>
-              )}
+                  <div className="grid gap-2">
+                    {nonImageFiles.map((file) => (
               
               {/* Non-Image Files */}
               {nonImageFiles.length > 0 && (
                 <div>
                   {imageFiles.length > 0 && (
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">tion-colors"
                       Other Files ({nonImageFiles.length})
                     </p>
-                  )}
-                  <div className="grid gap-2">
-                    {nonImageFiles.map((file) => (
+                  )}lex-1 min-w-0">
+                  <div className="grid gap-2">ile.name}</p>
+                    {nonImageFiles.map((file) => (FileExtension(file.name).toUpperCase()} file</p>
                       <a
                         key={file.id}
                         href={file.url}
@@ -486,13 +486,13 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                       </a>
                     ))}
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
+            />
+          </CardContent>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-medium">Notes</CardTitle>
+        );</CardHeader>
       })()}
-
+round whitespace-pre-wrap">
       {/* Production Notes */}
       {order.productionNotes && (
         <Card className="bg-card border-border">
@@ -516,34 +516,11 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-              {order.notes}
+              {order.notes}name: string; id: string }>, index: number) => void;
             </p>
           </CardContent>
-        </Card>
+        </Card>eBreakdown)[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
       )}
-
-      {/* Image Modal */}
-      <ImageModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        images={modalImages}
-        currentIndex={modalIndex}
-        onNavigate={setModalIndex}
-      />
-    </div>
-  );
-}
-
-interface LineItemCardProps {
-  item: OrderDetailLineItem;
-  index: number;
-  orderStatus: string;
-  imprintMockups: Array<{ id: string; url: string; name: string; thumbnail_url?: string | null }>;
-  onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
-}
-
-const SIZE_LABELS: (keyof SizeBreakdown)[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
-
 function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }: LineItemCardProps) {
   const sizes = mapSizesToGrid(item.sizes);
   const total = item.totalQuantity;
