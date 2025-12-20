@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,12 @@ function PdfThumbnail({
   className?: string;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  
+  // Reset thumbnailFailed state when thumbnailUrl changes
+  useEffect(() => {
+    setThumbnailFailed(false);
+  }, [thumbnailUrl]);
+  
   const iconSize = size === 'small' ? 24 : 32;
   const containerClasses = size === 'small' 
     ? 'flex-shrink-0 w-12 h-12 rounded border border-border hover:border-primary transition-colors'
