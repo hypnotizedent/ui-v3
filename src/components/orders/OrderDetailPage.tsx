@@ -162,6 +162,10 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
   const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
   const [modalIndex, setModalIndex] = useState(0);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [visualId]);
+
   const openImageModal = (images: Array<{ url: string; name: string; id: string }>, index: number = 0) => {
     setModalImages(images);
     setModalIndex(index);
