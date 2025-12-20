@@ -278,10 +278,15 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                 </p>
               ) : (
                 (() => {
-                  // Extract imprint mockups sorted by ID for position matching
                   const imprintMockups = order.artworkFiles
                     .filter(f => f.source === 'imprintMockup')
-                    .sort((a, b) => parseInt(a.id) - parseInt(b.id));
+                    .sort((a, b) => {
+                      const aIsPdf = a.url?.toLowerCase().endsWith('.pdf');
+                      const bIsPdf = b.url?.toLowerCase().endsWith('.pdf');
+                      if (aIsPdf && !bIsPdf) return 1;
+                      if (!aIsPdf && bIsPdf) return -1;
+                      return 0;
+                    });
 
                   return order.lineItems.map((item, index) => (
                     <LineItemCard
