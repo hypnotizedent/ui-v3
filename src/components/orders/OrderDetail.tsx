@@ -1,6 +1,5 @@
 import { Order, Transaction, LineItem, Imprint } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   User, Calendar, FileText, Printer, CreditCard, 
@@ -8,8 +7,8 @@ import {
 } from '@phosphor-icons/react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { 
-  formatCurrency, formatDate, formatDateTime, 
-  getMethodLabel, getPaymentMethodLabel, formatFileSize 
+  formatCurrency, formatDate, 
+  getPaymentMethodLabel 
 } from '@/lib/helpers';
 import { SizeGrid } from '@/components/shared/SizeGrid';
 
@@ -238,44 +237,47 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
 }
 
 function ImprintCard({ imprint }: { imprint: Imprint }) {
+  const mockups: string[] = [];
+  
   return (
-    <div className="p-3 bg-card rounded border border-border">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-xs">
-            {imprint.location}
-          </Badge>
-          <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
-            {getMethodLabel(imprint.method)}
-          </Badge>
+    <div className="p-2 bg-card rounded border border-border">
+      {mockups.length > 0 ? (
+        <div className="flex gap-2 mb-2">
+          {mockups.map((mockup, idx) => (
+            <div key={idx} className="w-16 h-16 bg-muted rounded border border-border flex-shrink-0">
+              <img src={mockup} alt="Mockup" className="w-full h-full object-cover rounded" />
+            </div>
+          ))}
         </div>
-        <span className="text-xs text-muted-foreground">
-          {imprint.colors} color{imprint.colors !== 1 ? 's' : ''} • {imprint.width}" × {imprint.height}"
-        </span>
-      </div>
+      ) : (
+        <p className="text-xs text-muted-foreground py-1">No imprint mockups</p>
+      )}
       
-      {imprint.artwork && (
-        <div className="mt-2 flex items-center gap-2 text-sm">
-          <Image className="w-4 h-4 text-muted-foreground" weight="bold" />
-          <span className="text-muted-foreground truncate flex-1">
-            {imprint.artwork.filename}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {formatFileSize(imprint.artwork.file_size)}
-          </span>
-          {imprint.artwork.approved ? (
-            <CheckCircle className="w-4 h-4 text-green-400" weight="fill" />
-          ) : (
-            <XCircle className="w-4 h-4 text-yellow-400" weight="fill" />
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          {imprint.artwork && (
+            <div className="flex items-center gap-1.5 text-xs mb-1">
+              <Image className="w-3 h-3 text-muted-foreground flex-shrink-0" weight="bold" />
+              <span className="text-muted-foreground truncate">
+                {imprint.artwork.filename}
+              </span>
+              {imprint.artwork.approved ? (
+                <CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" weight="fill" />
+              ) : (
+                <XCircle className="w-3 h-3 text-yellow-400 flex-shrink-0" weight="fill" />
+              )}
+            </div>
           )}
+          <p className="text-xs text-muted-foreground">
+            {imprint.colors} color{imprint.colors !== 1 ? 's' : ''} • {imprint.width}" × {imprint.height}"
+          </p>
         </div>
-      )}
-      
-      {imprint.setup_fee > 0 && (
-        <div className="mt-2 text-xs text-muted-foreground">
-          Setup fee: {formatCurrency(imprint.setup_fee)}
-        </div>
-      )}
+        {imprint.setup_fee > 0 && (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            +{formatCurrency(imprint.setup_fee)}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
