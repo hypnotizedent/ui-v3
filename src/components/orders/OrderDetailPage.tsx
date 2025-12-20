@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,10 +16,41 @@ import {
   Envelope,
   Buildings,
   Package,
-  Printer
+  Printer,
+  FilePdf,
+  FileImage,
+  File
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel, getMethodLabel } from '@/lib/helpers';
 import { SizeBreakdown, ImprintMethod } from '@/lib/types';
+import { ImageModal } from '@/components/shared/ImageModal';
+
+// Helper to get file extension
+function getFileExtension(filename: string): string {
+  const parts = filename.split('.');
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+}
+
+// Helper to check if file is an image
+function isImageFile(filename: string): boolean {
+  const ext = getFileExtension(filename);
+  return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext);
+}
+
+// Helper to get file icon
+function getFileIcon(filename: string) {
+  const ext = getFileExtension(filename);
+  
+  if (ext === 'pdf') {
+    return <FilePdf className="w-5 h-5 text-red-400" weight="fill" />;
+  }
+  
+  if (isImageFile(filename)) {
+    return <FileImage className="w-5 h-5 text-blue-400" weight="fill" />;
+  }
+  
+  return <File className="w-5 h-5 text-muted-foreground" weight="bold" />;
+}
 
 // Map API size keys to SizeBreakdown format
 function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): SizeBreakdown {
@@ -50,6 +82,15 @@ interface OrderDetailPageProps {
 
 export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPageProps) {
   const { order, loading, error, refetch } = useOrderDetail(visualId);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
+  const [modalIndex, setModalIndex] = useState(0);
+
+  const openImageModal = (images: Array<{ url: string; name: string; id: string }>, index: number = 0) => {
+    setModalImages(images);
+    setModalIndex(index);
+    setModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -185,6 +226,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                       index={index}
                       orderStatus={order.status}
                       imprintMockup={imprintMockups[index] || null}
+                      onImageClick={openImageModal}
                     />
                   ));
                 })()
@@ -195,6 +237,9 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
           {/* Production Files - only show productionFile source, not line item mockups */}
           {(() => {
             const productionFiles = order.artworkFiles.filter(f => f.source === 'productionFile');
+            const imageFiles = productionFiles.filter(f => isImageFile(f.name));
+            const nonImageFiles = productionFiles.filter(f => !isImageFile(f.name));
+            
             return productionFiles.length > 0 && (
               <Card className="bg-card border-border">
                 <CardHeader>
@@ -203,23 +248,68 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                     Production Files ({productionFiles.length})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-2">
-                    {productionFiles.map((file) => (
-                      <a
-                        key={file.id}
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors"
-                      >
-                        <FileText className="w-5 h-5 text-muted-foreground" weight="bold" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{file.name}</p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
+                <CardContent className="space-y-4">
+                  {/* Image Files with Previews */}
+                  {imageFiles.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                        Images ({imageFiles.length})
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {imageFiles.map((file, idx) => (
+                          <button
+                            key={file.id}
+                            onClick={() => openImageModal(imageFiles, idx)}
+                            className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-border hover:border-primary transition-colors cursor-pointer"
+                          >
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <FileImage className="w-8 h-8 text-white" weight="bold" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/80 text-white text-xs truncate">
+                              {file.name}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Non-Image Files */}
+                  {nonImageFiles.length > 0 && (
+                    <div>
+                      {imageFiles.length > 0 && (
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                          Other Files ({nonImageFiles.length})
+                        </p>
+                      )}
+                      <div className="grid gap-2">
+                        {nonImageFiles.map((file) => (
+                          <a
+                            key={file.id}
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors"
+                          >
+                            {getFileIcon(file.name)}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{file.name}</p>
+                              <p className="text-xs text-muted-foreground">{getFileExtension(file.name).toUpperCase()} file</p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -367,6 +457,15 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
           </Card>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        images={modalImages}
+        currentIndex={modalIndex}
+        onNavigate={setModalIndex}
+      />
     </div>
   );
 }
@@ -376,11 +475,12 @@ interface LineItemCardProps {
   index: number;
   orderStatus: string;
   imprintMockup: { id: string; url: string; name: string } | null;
+  onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
 }
 
 const SIZE_LABELS: (keyof SizeBreakdown)[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
-function LineItemCard({ item, index, orderStatus, imprintMockup }: LineItemCardProps) {
+function LineItemCard({ item, index, orderStatus, imprintMockup, onImageClick }: LineItemCardProps) {
   const sizes = mapSizesToGrid(item.sizes);
   const total = item.totalQuantity;
   const hasOtherSizes = (item.sizes.xxxxl || 0) + (item.sizes.xxxxxl || 0) + (item.sizes.other || 0) > 0;
@@ -393,11 +493,9 @@ function LineItemCard({ item, index, orderStatus, imprintMockup }: LineItemCardP
       <div className="flex items-start gap-4">
         {/* Mockup Thumbnail */}
         {item.mockup ? (
-          <a
-            href={item.mockup.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors"
+          <button
+            onClick={() => onImageClick?.([item.mockup!], 0)}
+            className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
           >
             <img
               src={item.mockup.url}
@@ -407,7 +505,7 @@ function LineItemCard({ item, index, orderStatus, imprintMockup }: LineItemCardP
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          </a>
+          </button>
         ) : (
           <div className="flex-shrink-0 w-20 h-20 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
             <Image className="w-6 h-6 text-muted-foreground/50" weight="duotone" />
@@ -493,18 +591,19 @@ function LineItemCard({ item, index, orderStatus, imprintMockup }: LineItemCardP
           <div className="flex items-center gap-3">
             {/* Imprint Mockup Thumbnail */}
             {imprintMockup && (
-              <a
-                href={imprintMockup.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0"
+              <button
+                onClick={() => onImageClick?.([imprintMockup], 0)}
+                className="flex-shrink-0 cursor-pointer"
               >
                 <img
                   src={imprintMockup.url}
                   alt="Imprint mockup"
                   className="w-12 h-12 object-cover rounded border border-border hover:opacity-80 transition-opacity"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
-              </a>
+              </button>
             )}
             <div className="flex items-center justify-between flex-1">
               <div className="flex items-center gap-2">
@@ -515,9 +614,14 @@ function LineItemCard({ item, index, orderStatus, imprintMockup }: LineItemCardP
                   {getMethodLabel(imprintMethod)}
                 </Badge>
               </div>
-              <span className="text-xs text-muted-foreground">
-                {imprintMockup ? 'View mockup' : 'Standard placement'}
-              </span>
+              {imprintMockup && (
+                <button
+                  onClick={() => onImageClick?.([imprintMockup], 0)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  View mockup
+                </button>
+              )}
             </div>
           </div>
         </div>
