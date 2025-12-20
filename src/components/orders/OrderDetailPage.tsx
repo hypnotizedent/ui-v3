@@ -480,7 +480,7 @@ interface LineItemCardProps {
   item: OrderDetailLineItem;
   index: number;
   orderStatus: string;
-  imprintMockup: { id: string; url: string; name: string } | null;
+  imprintMockup: { id: string; url: string; name: string; thumbnail_url?: string | null } | null;
   onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
 }
 
@@ -500,14 +500,32 @@ function LineItemCard({ item, index, orderStatus, imprintMockup, onImageClick }:
         {/* Mockup Thumbnail */}
         {item.mockup ? (
           isPdfUrl(item.mockup.url) ? (
-            <a
-              href={item.mockup.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0 w-20 h-20 rounded-lg bg-card border border-border hover:border-primary transition-colors flex items-center justify-center"
-            >
-              <FilePdf size={32} className="text-red-400" weight="fill" />
-            </a>
+            item.mockup.thumbnail_url ? (
+              <a
+                href={item.mockup.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors"
+              >
+                <img
+                  src={item.mockup.thumbnail_url}
+                  alt={item.mockup.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </a>
+            ) : (
+              <a
+                href={item.mockup.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 w-20 h-20 rounded-lg bg-card border border-border hover:border-primary transition-colors flex items-center justify-center"
+              >
+                <FilePdf size={32} className="text-red-400" weight="fill" />
+              </a>
+            )
           ) : (
             <button
               onClick={() => onImageClick?.([item.mockup!], 0)}
@@ -609,14 +627,32 @@ function LineItemCard({ item, index, orderStatus, imprintMockup, onImageClick }:
             {/* Imprint Mockup Thumbnail */}
             {imprintMockup && (
               isPdfUrl(imprintMockup.url) ? (
-                <a
-                  href={imprintMockup.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0 w-12 h-12 rounded border border-border hover:border-primary transition-colors flex items-center justify-center bg-muted/50"
-                >
-                  <FilePdf size={24} className="text-red-400" weight="fill" />
-                </a>
+                imprintMockup.thumbnail_url ? (
+                  <a
+                    href={imprintMockup.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 w-12 h-12 rounded border border-border hover:border-primary transition-colors overflow-hidden"
+                  >
+                    <img
+                      src={imprintMockup.thumbnail_url}
+                      alt="Imprint mockup"
+                      className="w-12 h-12 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </a>
+                ) : (
+                  <a
+                    href={imprintMockup.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 w-12 h-12 rounded border border-border hover:border-primary transition-colors flex items-center justify-center bg-muted/50"
+                  >
+                    <FilePdf size={24} className="text-red-400" weight="fill" />
+                  </a>
+                )
               ) : (
                 <button
                   onClick={() => onImageClick?.([imprintMockup], 0)}

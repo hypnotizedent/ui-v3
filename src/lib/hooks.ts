@@ -197,6 +197,7 @@ export interface LineItemMockup {
   id: string
   url: string
   name: string
+  thumbnail_url?: string | null
 }
 
 export interface OrderDetailLineItem {
@@ -236,6 +237,7 @@ export interface OrderDetailArtwork {
   url: string
   name: string
   source: string
+  thumbnail_url?: string | null
 }
 
 export interface OrderDetail {
@@ -314,6 +316,7 @@ export function useOrderDetail(visualId: string | null) {
           url: a.url,
           name: a.name,
           source: a.source,
+          thumbnail_url: a.thumbnail_url || a.thumbnailUrl || null,
         })),
         lineItems: (data.lineItems || data.line_items || []).map((li: any) => ({
           id: li.id,
@@ -340,6 +343,7 @@ export function useOrderDetail(visualId: string | null) {
             id: li.mockup.id,
             url: li.mockup.url,
             name: li.mockup.name,
+            thumbnail_url: li.mockup.thumbnail_url || li.mockup.thumbnailUrl || null,
           } : null,
         })),
       }
