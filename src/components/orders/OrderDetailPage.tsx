@@ -16,11 +16,41 @@ import {
   Envelope,
   Buildings,
   Package,
-  Printer
+  Printer,
+  FilePdf,
+  FileImage,
+  File
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel, getMethodLabel } from '@/lib/helpers';
 import { SizeBreakdown, ImprintMethod } from '@/lib/types';
 import { ImageModal } from '@/components/shared/ImageModal';
+
+// Helper to get file extension
+function getFileExtension(filename: string): string {
+  const parts = filename.split('.');
+  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
+}
+
+// Helper to check if file is an image
+function isImageFile(filename: string): boolean {
+  const ext = getFileExtension(filename);
+  return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext);
+}
+
+// Helper to get file icon
+function getFileIcon(filename: string) {
+  const ext = getFileExtension(filename);
+  
+  if (ext === 'pdf') {
+    return <FilePdf className="w-5 h-5 text-red-400" weight="fill" />;
+  }
+  
+  if (isImageFile(filename)) {
+    return <FileImage className="w-5 h-5 text-blue-400" weight="fill" />;
+  }
+  
+  return <File className="w-5 h-5 text-muted-foreground" weight="bold" />;
+}
 
 // Map API size keys to SizeBreakdown format
 function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): SizeBreakdown {
@@ -207,6 +237,9 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
           {/* Production Files - only show productionFile source, not line item mockups */}
           {(() => {
             const productionFiles = order.artworkFiles.filter(f => f.source === 'productionFile');
+            const imageFiles = productionFiles.filter(f => isImageFile(f.name));
+            const nonImageFiles = productionFiles.filter(f => !isImageFile(f.name));
+            
             return productionFiles.length > 0 && (
               <Card className="bg-card border-border">
                 <CardHeader>
@@ -215,23 +248,68 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                     Production Files ({productionFiles.length})
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-2">
-                    {productionFiles.map((file) => (
-                      <a
-                        key={file.id}
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors"
-                      >
-                        <FileText className="w-5 h-5 text-muted-foreground" weight="bold" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{file.name}</p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
+                <CardContent className="space-y-4">
+                  {/* Image Files with Previews */}
+                  {imageFiles.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                        Images ({imageFiles.length})
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {imageFiles.map((file, idx) => (
+                          <button
+                            key={file.id}
+                            onClick={() => openImageModal(imageFiles, idx)}
+                            className="relative group aspect-square rounded-lg overflow-hidden bg-muted border border-border hover:border-primary transition-colors cursor-pointer"
+                          >
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <FileImage className="w-8 h-8 text-white" weight="bold" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/80 text-white text-xs truncate">
+                              {file.name}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Non-Image Files */}
+                  {nonImageFiles.length > 0 && (
+                    <div>
+                      {imageFiles.length > 0 && (
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                          Other Files ({nonImageFiles.length})
+                        </p>
+                      )}
+                      <div className="grid gap-2">
+                        {nonImageFiles.map((file) => (
+                          <a
+                            key={file.id}
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors"
+                          >
+                            {getFileIcon(file.name)}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{file.name}</p>
+                              <p className="text-xs text-muted-foreground">{getFileExtension(file.name).toUpperCase()} file</p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
