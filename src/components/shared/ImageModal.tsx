@@ -8,6 +8,9 @@ import {
 import { X, ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 
+// Placeholder image for failed loads
+const ERROR_IMAGE_PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23333" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EImage Not Found%3C/text%3E%3C/svg%3E';
+
 interface ImageModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -99,7 +102,7 @@ export function ImageModal({ isOpen, onClose, images, currentIndex, onNavigate }
               className="max-w-full max-h-full object-contain"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23333" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EImage Not Found%3C/text%3E%3C/svg%3E';
+                target.src = ERROR_IMAGE_PLACEHOLDER;
               }}
             />
 
