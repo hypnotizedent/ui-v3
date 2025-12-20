@@ -406,6 +406,20 @@ export interface CustomerListItem {
   company: string | null
   city: string | null
   state: string | null
+  billingAddress?: {
+    street: string
+    city: string
+    state: string
+    zip: string
+    country?: string
+  }
+  shippingAddress?: {
+    street: string
+    city: string
+    state: string
+    zip: string
+    country?: string
+  }
   orders_count: number
   created_at: string
 }
@@ -454,6 +468,20 @@ export function useCustomersList(options?: {
         company: c.company || null,
         city: c.city || null,
         state: c.state || null,
+        billingAddress: c.billingAddress || c.billing_address ? {
+          street: c.billingAddress?.street || c.billing_address?.street || '',
+          city: c.billingAddress?.city || c.billing_address?.city || '',
+          state: c.billingAddress?.state || c.billing_address?.state || '',
+          zip: c.billingAddress?.zip || c.billing_address?.zip || '',
+          country: c.billingAddress?.country || c.billing_address?.country || undefined,
+        } : undefined,
+        shippingAddress: c.shippingAddress || c.shipping_address ? {
+          street: c.shippingAddress?.street || c.shipping_address?.street || '',
+          city: c.shippingAddress?.city || c.shipping_address?.city || '',
+          state: c.shippingAddress?.state || c.shipping_address?.state || '',
+          zip: c.shippingAddress?.zip || c.shipping_address?.zip || '',
+          country: c.shippingAddress?.country || c.shipping_address?.country || undefined,
+        } : undefined,
         orders_count: c.orders_count || 0,
         created_at: c.created_at || '',
       }))
@@ -515,6 +543,20 @@ export function useCustomerDetail(customerId: string | null) {
         company: found.company || null,
         city: found.city || null,
         state: found.state || null,
+        billingAddress: found.billingAddress || found.billing_address ? {
+          street: found.billingAddress?.street || found.billing_address?.street || '',
+          city: found.billingAddress?.city || found.billing_address?.city || '',
+          state: found.billingAddress?.state || found.billing_address?.state || '',
+          zip: found.billingAddress?.zip || found.billing_address?.zip || '',
+          country: found.billingAddress?.country || found.billing_address?.country || undefined,
+        } : undefined,
+        shippingAddress: found.shippingAddress || found.shipping_address ? {
+          street: found.shippingAddress?.street || found.shipping_address?.street || '',
+          city: found.shippingAddress?.city || found.shipping_address?.city || '',
+          state: found.shippingAddress?.state || found.shipping_address?.state || '',
+          zip: found.shippingAddress?.zip || found.shipping_address?.zip || '',
+          country: found.shippingAddress?.country || found.shipping_address?.country || undefined,
+        } : undefined,
         orders_count: found.orders_count || 0,
         created_at: found.created_at || '',
       }

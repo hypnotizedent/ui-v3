@@ -10,9 +10,13 @@ import {
   MapPin,
   Package,
   Warning,
-  ArrowClockwise
+  ArrowClockwise,
+  PencilSimple,
+  Check,
+  X
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
+import { useState, useEffect } from 'react';
 
 interface CustomerDetailPageProps {
   customerId: string;
@@ -21,6 +25,133 @@ interface CustomerDetailPageProps {
 
 export function CustomerDetailPage({ customerId, onViewOrder }: CustomerDetailPageProps) {
   const { customer, orders, loading, error, refetch } = useCustomerDetail(customerId);
+
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [shippingSameAsBilling, setShippingSameAsBilling] = useState(false);
+  const [billingAddress, setBillingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: 'US'
+  });
+  const [shippingAddress, setShippingAddress] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: 'US'
+  });
+
+  // Initialize addresses when customer loads
+  useEffect(() => {
+    if (customer?.billingAddress) {
+      setBillingAddress({
+        street: customer.billingAddress.street || '',
+        city: customer.billingAddress.city || '',
+        state: customer.billingAddress.state || '',
+        zip: customer.billingAddress.zip || '',
+        country: customer.billingAddress.country || 'US'
+      });
+    }
+    if (customer?.shippingAddress) {
+      setShippingAddress({
+        street: customer.shippingAddress.street || '',
+        city: customer.shippingAddress.city || '',
+        state: customer.shippingAddress.state || '',
+        zip: customer.shippingAddress.zip || '',
+        country: customer.shippingAddress.country || 'US'
+      });
+    }
+  }, [customer]);
+
+  // Google Places Autocomplete for billing address
+  useEffect(() => {
+    if (window.google && isEditing) {
+      const input = document.getElementById('billing-address-autocomplete') as HTMLInputElement;
+      if (input) {
+        const autocomplete = new window.google.maps.places.Autocomplete(input, {
+          types: ['address'],
+          componentRestrictions: { country: 'us' }
+        });
+        
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          const components = place.address_components;
+          
+          const getComponent = (type: string) => 
+            components?.find(c => c.types.includes(type))?.long_name || '';
+          
+          setBillingAddress({
+            street: `${getComponent('street_number')} ${getComponent('route')}`.trim(),
+            city: getComponent('locality') || getComponent('sublocality'),
+            state: getComponent('administrative_area_level_1'),
+            zip: getComponent('postal_code'),
+            country: getComponent('country')
+          });
+        });
+      }
+    }
+  }, [isEditing]);
+
+  // Google Places Autocomplete for shipping address
+  useEffect(() => {
+    if (window.google && isEditing && !shippingSameAsBilling) {
+      const input = document.getElementById('shipping-address-autocomplete') as HTMLInputElement;
+      if (input) {
+        const autocomplete = new window.google.maps.places.Autocomplete(input, {
+          types: ['address'],
+          componentRestrictions: { country: 'us' }
+        });
+        
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          const components = place.address_components;
+          
+          const getComponent = (type: string) => 
+            components?.find(c => c.types.includes(type))?.long_name || '';
+          
+          setShippingAddress({
+            street: `${getComponent('street_number')} ${getComponent('route')}`.trim(),
+            city: getComponent('locality') || getComponent('sublocality'),
+            state: getComponent('administrative_area_level_1'),
+            zip: getComponent('postal_code'),
+            country: getComponent('country')
+          });
+        });
+      }
+    }
+  }, [isEditing, shippingSameAsBilling]);
+
+  const handleSave = () => {
+    // TODO: Save to API
+    console.log('Saving addresses:', { billingAddress, shippingAddress: shippingSameAsBilling ? billingAddress : shippingAddress });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    // Reset to original values
+    if (customer?.billingAddress) {
+      setBillingAddress({
+        street: customer.billingAddress.street || '',
+        city: customer.billingAddress.city || '',
+        state: customer.billingAddress.state || '',
+        zip: customer.billingAddress.zip || '',
+        country: customer.billingAddress.country || 'US'
+      });
+    }
+    if (customer?.shippingAddress) {
+      setShippingAddress({
+        street: customer.shippingAddress.street || '',
+        city: customer.shippingAddress.city || '',
+        state: customer.shippingAddress.state || '',
+        zip: customer.shippingAddress.zip || '',
+        country: customer.shippingAddress.country || 'US'
+      });
+    }
+    setIsEditing(false);
+  };
 
   // Calculate totals
   const totalSpent = orders.reduce((sum, o) => sum + o.total_amount, 0);
@@ -154,23 +285,225 @@ export function CustomerDetailPage({ customerId, onViewOrder }: CustomerDetailPa
           </Card>
 
           {/* Location */}
-          {(customer.city || customer.state) && (
-            <Card className="bg-card border-border">
-              <CardHeader>
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-medium flex items-center gap-2">
                   <MapPin className="w-4 h-4" weight="bold" />
                   Location
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <p>
-                  {customer.city && customer.state
-                    ? `${customer.city}, ${customer.state}`
-                    : customer.city || customer.state}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+                {!isEditing ? (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <PencilSimple className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleSave}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={handleCancel}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="text-sm space-y-4">
+              {!isEditing ? (
+                <>
+                  {/* View Mode - Billing Address */}
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase mb-1">Billing Address</p>
+                    {customer?.billingAddress ? (
+                      <>
+                        <p className="text-foreground">{customer.billingAddress.street || '—'}</p>
+                        <p className="text-muted-foreground">
+                          {customer.billingAddress.city}, {customer.billingAddress.state} {customer.billingAddress.zip}
+                        </p>
+                        {customer.billingAddress.country && customer.billingAddress.country !== 'US' && (
+                          <p className="text-muted-foreground">{customer.billingAddress.country}</p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        {customer?.city && customer?.state
+                          ? `${customer.city}, ${customer.state}`
+                          : customer?.city || customer?.state || '—'}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* View Mode - Shipping Address (if different) */}
+                  {customer?.shippingAddress && customer.shippingAddress.street !== customer?.billingAddress?.street && (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase mb-1">Shipping Address</p>
+                      <p className="text-foreground">{customer.shippingAddress.street}</p>
+                      <p className="text-muted-foreground">
+                        {customer.shippingAddress.city}, {customer.shippingAddress.state} {customer.shippingAddress.zip}
+                      </p>
+                      {customer.shippingAddress.country && customer.shippingAddress.country !== 'US' && (
+                        <p className="text-muted-foreground">{customer.shippingAddress.country}</p>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Edit Mode - Billing Address */}
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase mb-2">Billing Address</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs text-muted-foreground uppercase block mb-1">Street Address</label>
+                        <input
+                          id="billing-address-autocomplete"
+                          type="text"
+                          value={billingAddress.street}
+                          onChange={(e) => setBillingAddress({...billingAddress, street: e.target.value})}
+                          placeholder="Start typing address..."
+                          className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase block mb-1">City</label>
+                          <input
+                            type="text"
+                            value={billingAddress.city}
+                            onChange={(e) => setBillingAddress({...billingAddress, city: e.target.value})}
+                            className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase block mb-1">State</label>
+                          <input
+                            type="text"
+                            value={billingAddress.state}
+                            onChange={(e) => setBillingAddress({...billingAddress, state: e.target.value})}
+                            className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase block mb-1">ZIP Code</label>
+                          <input
+                            type="text"
+                            value={billingAddress.zip}
+                            onChange={(e) => setBillingAddress({...billingAddress, zip: e.target.value})}
+                            className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase block mb-1">Country</label>
+                          <input
+                            type="text"
+                            value={billingAddress.country}
+                            onChange={(e) => setBillingAddress({...billingAddress, country: e.target.value})}
+                            placeholder="US"
+                            className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shipping same as billing checkbox */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={shippingSameAsBilling}
+                        onChange={(e) => setShippingSameAsBilling(e.target.checked)}
+                        className="rounded bg-secondary border-input"
+                      />
+                      Shipping address same as billing
+                    </label>
+                  </div>
+
+                  {/* Edit Mode - Shipping Address */}
+                  {!shippingSameAsBilling && (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase mb-2">Shipping Address</p>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase block mb-1">Street Address</label>
+                          <input
+                            id="shipping-address-autocomplete"
+                            type="text"
+                            value={shippingAddress.street}
+                            onChange={(e) => setShippingAddress({...shippingAddress, street: e.target.value})}
+                            placeholder="Start typing address..."
+                            className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-muted-foreground uppercase block mb-1">City</label>
+                            <input
+                              type="text"
+                              value={shippingAddress.city}
+                              onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})}
+                              className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-muted-foreground uppercase block mb-1">State</label>
+                            <input
+                              type="text"
+                              value={shippingAddress.state}
+                              onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})}
+                              className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs text-muted-foreground uppercase block mb-1">ZIP Code</label>
+                            <input
+                              type="text"
+                              value={shippingAddress.zip}
+                              onChange={(e) => setShippingAddress({...shippingAddress, zip: e.target.value})}
+                              className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-muted-foreground uppercase block mb-1">Country</label>
+                            <input
+                              type="text"
+                              value={shippingAddress.country}
+                              onChange={(e) => setShippingAddress({...shippingAddress, country: e.target.value})}
+                              placeholder="US"
+                              className="w-full bg-secondary border border-input rounded px-3 py-2 text-foreground"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Stats */}
           <Card className="bg-card border-border">
