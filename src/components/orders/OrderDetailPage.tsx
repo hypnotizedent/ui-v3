@@ -720,10 +720,3 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
     </div>
   );
 }
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
