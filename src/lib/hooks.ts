@@ -369,24 +369,27 @@ export function useOrderDetail(visualId: string | null) {
             name: li.mockup.name,
             thumbnail_url: li.mockup.thumbnail_url || li.mockup.thumbnailUrl || null,
           } : null,
-          imprints: (li.imprints || []).map((imp: any) => ({
-            id: imp.id,
-            location: imp.location || null,
-            decorationType: imp.decorationType || imp.decoration_type || null,
-            description: imp.description || null,
-            colorCount: imp.colorCount || imp.color_count || null,
-            colors: imp.colors || null,
-            width: imp.width || null,
-            height: imp.height || null,
-            hasUnderbase: imp.hasUnderbase || imp.has_underbase || null,
-            stitchCount: imp.stitchCount || imp.stitch_count || null,
-            mockups: (imp.mockups || []).map((m: any) => ({
-              id: m.id,
-              url: m.url,
-              name: m.name || 'Mockup',
-              thumbnail_url: m.thumbnail_url || m.thumbnailUrl || null,
-            })),
-          })),
+          imprints: (li.imprints || []).map((imp: any) => {
+            console.log('🔍 Mapping imprint:', imp);
+            return {
+              id: imp.id,
+              location: imp.location || null,
+              decorationType: imp.decorationType || imp.decoration_type || null,
+              description: imp.description || null,
+              colorCount: imp.colorCount || imp.color_count || null,
+              colors: imp.colors || null,
+              width: imp.width || null,
+              height: imp.height || null,
+              hasUnderbase: imp.hasUnderbase || imp.has_underbase || null,
+              stitchCount: imp.stitchCount || imp.stitch_count || null,
+              mockups: (imp.mockups || []).map((m: any) => ({
+                id: m.id,
+                url: m.url,
+                name: m.name || 'Mockup',
+                thumbnail_url: m.thumbnail_url || m.thumbnailUrl || null,
+              })),
+            };
+          }),
         })),
       }
 
