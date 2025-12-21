@@ -165,15 +165,15 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
                 onClick={() => onViewCustomer(String(customer.id))}
                 className="bg-card/50 hover:bg-card/80 border-border/50 cursor-pointer transition-all hover:border-border overflow-hidden group"
               >
-                <CardContent className="px-3 py-2.5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                <CardContent className="px-2.5 py-1.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <h3 className="text-sm font-medium text-foreground truncate">
                             {customer.name}
                           </h3>
-                          <Badge className={`${getTierColor(customer.tier)} uppercase text-[10px] font-semibold px-1.5 py-0 h-4`}>
+                          <Badge className={`${getTierColor(customer.tier)} uppercase text-[10px] font-semibold px-1 py-0 h-3.5`}>
                             {customer.tier}
                           </Badge>
                         </div>
@@ -185,23 +185,23 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-6 flex-shrink-0">
+                    <div className="flex items-center gap-4 flex-shrink-0">
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Revenue</p>
-                        <p className="text-sm font-semibold text-foreground">
+                        <p className="text-[10px] text-muted-foreground">Revenue</p>
+                        <p className="text-xs font-semibold text-foreground">
                           ${customer.total_revenue.toFixed(2)}
                         </p>
                       </div>
                       
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Orders</p>
-                        <p className="text-sm font-semibold text-foreground">
+                        <p className="text-[10px] text-muted-foreground">Orders</p>
+                        <p className="text-xs font-semibold text-foreground">
                           {customer.orders_count}
                         </p>
                       </div>
                       
                       <div className="text-right min-w-[80px]">
-                        <p className="text-xs text-muted-foreground">Last Order</p>
+                        <p className="text-[10px] text-muted-foreground">Last Order</p>
                         <p className="text-xs font-medium text-foreground">
                           {lastOrderDate}
                         </p>
