@@ -21,8 +21,8 @@ import {
   File,
   DotsThree
 } from '@phosphor-icons/react';
-import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel, getMethodLabel } from '@/lib/helpers';
-import { SizeBreakdown, ImprintMethod } from '@/lib/types';
+import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
+import { SizeBreakdown } from '@/lib/types';
 import { ImageModal } from '@/components/shared/ImageModal';
 
 // Component for rendering PDF thumbnail with fallback
@@ -139,16 +139,6 @@ function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): SizeBreakdown {
     '2XL': sizes.xxl || 0,
     '3XL': sizes.xxxl || 0,
   };
-}
-
-// Infer imprint method from order status/category
-function inferImprintMethod(status: string): ImprintMethod {
-  const normalized = status.toLowerCase();
-  if (normalized.includes('embroid')) return 'embroidery';
-  if (normalized.includes('dtg')) return 'dtg';
-  if (normalized.includes('vinyl')) return 'vinyl';
-  if (normalized.includes('digital') || normalized.includes('transfer')) return 'digital-transfer';
-  return 'screen-print';
 }
 
 interface OrderDetailPageProps {
@@ -346,7 +336,15 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        
+        <Separator className="my-0" />
+        
+        <CardContent className="pt-6 space-y-4">
+          {/* Line Items Section Header */}
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-base font-medium">Line Items</h3>
+          </div>
+          
           {order.lineItems.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-4">
               No line items
@@ -375,6 +373,21 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
               ));
             })()
           )}
+          
+          {/* Add Line Item Button */}
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                // TODO: Implement add line item functionality
+              }}
+            >
+              <Package className="w-4 h-4" weight="bold" />
+              Add Line Item
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -511,8 +524,6 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
   const total = item.totalQuantity;
   const hasOtherSizes = (item.sizes.xxxxl || 0) + (item.sizes.xxxxxl || 0) + (item.sizes.other || 0) > 0;
 
-  const imprintMethod = inferImprintMethod(orderStatus);
-
   const lineItemMockups = item.mockup ? [item.mockup] : [];
   const allLineItemMockups = lineItemMockups.sort((a, b) => {
     const aIsPdf = a.url?.toLowerCase().endsWith('.pdf');
@@ -628,17 +639,18 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
           <Printer className="w-3 h-3" weight="bold" />
-          Imprint Mockups
+          Imprints
         </p>
-        <div className="p-4 bg-card rounded-lg border border-border">
-          <div className="flex flex-col gap-4">
-            {/* Imprint Mockup Thumbnails - Show ALL mockups in a grid */}
-            {imprintMockups.length > 0 ? (
-              <div className="flex gap-3 flex-wrap">
-                {imprintMockups.map((mockup, idx) => (
-                  isPdfUrl(mockup.url) ? (
+        
+        {/* Multiple imprint cards */}
+        {imprintMockups.length > 0 ? (
+          imprintMockups.map((mockup, mockupIdx) => (
+            <div key={mockup.id} className="p-4 bg-card rounded-lg border border-border">
+              <div className="flex flex-col gap-3">
+                {/* Imprint Mockup Thumbnail */}
+                <div className="flex gap-3">
+                  {isPdfUrl(mockup.url) ? (
                     <PdfThumbnail
-                      key={mockup.id}
                       thumbnailUrl={mockup.thumbnail_url}
                       pdfUrl={mockup.url}
                       name={mockup.name || 'Imprint mockup'}
@@ -646,8 +658,7 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
                     />
                   ) : (
                     <button
-                      key={mockup.id}
-                      onClick={() => onImageClick?.(imprintMockups.filter(m => !isPdfUrl(m.url)), idx)}
+                      onClick={() => onImageClick?.([mockup], 0)}
                       className="flex-shrink-0 cursor-pointer group"
                     >
                       <img
@@ -659,27 +670,39 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
                         }}
                       />
                     </button>
-                  )
-                ))}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <div className="text-center">
-                  <Image className="w-12 h-12 mx-auto mb-2 opacity-30" weight="duotone" />
-                  <p className="text-sm">No imprint mockups available</p>
+                  )}
+                  <div className="flex-1 flex items-center">
+                    <p className="text-sm text-muted-foreground">
+                      {mockup.name || `Imprint ${mockupIdx + 1}`}
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                Front
-              </Badge>
-              <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
-                {getMethodLabel(imprintMethod)}
-              </Badge>
+            </div>
+          ))
+        ) : (
+          <div className="p-4 bg-card rounded-lg border border-border">
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <div className="text-center">
+                <Image className="w-12 h-12 mx-auto mb-2 opacity-30" weight="duotone" />
+                <p className="text-sm">No imprints available</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        
+        {/* Add Imprint Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => {
+            // TODO: Implement add imprint functionality
+          }}
+        >
+          <Printer className="w-4 h-4" weight="bold" />
+          Add Imprint
+        </Button>
       </div>
     </div>
   );
