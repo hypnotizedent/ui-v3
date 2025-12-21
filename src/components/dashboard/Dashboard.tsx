@@ -67,8 +67,8 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
       </div>
 
       <Card className="bg-card/50 border-border/50">
-        <CardContent className="px-4 pt-1.5 pb-2">
-          <div className="flex items-center justify-between mb-2">
+        <CardContent className="px-4 pt-2 pb-2">
+          <div className="flex items-center justify-between mb-4">
             <button className="bg-secondary/50 hover:bg-secondary text-secondary-foreground text-xs font-medium px-4 py-1 rounded-full transition-colors">
               All Orders
             </button>
