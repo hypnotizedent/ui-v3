@@ -39,8 +39,9 @@ export interface APIOrder {
   artwork_count: number;
 }
 
-export type ImprintLocation = 'Front' | 'Back' | 'Left Chest' | 'Right Sleeve' | 'Left Sleeve' | 'Neck';
-export type ImprintMethod = 'screen-print' | 'dtg' | 'embroidery' | 'vinyl' | 'digital-transfer';
+export type ImprintLocation = 'Front' | 'Back' | 'Left Chest' | 'Right Sleeve' | 'Left Sleeve' | 'Neck' | 'Right Chest' | 'Full Front' | 'Full Back';
+export type ImprintMethod = 'screen-print' | 'dtg' | 'embroidery' | 'vinyl' | 'digital-transfer' | 'heat-transfer';
+export type SupplierType = 'ss' | 'sanmar' | 'ascolour' | 'manual';
 
 export interface Artwork {
   id: string;
@@ -62,7 +63,19 @@ export interface Imprint {
   width: number;
   height: number;
   artwork: Artwork | null;
+  mockupUrl?: string;
+  artworkUrl?: string;
   setup_fee: number;
+}
+
+export interface SupplierProduct {
+  sku: string;
+  supplier: SupplierType;
+  styleName: string;
+  colors: { name: string; hex: string }[];
+  sizes: string[];
+  basePrice: number;
+  imageUrl?: string;
 }
 
 export interface SizeBreakdown {
@@ -78,14 +91,26 @@ export interface SizeBreakdown {
 export interface LineItem {
   id: string;
   order_id: string;
+  position: number;
+  groupId?: string;
   product_name: string;
   product_sku: string;
   product_color: string;
+  supplier?: SupplierType;
+  styleName?: string;
   sizes: SizeBreakdown;
   quantity: number;
   unit_price: number;
   subtotal: number;
+  mockupUrl?: string;
   imprints: Imprint[];
+}
+
+export interface LineItemGroup {
+  id: string;
+  name: string;
+  position: number;
+  lineItemIds: string[];
 }
 
 export interface Order {
@@ -93,11 +118,14 @@ export interface Order {
   visual_id: string;
   customer_id: string;
   customer_name: string;
+  customer?: Customer;
   status: OrderStatus;
   line_items: LineItem[];
+  lineItemGroups?: LineItemGroup[];
   subtotal: number;
   tax: number;
   total: number;
+  balance: number;
   due_date: string;
   created_at: string;
   production_notes: string;

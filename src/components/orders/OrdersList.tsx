@@ -102,10 +102,16 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
             <Warning size={48} className="mx-auto mb-4 text-destructive" />
             <h3 className="text-lg font-semibold mb-2">Failed to Load Orders</h3>
             <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-            <Button onClick={() => refetch()} variant="outline" className="gap-2">
-              <ArrowClockwise size={16} />
-              Try Again
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => refetch()} variant="outline" className="gap-2">
+                <ArrowClockwise size={16} />
+                Try Again
+              </Button>
+              <Button onClick={() => onViewOrder('demo')} variant="default" className="gap-2">
+                <Package size={16} />
+                View Demo Order
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

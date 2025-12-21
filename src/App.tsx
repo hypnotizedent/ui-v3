@@ -5,7 +5,8 @@ import { useOrders, useCustomers } from '@/lib/hooks';
 import { type OrderStatus as ApiOrderStatus } from '@/lib/api-adapter';
 import { Dashboard } from '@/components/dashboard/Dashboard';
 import { OrdersList } from '@/components/orders/OrdersList';
-import { OrderDetailPage } from '@/components/orders/OrderDetailPage';
+import { OrderDetailPageNew } from '@/components/orders/OrderDetailPageNew';
+import { OrderDetailPageDemo } from '@/components/orders/OrderDetailPageDemo';
 import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
 import { Button } from '@/components/ui/button';
@@ -170,8 +171,13 @@ function App() {
           />
         );
       case 'order-detail':
-        return selectedOrderId ? (
-          <OrderDetailPage
+        // Use demo page if selectedOrderId is 'demo', otherwise use real page
+        return selectedOrderId === 'demo' ? (
+          <OrderDetailPageDemo
+            onViewCustomer={handleViewCustomer}
+          />
+        ) : selectedOrderId ? (
+          <OrderDetailPageNew
             visualId={selectedOrderId}
             onViewCustomer={handleViewCustomer}
           />
