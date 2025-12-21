@@ -324,12 +324,6 @@ function App() {
                 </svg>
                 New Order
               </Button>
-            </div>
-          </div>
-        </header>
-        
-        <main className="p-6">
-          {renderView()}
         </main>
       </div>
     </div>
