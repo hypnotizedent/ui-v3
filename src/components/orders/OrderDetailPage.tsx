@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks';
+import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import {
   FileText,
@@ -19,11 +21,16 @@ import {
   FilePdf,
   FileImage,
   File,
-  DotsThree
+  DotsThree,
+  Copy,
+  Trash,
+  Columns
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
 import { SizeBreakdown } from '@/lib/types';
 import { ImageModal } from '@/components/shared/ImageModal';
+import { ManageColumnsModal, ColumnConfig, DEFAULT_COLUMN_CONFIG } from './ManageColumnsModal';
+import { toast } from 'sonner';
 
 // Component for rendering PDF thumbnail with fallback
 function PdfThumbnail({ 
@@ -129,7 +136,7 @@ function getFileIcon(filename: string) {
 }
 
 // Map API size keys to SizeBreakdown format
-function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): SizeBreakdown {
+function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): Record<string, number> {
   return {
     XS: sizes.xs || 0,
     S: sizes.s || 0,
@@ -138,6 +145,9 @@ function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): SizeBreakdown {
     XL: sizes.xl || 0,
     '2XL': sizes.xxl || 0,
     '3XL': sizes.xxxl || 0,
+    '4XL': sizes.xxxxl || 0,
+    '5XL': sizes.xxxxxl || 0,
+    '6XL': 0,
   };
 }
 
@@ -151,6 +161,9 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
   const [modalIndex, setModalIndex] = useState(0);
+  const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
+  
+  const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -369,6 +382,8 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                   orderStatus={order.status}
                   imprintMockups={imprintMockups}
                   onImageClick={openImageModal}
+                  columnConfig={currentColumnConfig}
+                  onConfigChange={setColumnConfig}
                 />
               ));
             })()
@@ -515,14 +530,24 @@ interface LineItemCardProps {
   orderStatus: string;
   imprintMockups: Array<{ id: string; url: string; name: string; thumbnail_url?: string | null }>;
   onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
+  columnConfig: ColumnConfig;
+  onConfigChange: (config: ColumnConfig) => void;
 }
 
-const SIZE_LABELS: (keyof SizeBreakdown)[] = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const ADULT_SIZE_LABELS = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'] as const;
 
-function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }: LineItemCardProps) {
+function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick, columnConfig, onConfigChange }: LineItemCardProps) {
   const sizes = mapSizesToGrid(item.sizes);
   const total = item.totalQuantity;
-  const hasOtherSizes = (item.sizes.xxxxl || 0) + (item.sizes.xxxxxl || 0) + (item.sizes.other || 0) > 0;
+  const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
+  
+  const handleDuplicate = () => {
+    toast.success('Line item duplicated');
+  };
+  
+  const handleDelete = () => {
+    toast.success('Line item deleted');
+  };
 
   const lineItemMockups = item.mockup ? [item.mockup] : [];
   const allLineItemMockups = lineItemMockups.sort((a, b) => {
@@ -534,39 +559,65 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
   });
 
   return (
-    <div className="p-4 bg-secondary/30 rounded-lg space-y-4">
-      <div className="flex items-start gap-4">
-        {/* Mockup Thumbnail */}
-        {allLineItemMockups.length > 0 && allLineItemMockups[0] ? (
-          isPdfUrl(allLineItemMockups[0].url) ? (
-            <PdfThumbnail
-              thumbnailUrl={allLineItemMockups[0].thumbnail_url}
-              pdfUrl={allLineItemMockups[0].url}
-              name={allLineItemMockups[0].name}
-              size="large"
-            />
-          ) : (
-            <button
-              onClick={() => onImageClick?.(allLineItemMockups, 0)}
-              className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
-            >
-              <img
-                src={allLineItemMockups[0].url}
-                alt={allLineItemMockups[0].name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            </button>
-          )
-        ) : (
-          <div className="flex-shrink-0 w-20 h-20 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
-            <Image className="w-6 h-6 text-muted-foreground/50" weight="duotone" />
-          </div>
-        )}
+    <>
+      <div className="p-4 bg-secondary/30 rounded-lg space-y-4 relative">
+        {/* 3-dot menu */}
+        <div className="absolute top-3 right-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <DotsThree size={20} weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleDuplicate} className="gap-2 cursor-pointer">
+                <Copy className="w-4 h-4" weight="bold" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDelete} className="gap-2 cursor-pointer text-destructive">
+                <Trash className="w-4 h-4" weight="bold" />
+                Delete
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setManageColumnsOpen(true)} className="gap-2 cursor-pointer">
+                <Columns className="w-4 h-4" weight="bold" />
+                Manage Columns
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-        <div className="flex-1 min-w-0 flex items-start justify-between">
+        <div className="flex items-start gap-4">
+          {/* Mockup Thumbnail */}
+          {allLineItemMockups.length > 0 && allLineItemMockups[0] ? (
+            isPdfUrl(allLineItemMockups[0].url) ? (
+              <PdfThumbnail
+                thumbnailUrl={allLineItemMockups[0].thumbnail_url}
+                pdfUrl={allLineItemMockups[0].url}
+                name={allLineItemMockups[0].name}
+                size="large"
+              />
+            ) : (
+              <button
+                onClick={() => onImageClick?.(allLineItemMockups, 0)}
+                className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
+              >
+                <img
+                  src={allLineItemMockups[0].url}
+                  alt={allLineItemMockups[0].name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </button>
+            )
+          ) : (
+            <div className="flex-shrink-0 w-20 h-20 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
+              <Image className="w-6 h-6 text-muted-foreground/50" weight="duotone" />
+            </div>
+          )}
+
+        <div className="flex-1 min-w-0 flex items-start justify-between pr-12">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs bg-muted px-2 py-0.5 rounded">#{index + 1}</span>
@@ -575,16 +626,25 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
               </h4>
             </div>
             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground flex-wrap">
-              {item.styleNumber && <span>{item.styleNumber}</span>}
-              {item.styleNumber && item.color && <span>•</span>}
-              {item.color && <span>{item.color}</span>}
-              {item.category && (
+              {columnConfig.itemNumber && item.styleNumber && <span>{item.styleNumber}</span>}
+              {columnConfig.itemNumber && columnConfig.color && item.styleNumber && item.color && <span>•</span>}
+              {columnConfig.color && item.color && <span>{item.color}</span>}
+              {columnConfig.category && item.category && (
                 <>
                   <span>•</span>
                   <Badge variant="outline" className="text-xs">
                     {item.category}
                   </Badge>
                 </>
+              )}
+              {!columnConfig.itemNumber && !columnConfig.color && !columnConfig.category && item.styleNumber && (
+                <span>{item.styleNumber}</span>
+              )}
+              {!columnConfig.itemNumber && !columnConfig.color && !columnConfig.category && item.styleNumber && item.color && (
+                <span>•</span>
+              )}
+              {!columnConfig.itemNumber && !columnConfig.color && !columnConfig.category && item.color && (
+                <span>{item.color}</span>
               )}
             </div>
           </div>
@@ -600,7 +660,7 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
       {/* Size Grid */}
       <div className="overflow-x-auto">
         <div className="inline-flex gap-1 text-xs">
-          {SIZE_LABELS.map(size => (
+          {ADULT_SIZE_LABELS.filter(size => columnConfig.sizes.adult[size as keyof typeof columnConfig.sizes.adult]).map(size => (
             <div
               key={size}
               className="flex flex-col items-center min-w-[40px]"
@@ -619,20 +679,17 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
               </span>
             </div>
           ))}
-          <div className="flex flex-col items-center min-w-[50px] border-l border-border pl-1 ml-1">
-            <span className="text-muted-foreground font-medium px-2 py-1">
-              Total
-            </span>
-            <span className="px-2 py-1 font-semibold">
-              {total}
-            </span>
-          </div>
+          {columnConfig.quantity && (
+            <div className="flex flex-col items-center min-w-[50px] border-l border-border pl-1 ml-1">
+              <span className="text-muted-foreground font-medium px-2 py-1">
+                Total
+              </span>
+              <span className="px-2 py-1 font-semibold">
+                {total}
+              </span>
+            </div>
+          )}
         </div>
-        {hasOtherSizes && (
-          <p className="text-xs text-muted-foreground mt-1">
-            + other sizes included
-          </p>
-        )}
       </div>
 
       {/* Imprints Section */}
@@ -705,6 +762,14 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick }
           )}
         </div>
       </div>
-    </div>
+      </div>
+
+      <ManageColumnsModal
+        open={manageColumnsOpen}
+        onOpenChange={setManageColumnsOpen}
+        config={columnConfig}
+        onChange={onConfigChange}
+      />
+    </>
   );
 }
