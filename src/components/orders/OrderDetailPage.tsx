@@ -292,6 +292,208 @@ function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploa
   );
 }
 
+// Add Line Item dialog component
+interface AddLineItemDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (lineItem: Partial<OrderDetailLineItem>) => void;
+}
+
+function AddLineItemDialog({ open, onOpenChange, onAdd }: AddLineItemDialogProps) {
+  const [description, setDescription] = useState('');
+  const [styleNumber, setStyleNumber] = useState('');
+  const [color, setColor] = useState('');
+  const [unitCost, setUnitCost] = useState('0');
+
+  const handleAdd = () => {
+    onAdd({
+      description,
+      styleNumber,
+      color,
+      unitCost: parseFloat(unitCost) || 0,
+      totalQuantity: 0,
+      totalCost: 0,
+      sizes: { xs: 0, s: 0, m: 0, l: 0, xl: 0, xxl: 0, xxxl: 0, xxxxl: 0, xxxxxl: 0, other: 0 },
+      imprints: []
+    });
+    setDescription('');
+    setStyleNumber('');
+    setColor('');
+    setUnitCost('0');
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
+    setDescription('');
+    setStyleNumber('');
+    setColor('');
+    setUnitCost('0');
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Line Item</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Description *</label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., Gildan 5000 T-Shirt"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Style Number</label>
+              <Input
+                value={styleNumber}
+                onChange={(e) => setStyleNumber(e.target.value)}
+                placeholder="e.g., G5000"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Color</label>
+              <Input
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="e.g., Black"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Unit Cost</label>
+            <Input
+              type="number"
+              step="0.01"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            You can add sizes and imprints after creating the line item.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleAdd} disabled={!description.trim()}>
+            <Plus className="w-4 h-4 mr-1.5" weight="bold" />
+            Add Line Item
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Add Imprint dialog component
+interface AddImprintDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (imprint: Partial<LineItemImprint>) => void;
+  lineItemDescription?: string;
+}
+
+function AddImprintDialog({ open, onOpenChange, onAdd, lineItemDescription }: AddImprintDialogProps) {
+  const [location, setLocation] = useState('');
+  const [decorationType, setDecorationType] = useState('');
+  const [description, setDescription] = useState('');
+  const [colors, setColors] = useState('');
+
+  const handleAdd = () => {
+    onAdd({
+      location,
+      decorationType,
+      description,
+      colors,
+      colorCount: 0,
+      width: null,
+      height: null,
+      mockups: []
+    });
+    setLocation('');
+    setDecorationType('');
+    setDescription('');
+    setColors('');
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
+    setLocation('');
+    setDecorationType('');
+    setDescription('');
+    setColors('');
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            Add Imprint {lineItemDescription && `to ${lineItemDescription}`}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Location *</label>
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., Front, Back"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Type</label>
+              <Input
+                value={decorationType}
+                onChange={(e) => setDecorationType(e.target.value)}
+                placeholder="e.g., Screen Print"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Description</label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe the imprint details..."
+              className="min-h-[80px] resize-none"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Colors</label>
+            <Input
+              value={colors}
+              onChange={(e) => setColors(e.target.value)}
+              placeholder="e.g., Black, White"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            You can upload mockups and add more details after creating the imprint.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleAdd} disabled={!location.trim()}>
+            <Plus className="w-4 h-4 mr-1.5" weight="bold" />
+            Add Imprint
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 interface LineItemsTableProps {
   items: OrderDetailLineItem[];
   onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
@@ -747,6 +949,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
   const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
   const [modalIndex, setModalIndex] = useState(0);
   const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
+  const [addLineItemOpen, setAddLineItemOpen] = useState(false);
   
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
 
@@ -758,6 +961,11 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
     setModalImages(images);
     setModalIndex(index);
     setModalOpen(true);
+  };
+
+  const handleAddLineItem = (lineItem: Partial<OrderDetailLineItem>) => {
+    toast.success(`Line item "${lineItem.description}" added`);
+    // In a real implementation, this would add the line item to the order
   };
 
   if (loading) {
@@ -960,9 +1168,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
               variant="outline"
               size="sm"
               className="gap-2 h-8"
-              onClick={() => {
-                // TODO: Implement add line item functionality
-              }}
+              onClick={() => setAddLineItemOpen(true)}
             >
               <Package className="w-4 h-4" weight="bold" />
               Add Line Item
@@ -1107,6 +1313,12 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onNavigate={setModalIndex}
+      />
+
+      <AddLineItemDialog
+        open={addLineItemOpen}
+        onOpenChange={setAddLineItemOpen}
+        onAdd={handleAddLineItem}
       />
     </div>
   );
@@ -1334,6 +1546,7 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
   const [editedSizes, setEditedSizes] = useState(mapSizesToGrid(item.sizes));
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   const [mockupUploadOpen, setMockupUploadOpen] = useState(false);
+  const [addImprintOpen, setAddImprintOpen] = useState(false);
   
   const sizes = isEditing ? editedSizes : mapSizesToGrid(item.sizes);
   const total = Object.values(sizes).reduce((sum, qty) => sum + qty, 0);
@@ -1371,6 +1584,11 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
   const handleMockupUpload = (files: File[]) => {
     toast.success(`${files.length} mockup${files.length > 1 ? 's' : ''} uploaded to line item`);
     // In a real implementation, this would upload the files and update the line item
+  };
+
+  const handleAddImprint = (imprint: Partial<LineItemImprint>) => {
+    toast.success(`Imprint "${imprint.location}" added to line item`);
+    // In a real implementation, this would add the imprint to the line item
   };
 
   const lineItemMockups = item.mockup ? [item.mockup] : [];
@@ -1636,9 +1854,7 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
               variant="ghost"
               size="sm"
               className="h-8 gap-2 border border-dashed border-border hover:border-primary hover:bg-primary/5"
-              onClick={() => {
-                toast.info('Add imprint functionality coming soon');
-              }}
+              onClick={() => setAddImprintOpen(true)}
             >
               <Printer className="w-3.5 h-3.5" weight="bold" />
               Add Imprint
@@ -1652,6 +1868,13 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
         onOpenChange={setMockupUploadOpen}
         onUpload={handleMockupUpload}
         title={`Upload Mockups for ${item.description || 'Line Item'}`}
+      />
+
+      <AddImprintDialog
+        open={addImprintOpen}
+        onOpenChange={setAddImprintOpen}
+        onAdd={handleAddImprint}
+        lineItemDescription={item.description || item.styleNumber || undefined}
       />
 
       <ManageColumnsModal
