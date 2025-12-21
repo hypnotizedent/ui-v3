@@ -70,12 +70,13 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
       <Card className="bg-card/50 border-border/50">
         <CardContent className="px-4 pt-2 pb-2">
           <div className="flex items-center justify-between mb-4">
-            <button 
+            <Badge 
+              variant="secondary"
               onClick={onNavigateToOrders}
-              className="border border-border/60 hover:border-primary/50 hover:bg-primary/5 text-foreground/70 hover:text-foreground text-xs font-medium px-5 py-1.5 rounded-full transition-all hover:scale-[1.02] active:scale-100"
+              className="text-xs font-medium px-1.5 py-0 cursor-pointer hover:bg-secondary/80 transition-colors"
             >
               All Orders
-            </button>
+            </Badge>
           </div>
 
           {activeJobs.length === 0 ? (
