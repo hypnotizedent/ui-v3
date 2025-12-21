@@ -100,7 +100,7 @@ function App() {
     due_date: o.due_date,
     created_at: o.created_at,
     production_notes: o.production_note,
-    nickname: o.nickname
+    nickname: o.nickname || undefined
   }));
 
   // Transform API customers to match component types

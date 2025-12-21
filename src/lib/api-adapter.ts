@@ -102,7 +102,7 @@ export interface Order {
   id: string
   visual_id: string
   printavo_id: number | null
-  nickname: string
+  nickname: string | null
   status: OrderStatus
   customer_id: string
   customer: Customer
@@ -311,7 +311,7 @@ function transformOrder(apiOrder: APIOrder): Order {
     id: String(apiOrder.id),
     visual_id: apiOrder.visual_id || String(apiOrder.id),
     printavo_id: apiOrder.printavo_id,
-    nickname: apiOrder.nickname || '',
+    nickname: apiOrder.nickname || null,
     status,
     customer_id: String(apiOrder.customer_id || 0),
     customer,
