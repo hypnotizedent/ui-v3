@@ -122,7 +122,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -130,11 +130,11 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
             placeholder="Search by order #, customer, or nickname..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-card border-border"
+            className="pl-9 bg-card/50 border-border/50"
           />
         </div>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full sm:w-[180px] bg-card border-border">
+          <SelectTrigger className="w-full sm:w-[200px] bg-card/50 border-border/50">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -152,7 +152,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
 
       {/* Orders Table */}
       {filteredOrders.length === 0 ? (
-        <Card className="bg-card border-border">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
           <CardContent className="py-12 text-center">
             <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" weight="duotone" />
             <p className="text-muted-foreground">
@@ -161,16 +161,16 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Order</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Customer</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Due</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Total</th>
+                <tr className="border-b border-border/50 bg-secondary/20">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Order</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Customer</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Status</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Due</th>
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -178,9 +178,9 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
                   <tr
                     key={order.id}
                     onClick={() => onViewOrder(order.visual_id)}
-                    className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors"
+                    className="border-b border-border/30 hover:bg-secondary/20 cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <div>
                         <span className="font-medium">#{order.visual_id}</span>
                         {order.order_nickname && (
@@ -190,19 +190,19 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm">{order.customer_name}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4 text-sm">{order.customer_name}</td>
+                    <td className="px-5 py-4">
                       <Badge
                         variant="secondary"
-                        className={`${getAPIStatusColor(order.printavo_status_name)} font-medium text-xs`}
+                        className={`${getAPIStatusColor(order.printavo_status_name)} font-medium text-xs rounded-full`}
                       >
                         {order.printavo_status_name}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-5 py-4 text-sm text-muted-foreground">
                       {order.due_date ? formatDate(order.due_date) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right font-medium">
+                    <td className="px-5 py-4 text-right font-medium">
                       {formatCurrency(order.total_amount)}
                     </td>
                   </tr>

@@ -198,15 +198,15 @@ function App() {
   
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="border-b border-border/50 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
             {showBackButton && (
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleBack}
-                className="gap-1.5"
+                className="gap-2 hover:bg-secondary/80 -ml-2"
               >
                 <ArrowLeft weight="bold" className="w-4 h-4" />
                 Back
@@ -217,12 +217,12 @@ function App() {
             </h1>
           </div>
           
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-2">
             <Button 
               variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => setCurrentView('dashboard')}
-              className="gap-1.5"
+              className="gap-2 hover:bg-secondary/80"
             >
               <ChartLine weight="bold" className="w-4 h-4" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -231,7 +231,7 @@ function App() {
               variant={currentView === 'orders' || currentView === 'order-detail' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => { setCurrentView('orders'); setSelectedOrderId(null); }}
-              className="gap-1.5"
+              className="gap-2 hover:bg-secondary/80"
             >
               <Package weight="bold" className="w-4 h-4" />
               <span className="hidden sm:inline">Orders</span>
@@ -240,7 +240,7 @@ function App() {
               variant={currentView === 'customers' || currentView === 'customer-detail' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => { setCurrentView('customers'); setSelectedCustomerId(null); }}
-              className="gap-1.5"
+              className="gap-2 hover:bg-secondary/80"
             >
               <Users weight="bold" className="w-4 h-4" />
               <span className="hidden sm:inline">Customers</span>
@@ -249,7 +249,7 @@ function App() {
         </div>
       </header>
       
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-6 py-8">
         {renderView()}
       </main>
     </div>

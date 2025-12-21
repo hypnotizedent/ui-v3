@@ -10,7 +10,7 @@ export function TierBadge({ tier }: TierBadgeProps) {
   return (
     <Badge 
       variant="secondary" 
-      className={`${getTierColor(tier)} font-medium text-xs capitalize`}
+      className={`${getTierColor(tier)} font-medium text-xs capitalize rounded-full`}
     >
       {tier}
     </Badge>

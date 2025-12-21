@@ -105,7 +105,7 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
       </div>
 
       {/* Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -114,14 +114,14 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-9 bg-card border-border"
+            className="pl-9 bg-card/50 border-border/50"
           />
         </div>
-        <Button onClick={handleSearch} variant="secondary">
+        <Button onClick={handleSearch} variant="secondary" className="rounded-xl">
           Search
         </Button>
         {searchQuery && (
-          <Button onClick={handleClearSearch} variant="ghost">
+          <Button onClick={handleClearSearch} variant="ghost" className="rounded-xl">
             Clear
           </Button>
         )}
@@ -129,7 +129,7 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
 
       {/* Customers Table */}
       {customers.length === 0 ? (
-        <Card className="bg-card border-border">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
           <CardContent className="py-12 text-center">
             <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" weight="duotone" />
             <p className="text-muted-foreground">
@@ -138,17 +138,17 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-card border-border overflow-hidden">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Name</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Company</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Email</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Phone</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Location</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Orders</th>
+                <tr className="border-b border-border/50 bg-secondary/20">
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Name</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Company</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Email</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Phone</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Location</th>
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-5 py-4">Orders</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,15 +156,15 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
                   <tr
                     key={customer.id}
                     onClick={() => onViewCustomer(String(customer.id))}
-                    className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors"
+                    className="border-b border-border/30 hover:bg-secondary/20 cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <span className="font-medium">{customer.name}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-5 py-4 text-sm text-muted-foreground">
                       {customer.company || '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-5 py-4 text-sm">
                       {customer.email ? (
                         <a
                           href={`mailto:${customer.email}`}
@@ -177,15 +177,15 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
                         '—'
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-5 py-4 text-sm text-muted-foreground">
                       {customer.phone || '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-5 py-4 text-sm text-muted-foreground">
                       {customer.city && customer.state
                         ? `${customer.city}, ${customer.state}`
                         : customer.city || customer.state || '—'}
                     </td>
-                    <td className="px-4 py-3 text-right font-medium">
+                    <td className="px-5 py-4 text-right font-medium">
                       {customer.orders_count}
                     </td>
                   </tr>

@@ -87,12 +87,12 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
 
       {/* Production Stats Grid - 8 cards */}
       {productionStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
           {/* Quotes */}
-          <Card className="bg-amber-500/10 border-amber-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-amber-600 mb-2">
-                <FileText size={18} weight="fill" />
+          <Card className="bg-amber-500/10 border-amber-500/30 hover:border-amber-500/50 hover:shadow-xl hover:shadow-amber-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-amber-500 mb-2">
+                <FileText size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Quotes</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.quote.toLocaleString()}</p>
@@ -100,10 +100,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* Art */}
-          <Card className="bg-purple-500/10 border-purple-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-purple-600 mb-2">
-                <Palette size={18} weight="fill" />
+          <Card className="bg-purple-500/10 border-purple-500/30 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-purple-500 mb-2">
+                <Palette size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Art</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.art.toLocaleString()}</p>
@@ -111,10 +111,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* Screenprint */}
-          <Card className="bg-blue-500/10 border-blue-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-blue-600 mb-2">
-                <TShirt size={18} weight="fill" />
+          <Card className="bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-blue-500 mb-2">
+                <TShirt size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Screen</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.screenprint.toLocaleString()}</p>
@@ -122,10 +122,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* Embroidery */}
-          <Card className="bg-pink-500/10 border-pink-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-pink-600 mb-2">
-                <TShirt size={18} weight="fill" />
+          <Card className="bg-pink-500/10 border-pink-500/30 hover:border-pink-500/50 hover:shadow-xl hover:shadow-pink-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-pink-500 mb-2">
+                <TShirt size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Emb</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.embroidery.toLocaleString()}</p>
@@ -133,10 +133,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* DTG */}
-          <Card className="bg-cyan-500/10 border-cyan-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-cyan-600 mb-2">
-                <TShirt size={18} weight="fill" />
+          <Card className="bg-cyan-500/10 border-cyan-500/30 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-cyan-500 mb-2">
+                <TShirt size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">DTG</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.dtg.toLocaleString()}</p>
@@ -144,10 +144,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* Fulfillment */}
-          <Card className="bg-orange-500/10 border-orange-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-orange-600 mb-2">
-                <Package size={18} weight="fill" />
+          <Card className="bg-orange-500/10 border-orange-500/30 hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-orange-500 mb-2">
+                <Package size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Fulfill</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.fulfillment.toLocaleString()}</p>
@@ -155,10 +155,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* Complete */}
-          <Card className="bg-green-500/10 border-green-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-green-600 mb-2">
-                <CheckCircle size={18} weight="fill" />
+          <Card className="bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:shadow-xl hover:shadow-green-500/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-green-500 mb-2">
+                <CheckCircle size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Done</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.complete.toLocaleString()}</p>
@@ -166,10 +166,10 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </Card>
 
           {/* Total */}
-          <Card className="bg-primary/10 border-primary/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
+          <Card className="bg-primary/10 border-primary/30 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all cursor-pointer">
+            <CardContent className="p-5">
               <div className="flex items-center gap-2 text-primary mb-2">
-                <Briefcase size={18} weight="fill" />
+                <Briefcase size={20} weight="fill" />
                 <span className="text-xs font-medium uppercase tracking-wide">Total</span>
               </div>
               <p className="text-2xl font-bold">{productionStats.total.toLocaleString()}</p>
@@ -179,13 +179,13 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm hover:border-border transition-all">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               In Production
             </CardTitle>
-            <Briefcase className="w-4 h-4 text-muted-foreground" weight="bold" />
+            <Briefcase className="w-5 h-5 text-muted-foreground" weight="bold" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{inProduction}</div>
@@ -194,13 +194,13 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
             </p>
             {productionStats && (
               <div className="mt-3 flex gap-2 flex-wrap">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs rounded-full">
                   {productionStats.screenprint} screen
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs rounded-full">
                   {productionStats.embroidery} emb
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs rounded-full">
                   {productionStats.dtg} dtg
                 </Badge>
               </div>
@@ -208,12 +208,12 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm hover:border-border transition-all">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Pending Quotes
             </CardTitle>
-            <FileText className="w-4 h-4 text-muted-foreground" weight="bold" />
+            <FileText className="w-5 h-5 text-muted-foreground" weight="bold" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
@@ -224,7 +224,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
             </p>
             {productionStats && productionStats.art > 0 && (
               <div className="mt-3">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs rounded-full">
                   {productionStats.art} in art approval
                 </Badge>
               </div>
@@ -232,12 +232,12 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm hover:border-border transition-all">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Ready for Delivery
             </CardTitle>
-            <Package className="w-4 h-4 text-muted-foreground" weight="bold" />
+            <Package className="w-5 h-5 text-muted-foreground" weight="bold" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{productionStats?.fulfillment || 0}</div>
@@ -246,7 +246,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
             </p>
             {productionStats && (
               <div className="mt-3">
-                <Badge className="text-xs bg-green-600">
+                <Badge className="text-xs bg-green-600 rounded-full">
                   {productionStats.complete.toLocaleString()} completed all-time
                 </Badge>
               </div>
@@ -257,7 +257,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
 
       {/* Recent Orders & Needs Attention */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="bg-card border-border">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-base font-medium">Recent Orders</CardTitle>
           </CardHeader>
@@ -271,7 +271,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
                 <div
                   key={order.id}
                   onClick={() => onViewOrder(order.visual_id)}
-                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border/30 hover:border-border/60 cursor-pointer transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div>
@@ -300,7 +300,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
+        <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-base font-medium">Orders Needing Attention</CardTitle>
           </CardHeader>
@@ -314,7 +314,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
                 <div
                   key={order.id}
                   onClick={() => onViewOrder(order.visual_id)}
-                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 border border-border/30 hover:border-border/60 cursor-pointer transition-all"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
                       Due: {formatDate(order.due_date)}
                     </p>
                   </div>
-                  <Badge variant="outline" className="text-destructive border-destructive/50">
+                  <Badge variant="outline" className="text-destructive border-destructive/50 rounded-full">
                     {new Date(order.due_date) < new Date() ? 'Overdue' : 'Pending'}
                   </Badge>
                 </div>
