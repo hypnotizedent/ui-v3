@@ -201,11 +201,13 @@ function App() {
       {/* Sidebar */}
       <aside className="w-56 border-r border-border bg-card/30 flex flex-col fixed h-screen">
         <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-              <span className="font-black text-lg text-primary-foreground">M</span>
-            </div>
-            <span className="font-bold text-lg">MINT PRINTS</span>
+          <div className="flex items-center gap-3">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 4L8 8V16C8 21.52 11.84 26.56 16 28C20.16 26.56 24 21.52 24 16V8L16 4Z" fill="#10B981" opacity="0.9"/>
+              <circle cx="22" cy="8" r="2" fill="#10B981"/>
+              <circle cx="26" cy="6" r="1.5" fill="#10B981" opacity="0.7"/>
+            </svg>
+            <span className="font-bold text-xl tracking-wide">MINT PRINTS</span>
           </div>
         </div>
         
