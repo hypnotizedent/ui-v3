@@ -57,6 +57,8 @@ function App() {
   const { orders: apiOrders, loading: ordersLoading } = useOrders({ limit: 100 });
   const { customers: apiCustomers, loading: customersLoading } = useCustomers({ limit: 100 });
   
+  console.log('App loaded - Spark UI v2', { ordersCount: apiOrders.length, customersCount: apiCustomers.length });
+  
   // Transform API orders to match component types
   const orders = apiOrders.map(o => ({
     id: o.id,
@@ -213,6 +215,7 @@ function App() {
               <circle cx="26" cy="6" r="1" fill="#10B981"/>
             </svg>
             <span className="font-bold text-lg tracking-wide">MINT PRINTS</span>
+            <span className="text-[8px] text-muted-foreground ml-1">v2</span>
           </div>
         </div>
         

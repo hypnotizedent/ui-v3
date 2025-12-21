@@ -1018,6 +1018,11 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
   
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
 
+  // Debug logging
+  useEffect(() => {
+    console.log('OrderDetailPage mounted', { visualId, loading, error: error?.message, hasOrder: !!order });
+  }, [visualId, loading, error, order]);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [visualId]);
@@ -1116,6 +1121,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
             {order.orderNickname && (
               <span className="text-muted-foreground"> · {order.orderNickname}</span>
             )}
+            <span className="text-[10px] text-emerald-500 ml-2 font-normal">● Updated</span>
           </h2>
         </div>
         <div className="flex items-center gap-3">
