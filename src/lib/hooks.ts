@@ -211,6 +211,7 @@ export interface LineItemImprint {
   height: number | null
   hasUnderbase: boolean | null
   stitchCount: number | null
+  mockups: LineItemMockup[]
 }
 
 export interface OrderDetailLineItem {
@@ -370,6 +371,12 @@ export function useOrderDetail(visualId: string | null) {
             height: imp.height || null,
             hasUnderbase: imp.hasUnderbase || imp.has_underbase || null,
             stitchCount: imp.stitchCount || imp.stitch_count || null,
+            mockups: (imp.mockups || []).map((m: any) => ({
+              id: m.id,
+              url: m.url,
+              name: m.name || 'Mockup',
+              thumbnail_url: m.thumbnail_url || m.thumbnailUrl || null,
+            })),
           })),
         })),
       }

@@ -364,30 +364,17 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
               No line items
             </p>
           ) : (
-            (() => {
-              const imprintMockups = order.artworkFiles
-                .filter(f => f.source === 'imprintMockup')
-                .sort((a, b) => {
-                  const aIsPdf = a.url?.toLowerCase().endsWith('.pdf');
-                  const bIsPdf = b.url?.toLowerCase().endsWith('.pdf');
-                  if (aIsPdf && !bIsPdf) return 1;
-                  if (!aIsPdf && bIsPdf) return -1;
-                  return 0;
-                });
-
-              return order.lineItems.map((item, index) => (
-                <LineItemCard
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  orderStatus={order.status}
-                  imprintMockups={imprintMockups}
-                  onImageClick={openImageModal}
-                  columnConfig={currentColumnConfig}
-                  onConfigChange={setColumnConfig}
-                />
-              ));
-            })()
+            order.lineItems.map((item, index) => (
+              <LineItemCard
+                key={item.id}
+                item={item}
+                index={index}
+                orderStatus={order.status}
+                onImageClick={openImageModal}
+                columnConfig={currentColumnConfig}
+                onConfigChange={setColumnConfig}
+              />
+            ))
           )}
           
           {/* Add Line Item Button */}
@@ -529,7 +516,6 @@ interface LineItemCardProps {
   item: OrderDetailLineItem;
   index: number;
   orderStatus: string;
-  imprintMockups: Array<{ id: string; url: string; name: string; thumbnail_url?: string | null }>;
   onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
   columnConfig: ColumnConfig;
   onConfigChange: (config: ColumnConfig) => void;
@@ -537,7 +523,7 @@ interface LineItemCardProps {
 
 const ADULT_SIZE_LABELS = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'] as const;
 
-function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick, columnConfig, onConfigChange }: LineItemCardProps) {
+function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, onConfigChange }: LineItemCardProps) {
   const sizes = mapSizesToGrid(item.sizes);
   const total = item.totalQuantity;
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
@@ -700,96 +686,91 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick, 
           Imprints
         </p>
         
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {imprintMockups.length > 0 ? (
-            <>
-              {imprintMockups.map((mockup, mockupIdx) => (
-                isPdfUrl(mockup.url) ? (
-                  <PdfThumbnail
-                    key={mockup.id}
-                    thumbnailUrl={mockup.thumbnail_url}
-                    pdfUrl={mockup.url}
-                    name={mockup.name || 'Imprint mockup'}
-                    size="small"
-                    className="w-9 h-9"
-                  />
-                ) : (
-                  <button
-                    key={mockup.id}
-                    onClick={() => onImageClick?.([mockup], 0)}
-                    className="w-9 h-9 flex-shrink-0 rounded border border-border bg-muted hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer overflow-hidden"
-                    title={mockup.name || `Imprint ${mockupIdx + 1}`}
-                  >
-                    <img
-                      src={mockup.url}
-                      alt={mockup.name || 'Imprint mockup'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </button>
-                )
-              ))}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-9 h-9 border border-dashed border-border hover:border-primary hover:bg-primary/5"
-                onClick={() => {
-                  // TODO: Implement add imprint functionality
-                }}
-                title="Add Imprint"
-              >
-                <Printer className="w-3.5 h-3.5" weight="bold" />
-              </Button>
-            </>
-          ) : (
-            <div className="flex items-center gap-1.5">
-              <div className="w-9 h-9 flex-shrink-0 rounded border border-dashed border-border bg-muted/30 flex items-center justify-center">
-                <Image className="w-3.5 h-3.5 text-muted-foreground/50" weight="duotone" />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-9 h-9 border border-dashed border-border hover:border-primary hover:bg-primary/5"
-                onClick={() => {
-                  // TODO: Implement add imprint functionality
-                }}
-                title="Add Imprint"
-              >
-                <Printer className="w-3.5 h-3.5" weight="bold" />
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Imprint Details from API */}
-        {item.imprints && item.imprints.length > 0 && (
+        {/* Imprint Details with Mockups */}
+        {item.imprints && item.imprints.length > 0 ? (
           <div className="mt-2 space-y-1.5">
             {item.imprints.map((imprint) => (
-              <div key={imprint.id} className="flex items-start gap-2 p-2 bg-card/50 rounded border border-border/50">
-                <Stamp className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" weight="duotone" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-medium">
-                      {imprint.location || 'Imprint'}
-                    </span>
-                    {imprint.decorationType && (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0 bg-primary/10 text-primary">
-                        {imprint.decorationType}
-                      </Badge>
+              <div key={imprint.id} className="p-2 bg-card/50 rounded border border-border/50 space-y-1.5">
+                <div className="flex items-start gap-2">
+                  <Stamp className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" weight="duotone" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-medium">
+                        {imprint.location || 'Imprint'}
+                      </span>
+                      {imprint.decorationType && (
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 bg-primary/10 text-primary">
+                          {imprint.decorationType}
+                        </Badge>
+                      )}
+                    </div>
+                    {imprint.description && imprint.description !== imprint.location && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                        {imprint.description.split('\n').slice(1).join(' ').trim() || ''}
+                      </p>
                     )}
                   </div>
-                  {imprint.description && imprint.description !== imprint.location && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
-                      {imprint.description.split('\n').slice(1).join(' ').trim() || ''}
-                    </p>
-                  )}
                 </div>
+                
+                {/* Mockups for this imprint */}
+                {imprint.mockups && imprint.mockups.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap pl-5">
+                    {imprint.mockups.map((mockup) => (
+                      isPdfUrl(mockup.url) ? (
+                        <PdfThumbnail
+                          key={mockup.id}
+                          thumbnailUrl={mockup.thumbnail_url}
+                          pdfUrl={mockup.url}
+                          name={mockup.name || 'Imprint mockup'}
+                          size="small"
+                          className="w-12 h-12"
+                        />
+                      ) : (
+                        <button
+                          key={mockup.id}
+                          onClick={() => onImageClick?.([mockup], 0)}
+                          className="w-12 h-12 flex-shrink-0 rounded border border-border bg-muted hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer overflow-hidden"
+                          title={mockup.name || 'Mockup'}
+                        >
+                          <img
+                            src={mockup.url}
+                            alt={mockup.name || 'Imprint mockup'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </button>
+                      )
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
+        ) : (
+          <div className="flex items-center gap-1.5 mt-2">
+            <div className="w-9 h-9 flex-shrink-0 rounded border border-dashed border-border bg-muted/30 flex items-center justify-center">
+              <Image className="w-3.5 h-3.5 text-muted-foreground/50" weight="duotone" />
+            </div>
+            <span className="text-xs text-muted-foreground">No imprints</span>
+          </div>
         )}
+        
+        {/* Add Imprint Button */}
+        <div className="pt-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-2 border border-dashed border-border hover:border-primary hover:bg-primary/5"
+            onClick={() => {
+              // TODO: Implement add imprint functionality
+            }}
+          >
+            <Printer className="w-3.5 h-3.5" weight="bold" />
+            Add Imprint
+          </Button>
+        </div>
       </div>
       </div>
 
