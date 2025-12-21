@@ -38,7 +38,7 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
   const formattedDate = now.toLocaleDateString('en-US', dateOptions);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{formattedDate}</h1>
