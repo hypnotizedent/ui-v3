@@ -250,24 +250,24 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-semibold tracking-tight">
-              Order #{order.orderNumber}
-            </h2>
-            <Badge
-              variant="secondary"
-              className={`${getAPIStatusColor(order.status)} font-medium text-xs uppercase tracking-wide`}
-            >
-              {getAPIStatusLabel(order.status)}
-            </Badge>
-          </div>
-          {order.orderNickname && (
-            <p className="text-muted-foreground mt-1">{order.orderNickname}</p>
-          )}
+          <h2 className="text-2xl font-semibold tracking-tight">
+            #{order.orderNumber}
+            {order.orderNickname && (
+              <span className="text-muted-foreground"> · {order.orderNickname}</span>
+            )}
+          </h2>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-2xl font-semibold">{formatCurrency(order.totalAmount)}</div>
+            <div className="flex items-center gap-2 justify-end mb-1">
+              <Badge
+                variant="secondary"
+                className={`${getAPIStatusColor(order.status)} font-medium text-xs uppercase tracking-wide`}
+              >
+                {getAPIStatusLabel(order.status)}
+              </Badge>
+              <div className="text-2xl font-semibold">{formatCurrency(order.totalAmount)}</div>
+            </div>
             <p className="text-sm text-muted-foreground">
               Balance:{' '}
               <span className={balance > 0 ? 'text-yellow-400' : 'text-green-400'}>
