@@ -289,7 +289,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
 
       {/* Minimal Info Bar - Customer and Dates */}
       <Card className="bg-card/50 border-border">
-        <CardContent className="py-3 px-4">
+        <CardHeader className="py-3 px-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* Customer Info - Left */}
             <div className="flex-1 min-w-0">
@@ -344,6 +344,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
                 </span>
               )}
             </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {order.lineItems.length === 0 ? (
