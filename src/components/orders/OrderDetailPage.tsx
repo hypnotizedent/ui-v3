@@ -188,11 +188,46 @@ interface MockupUploadDialogProps {
 
 function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploadDialogProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `${file.name} is too large (max 10MB)`;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return `${file.name} is not a supported file type`;
+    }
+    return null;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      const validFiles: File[] = [];
+      const errors: string[] = [];
+
+      newFiles.forEach(file => {
+        const error = validateFile(file);
+        if (error) {
+          errors.push(error);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (errors.length > 0) {
+        setError(errors.join(', '));
+        toast.error(errors[0]);
+      } else {
+        setError(null);
+      }
+
+      if (validFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...validFiles]);
+      }
     }
   };
 
@@ -200,22 +235,47 @@ function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploa
     e.preventDefault();
     if (e.dataTransfer.files) {
       const newFiles = Array.from(e.dataTransfer.files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      const validFiles: File[] = [];
+      const errors: string[] = [];
+
+      newFiles.forEach(file => {
+        const error = validateFile(file);
+        if (error) {
+          errors.push(error);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (errors.length > 0) {
+        setError(errors.join(', '));
+        toast.error(errors[0]);
+      } else {
+        setError(null);
+      }
+
+      if (validFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...validFiles]);
+      }
     }
   };
 
   const handleRemove = (index: number) => {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setError(null);
   };
 
   const handleUpload = () => {
+    if (uploadedFiles.length === 0) return;
     onUpload(uploadedFiles);
     setUploadedFiles([]);
+    setError(null);
     onOpenChange(false);
   };
 
   const handleClose = () => {
     setUploadedFiles([]);
+    setError(null);
     onOpenChange(false);
   };
 
@@ -226,6 +286,11 @@ function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploa
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <div
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
@@ -234,7 +299,7 @@ function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploa
           >
             <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" weight="bold" />
             <p className="text-sm font-medium mb-1">Drop files here or click to browse</p>
-            <p className="text-xs text-muted-foreground">Supports: JPG, PNG, PDF</p>
+            <p className="text-xs text-muted-foreground">Supports: JPG, PNG, GIF, WEBP, PDF (max 10MB per file)</p>
             <input
               id="mockup-file-input"
               type="file"
@@ -250,7 +315,7 @@ function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploa
               <p className="text-sm font-medium">Selected Files ({uploadedFiles.length})</p>
               <div className="space-y-1 max-h-60 overflow-y-auto">
                 {uploadedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                  <div key={`${file.name}-${file.size}-${index}`} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                     {file.type.startsWith('image/') ? (
                       <FileImage className="w-4 h-4 text-blue-400 flex-shrink-0" weight="fill" />
                     ) : file.type === 'application/pdf' ? (
