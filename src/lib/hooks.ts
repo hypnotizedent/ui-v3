@@ -340,36 +340,9 @@ export function useOrderDetail(visualId: string | null) {
           source: a.source,
           thumbnail_url: a.thumbnail_url || a.thumbnailUrl || null,
         })),
-        lineItems: (data.lineItems || data.line_items || []).map((li: any) => ({
-          id: li.id,
-          groupId: li.groupId || li.group_id || null,
-          groupName: li.groupName || li.group_name || null,
-          styleNumber: li.styleNumber || li.style_number || null,
-          description: li.description || li.style_description || null,
-          color: li.color || null,
-          category: li.category || null,
-          unitCost: parseFloat(li.unitCost) || parseFloat(li.unit_cost) || 0,
-          totalQuantity: li.totalQuantity || li.total_quantity || 0,
-          totalCost: parseFloat(li.totalCost) || parseFloat(li.total_cost) || 0,
-          sizes: {
-            xs: li.sizes?.xs || li.size_xs || 0,
-            s: li.sizes?.s || li.size_s || 0,
-            m: li.sizes?.m || li.size_m || 0,
-            l: li.sizes?.l || li.size_l || 0,
-            xl: li.sizes?.xl || li.size_xl || 0,
-            xxl: li.sizes?.xxl || li.size_2_xl || li.sizes?.['2xl'] || 0,
-            xxxl: li.sizes?.xxxl || li.size_3_xl || li.sizes?.['3xl'] || 0,
-            xxxxl: li.sizes?.xxxxl || li.size_4_xl || li.sizes?.['4xl'] || 0,
-            xxxxxl: li.sizes?.xxxxxl || li.size_5_xl || li.sizes?.['5xl'] || 0,
-            other: li.sizes?.other || li.size_other || 0,
-          },
-          mockup: li.mockup ? {
-            id: li.mockup.id,
-            url: li.mockup.url,
-            name: li.mockup.name,
-            thumbnail_url: li.mockup.thumbnail_url || li.mockup.thumbnailUrl || null,
-          } : null,
-          imprints: (li.imprints || []).map((imp: any) => {
+        lineItems: (data.lineItems || data.line_items || []).map((li: any) => {
+          // Get imprints from API or create mock data for testing
+          let imprints = (li.imprints || []).map((imp: any) => {
             console.log('🔍 Mapping imprint:', imp);
             return {
               id: imp.id,
@@ -389,8 +362,101 @@ export function useOrderDetail(visualId: string | null) {
                 thumbnail_url: m.thumbnail_url || m.thumbnailUrl || null,
               })),
             };
-          }),
-        })),
+          });
+
+          // ADD MOCK IMPRINT DATA FOR TESTING (if no imprints exist)
+          if (imprints.length === 0) {
+            console.log('⚠️ No imprints in API data, adding mock imprint for testing');
+            imprints = [
+              {
+                id: 99999,
+                location: 'Front',
+                decorationType: 'Screen Print',
+                description: 'Logo design with company branding',
+                colorCount: 2,
+                colors: 'Black, White',
+                width: 8.5,
+                height: 11,
+                hasUnderbase: false,
+                stitchCount: null,
+                mockups: [
+                  {
+                    id: 'mock-1',
+                    url: 'https://via.placeholder.com/400x400/10B981/FFFFFF?text=Front+Logo',
+                    name: 'Front Logo Mockup',
+                    thumbnail_url: 'https://via.placeholder.com/100x100/10B981/FFFFFF?text=Logo',
+                  },
+                  {
+                    id: 'mock-2',
+                    url: 'https://via.placeholder.com/400x400/3B82F6/FFFFFF?text=Alt+View',
+                    name: 'Alternative View',
+                    thumbnail_url: 'https://via.placeholder.com/100x100/3B82F6/FFFFFF?text=Alt',
+                  }
+                ],
+              },
+              {
+                id: 99998,
+                location: 'Back',
+                decorationType: 'Screen Print',
+                description: 'Text and design on back',
+                colorCount: 1,
+                colors: 'Black',
+                width: 12,
+                height: 14,
+                hasUnderbase: false,
+                stitchCount: null,
+                mockups: [
+                  {
+                    id: 'mock-3',
+                    url: 'https://via.placeholder.com/400x400/EF4444/FFFFFF?text=Back+Design',
+                    name: 'Back Design Mockup',
+                    thumbnail_url: 'https://via.placeholder.com/100x100/EF4444/FFFFFF?text=Back',
+                  }
+                ],
+              }
+            ];
+          }
+
+          // Add mock mockup if none exists
+          const mockup = li.mockup ? {
+            id: li.mockup.id,
+            url: li.mockup.url,
+            name: li.mockup.name,
+            thumbnail_url: li.mockup.thumbnail_url || li.mockup.thumbnailUrl || null,
+          } : {
+            id: 'mock-lineitem',
+            url: 'https://via.placeholder.com/400x400/8B5CF6/FFFFFF?text=Line+Item',
+            name: 'Line Item Mockup',
+            thumbnail_url: 'https://via.placeholder.com/100x100/8B5CF6/FFFFFF?text=Item',
+          };
+
+          return {
+            id: li.id,
+            groupId: li.groupId || li.group_id || null,
+            groupName: li.groupName || li.group_name || null,
+            styleNumber: li.styleNumber || li.style_number || null,
+            description: li.description || li.style_description || null,
+            color: li.color || null,
+            category: li.category || null,
+            unitCost: parseFloat(li.unitCost) || parseFloat(li.unit_cost) || 0,
+            totalQuantity: li.totalQuantity || li.total_quantity || 0,
+            totalCost: parseFloat(li.totalCost) || parseFloat(li.total_cost) || 0,
+            sizes: {
+              xs: li.sizes?.xs || li.size_xs || 0,
+              s: li.sizes?.s || li.size_s || 0,
+              m: li.sizes?.m || li.size_m || 0,
+              l: li.sizes?.l || li.size_l || 0,
+              xl: li.sizes?.xl || li.size_xl || 0,
+              xxl: li.sizes?.xxl || li.size_2_xl || li.sizes?.['2xl'] || 0,
+              xxxl: li.sizes?.xxxl || li.size_3_xl || li.sizes?.['3xl'] || 0,
+              xxxxl: li.sizes?.xxxxl || li.size_4_xl || li.sizes?.['4xl'] || 0,
+              xxxxxl: li.sizes?.xxxxxl || li.size_5_xl || li.sizes?.['5xl'] || 0,
+              other: li.sizes?.other || li.size_other || 0,
+            },
+            mockup: mockup,
+            imprints: imprints,
+          };
+        }),
       }
 
       // Debug: Log mapped order detail
