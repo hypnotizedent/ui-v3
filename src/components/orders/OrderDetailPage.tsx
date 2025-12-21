@@ -703,7 +703,8 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick, 
                 onClick={() => {
                   // TODO: Implement add imprint functionality
                 }}
-    title="Add Imprint"
+                title="Add Imprint"
+              >
                 <Printer className="w-4 h-4" weight="bold" />
               </Button>
             </div>
