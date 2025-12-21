@@ -100,7 +100,9 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2 mb-0.5">
-                          <h3 className="font-semibold text-sm">J-{order.visual_id}</h3>
+                          <h3 className="font-semibold text-sm">
+                            J-{order.visual_id}{order.nickname ? ` · ${order.nickname}` : ''}
+                          </h3>
                           <Badge 
                             variant="secondary" 
                             className="text-xs font-medium px-1.5 py-0"
