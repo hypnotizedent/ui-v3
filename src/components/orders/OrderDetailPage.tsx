@@ -585,6 +585,15 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
   const [editedImprints, setEditedImprints] = useState<Record<number, Partial<LineItemImprint>>>({}); 
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set(items.map(i => i.id)));
   
+  // Debug logging
+  useEffect(() => {
+    console.log('LineItemsTable - Items:', items);
+    console.log('LineItemsTable - Items with imprints:', items.filter(i => i.imprints && i.imprints.length > 0));
+    console.log('LineItemsTable - Items with mockups:', items.filter(i => i.mockup));
+    console.log('LineItemsTable - Expanded items:', Array.from(expandedItems));
+    console.log('LineItemsTable - Column config:', currentColumnConfig);
+  }, [items, expandedItems, currentColumnConfig]);
+  
   const sizeColumns = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'] as const;
   const visibleSizeColumns = sizeColumns.filter(size => 
     currentColumnConfig.sizes.adult[size as keyof typeof currentColumnConfig.sizes.adult]
@@ -826,6 +835,9 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
               <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap min-w-[200px]">
                 Description
               </th>
+              <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                Mockup
+              </th>
               {visibleSizeColumns.map(size => (
                 <th key={size} className="text-center px-2 py-2 font-medium text-muted-foreground whitespace-nowrap">
                   {size}
@@ -867,10 +879,28 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
               const isExpanded = expandedItems.has(item.id);
               const hasImprints = item.imprints && item.imprints.length > 0;
               
+              // Check if this is the first item in a group
+              const isFirstInGroup = idx === 0 || items[idx - 1].groupId !== item.groupId;
+              const isInGroup = item.groupId !== null;
+              
               return (
                 <>
+                  {/* Group Header Row */}
+                  {isFirstInGroup && isInGroup && (
+                    <tr className="bg-muted/30 border-b border-border">
+                      <td colSpan={100} className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1 h-4 bg-primary rounded-full"></div>
+                          <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                            {item.groupName || `Group ${item.groupId}`}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  
                   {/* Line Item Row */}
-                  <tr key={item.id} className="border-b border-border hover:bg-muted/10 transition-colors">
+                  <tr key={item.id} className={`border-b border-border hover:bg-muted/10 transition-colors ${isInGroup ? 'bg-muted/5' : ''}`}>
                     <td className="px-3 py-1.5 align-top">
                       <div className="h-7 flex items-center">
                         {hasImprints && (
@@ -894,6 +924,36 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
                     {currentColumnConfig.itemNumber && renderEditableCell(item, 'styleNumber', 'left')}
                     {currentColumnConfig.color && renderEditableCell(item, 'color', 'left')}
                     {renderEditableCell(item, 'description', 'left')}
+                    <td className="px-3 py-1.5 align-top text-center">
+                      <div className="h-7 flex items-center justify-center">
+                        {item.mockup ? (
+                          <button
+                            onClick={() => {
+                              if (item.mockup) {
+                                onImageClick?.([{
+                                  url: item.mockup.url,
+                                  name: item.mockup.name || 'Line item mockup',
+                                  id: item.mockup.id
+                                }], 0);
+                              }
+                            }}
+                            className="w-10 h-10 flex-shrink-0 rounded border border-border bg-card hover:border-primary hover:shadow-sm transition-all cursor-pointer overflow-hidden"
+                            title={item.mockup.name || 'Mockup'}
+                          >
+                            <img
+                              src={item.mockup.thumbnail_url || item.mockup.url}
+                              alt={item.mockup.name || 'Line item mockup'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </button>
+                        ) : (
+                          <span className="text-muted-foreground/30 text-xs">-</span>
+                        )}
+                      </div>
+                    </td>
                     {visibleSizeColumns.map(size => renderEditableCell(item, `size-${size}`, 'center'))}
                     {currentColumnConfig.quantity && (
                       <td className="px-3 py-1.5 text-center align-top">
@@ -947,16 +1007,11 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
                         <td className="px-3 py-1.5 align-top"></td>
                       )}
                       {renderEditableImprintCell(imprint, 'description', 'left', 1)}
-                      {renderEditableImprintCell(imprint, 'location', 'left', Math.max(2, Math.floor(visibleSizeColumns.length / 4)))}
-                      {renderEditableImprintCell(imprint, 'colors', 'left', Math.max(2, Math.floor(visibleSizeColumns.length / 4)))}
-                      <td 
-                        className="px-3 py-1.5 align-top" 
-                        colSpan={visibleSizeColumns.length - Math.floor(visibleSizeColumns.length / 4) * 2}
-                      >
-                        <div className="h-7 flex items-center gap-2">
-                          {imprint.mockups && imprint.mockups.length > 0 && (
-                            <div className="flex gap-1">
-                              {imprint.mockups.slice(0, 3).map((mockup, idx) => (
+                      <td className="px-3 py-1.5 align-top text-center">
+                        <div className="h-7 flex items-center justify-center gap-1">
+                          {imprint.mockups && imprint.mockups.length > 0 ? (
+                            <>
+                              {imprint.mockups.slice(0, 2).map((mockup, idx) => (
                                 <button
                                   key={mockup.id}
                                   onClick={() => {
@@ -971,7 +1026,7 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
                                   title={mockup.name || 'Mockup'}
                                 >
                                   <img
-                                    src={mockup.url}
+                                    src={mockup.thumbnail_url || mockup.url}
                                     alt={mockup.name || 'Imprint mockup'}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
@@ -980,12 +1035,26 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
                                   />
                                 </button>
                               ))}
-                              {imprint.mockups.length > 3 && (
-                                <span className="text-[10px] text-muted-foreground self-center">
-                                  +{imprint.mockups.length - 3}
+                              {imprint.mockups.length > 2 && (
+                                <span className="text-[9px] text-muted-foreground">
+                                  +{imprint.mockups.length - 2}
                                 </span>
                               )}
-                            </div>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground/30 text-xs">-</span>
+                          )}
+                        </div>
+                      </td>
+                      {renderEditableImprintCell(imprint, 'location', 'left', Math.max(2, Math.floor(visibleSizeColumns.length / 4)))}
+                      {renderEditableImprintCell(imprint, 'colors', 'left', Math.max(2, Math.floor(visibleSizeColumns.length / 4)))}
+                      <td 
+                        className="px-3 py-1.5 align-top" 
+                        colSpan={visibleSizeColumns.length - Math.floor(visibleSizeColumns.length / 3) * 2}
+                      >
+                        <div className="h-7 flex items-center gap-1 text-xs text-muted-foreground">
+                          {imprint.width && imprint.height && (
+                            <span>{imprint.width}" × {imprint.height}"</span>
                           )}
                         </div>
                       </td>
