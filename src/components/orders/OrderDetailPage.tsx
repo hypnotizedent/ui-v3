@@ -169,6 +169,150 @@ function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): Record<string, num
   };
 }
 
+interface LineItemsTableProps {
+  items: OrderDetailLineItem[];
+  onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
+}
+
+function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
+  const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
+  const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
+  
+  const sizeColumns = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'] as const;
+  const visibleSizeColumns = sizeColumns.filter(size => 
+    currentColumnConfig.sizes.adult[size as keyof typeof currentColumnConfig.sizes.adult]
+  );
+  
+  const mapSizesToDisplay = (sizes: OrderDetailLineItem['sizes']): Record<string, number> => {
+    return {
+      XS: sizes.xs || 0,
+      S: sizes.s || 0,
+      M: sizes.m || 0,
+      L: sizes.l || 0,
+      XL: sizes.xl || 0,
+      '2XL': sizes.xxl || 0,
+      '3XL': sizes.xxxl || 0,
+      '4XL': sizes.xxxxl || 0,
+      '5XL': sizes.xxxxxl || 0,
+      '6XL': 0,
+    };
+  };
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-muted/50 border-b border-border">
+              {currentColumnConfig.itemNumber && (
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                  Item #
+                </th>
+              )}
+              {currentColumnConfig.color && (
+                <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                  Color
+                </th>
+              )}
+              <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap min-w-[200px]">
+                Description
+              </th>
+              {visibleSizeColumns.map(size => (
+                <th key={size} className="text-center px-2 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                  {size}
+                </th>
+              ))}
+              {currentColumnConfig.quantity && (
+                <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                  Quantity
+                </th>
+              )}
+              <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                Items
+              </th>
+              <th className="text-right px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                Price
+              </th>
+              <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                Taxed
+              </th>
+              <th className="text-right px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, idx) => {
+              const sizes = mapSizesToDisplay(item.sizes);
+              const totalQty = Object.values(sizes).reduce((sum, qty) => sum + qty, 0);
+              
+              return (
+                <tr key={item.id} className="border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors">
+                  {currentColumnConfig.itemNumber && (
+                    <td className="px-3 py-3 align-top">
+                      <span className="text-foreground font-medium">
+                        {item.styleNumber || '-'}
+                      </span>
+                    </td>
+                  )}
+                  {currentColumnConfig.color && (
+                    <td className="px-3 py-3 align-top">
+                      <span className="text-foreground">
+                        {item.color || '-'}
+                      </span>
+                    </td>
+                  )}
+                  <td className="px-3 py-3 align-top">
+                    <span className="text-foreground">
+                      {item.description || item.styleNumber || '-'}
+                    </span>
+                  </td>
+                  {visibleSizeColumns.map(size => (
+                    <td key={size} className="px-2 py-3 text-center align-top">
+                      {sizes[size] > 0 ? (
+                        <span className="text-foreground font-medium">
+                          {sizes[size]}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/30">-</span>
+                      )}
+                    </td>
+                  ))}
+                  {currentColumnConfig.quantity && (
+                    <td className="px-3 py-3 text-center align-top">
+                      <span className="text-foreground font-medium">
+                        {totalQty}
+                      </span>
+                    </td>
+                  )}
+                  <td className="px-3 py-3 text-center align-top">
+                    <span className="text-foreground font-medium">
+                      {item.totalQuantity}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 text-right align-top">
+                    <span className="text-foreground">
+                      {formatCurrency(item.unitCost)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 text-center align-top">
+                    <Check className="w-4 h-4 mx-auto text-foreground" weight="bold" />
+                  </td>
+                  <td className="px-3 py-3 text-right align-top">
+                    <span className="text-foreground font-medium">
+                      {formatCurrency(item.totalCost)}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 interface OrderDetailPageProps {
   visualId: string;
   onViewCustomer: (customerId: string) => void;
@@ -370,9 +514,9 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
         
         <Separator className="my-0" />
         
-        <CardContent className="pt-4 pb-4 space-y-3">
+        <CardContent className="pt-4 pb-4">
           {/* Line Items Section Header */}
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium">Line Items</h3>
           </div>
           
@@ -381,21 +525,14 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
               No line items
             </p>
           ) : (
-            order.lineItems.map((item, index) => (
-              <LineItemCard
-                key={item.id}
-                item={item}
-                index={index}
-                orderStatus={order.status}
-                onImageClick={openImageModal}
-                columnConfig={currentColumnConfig}
-                onConfigChange={setColumnConfig}
-              />
-            ))
+            <LineItemsTable
+              items={order.lineItems}
+              onImageClick={openImageModal}
+            />
           )}
           
           {/* Add Line Item Button */}
-          <div className="pt-1">
+          <div className="pt-3">
             <Button
               variant="outline"
               size="sm"
