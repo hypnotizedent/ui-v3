@@ -68,6 +68,42 @@ function PdfThumbnail({
   
   const hasThumbnail = thumbnailUrl && !thumbnailFailed;
   
+  // If we have a valid thumbnail URL, try to show the image
+  if (hasThumbnail) {
+    return (
+      <a
+        href={pdfUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${dimensions} flex-shrink-0 rounded-lg border-2 border-border hover:border-primary transition-all hover:shadow-lg overflow-hidden relative bg-card group ${className}`}
+        title={`Open ${name} (PDF)`}
+      >
+        <img
+          src={thumbnailUrl}
+          alt={name}
+          className={`w-full h-full object-cover transition-all duration-200 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setImgLoaded(true)}
+          onError={() => {
+            setThumbnailFailed(true);
+            setImgLoaded(false);
+          }}
+        />
+        {!imgLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+            <FilePdf size={iconSize} className="text-red-400/50 animate-pulse" weight="fill" />
+          </div>
+        )}
+        {/* PDF indicator badge - only show when image is loaded */}
+        {imgLoaded && (
+          <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-red-500 rounded text-white text-[10px] font-bold uppercase shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+            PDF
+          </div>
+        )}
+      </a>
+    );
+  }
+  
+  // Fallback to PDF icon
   return (
     <a
       href={pdfUrl}
@@ -76,34 +112,10 @@ function PdfThumbnail({
       className={`${dimensions} flex-shrink-0 rounded-lg border-2 border-border hover:border-primary transition-all hover:shadow-lg overflow-hidden relative bg-card group ${className}`}
       title={`Open ${name} (PDF)`}
     >
-      {hasThumbnail ? (
-        <>
-          <img
-            src={thumbnailUrl}
-            alt={name}
-            className={`w-full h-full object-cover transition-all duration-200 group-hover:scale-105 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={() => setImgLoaded(true)}
-            onError={() => {
-              setThumbnailFailed(true);
-              setImgLoaded(false);
-            }}
-          />
-          {!imgLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-              <FilePdf size={iconSize} className="text-red-400/50 animate-pulse" weight="fill" />
-            </div>
-          )}
-          {/* PDF indicator badge */}
-          <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-red-500 rounded text-white text-[10px] font-bold uppercase shadow-md">
-            PDF
-          </div>
-        </>
-      ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 group-hover:from-red-100 group-hover:to-red-200 dark:group-hover:from-red-900/30 dark:group-hover:to-red-800/30 transition-all">
-          <FilePdf size={iconSize} className="text-red-500 mb-1 group-hover:scale-110 transition-transform" weight="fill" />
-          <span className="text-[10px] text-red-600 dark:text-red-400 uppercase font-bold tracking-wide">PDF</span>
-        </div>
-      )}
+      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 group-hover:from-red-100 group-hover:to-red-200 dark:group-hover:from-red-900/30 dark:group-hover:to-red-800/30 transition-all">
+        <FilePdf size={iconSize} className="text-red-500 mb-1 group-hover:scale-110 transition-transform" weight="fill" />
+        <span className="text-[10px] text-red-600 dark:text-red-400 uppercase font-bold tracking-wide">PDF</span>
+      </div>
     </a>
   );
 }
@@ -797,37 +809,7 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
         </div>
 
         <div className="flex items-start gap-3">
-          {/* Mockup Thumbnail */}
-          {allLineItemMockups.length > 0 && allLineItemMockups[0] ? (
-            isPdfUrl(allLineItemMockups[0].url) ? (
-              <PdfThumbnail
-                thumbnailUrl={allLineItemMockups[0].thumbnail_url}
-                pdfUrl={allLineItemMockups[0].url}
-                name={allLineItemMockups[0].name}
-                size="large"
-              />
-            ) : (
-              <button
-                onClick={() => onImageClick?.(allLineItemMockups, 0)}
-                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
-              >
-                <img
-                  src={allLineItemMockups[0].url}
-                  alt={allLineItemMockups[0].name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </button>
-            )
-          ) : (
-            <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
-              <Image className="w-5 h-5 text-muted-foreground/50" weight="duotone" />
-            </div>
-          )}
-
-        <div className="flex-1 min-w-0 flex items-start justify-between pr-10">
+          <div className="flex-1 min-w-0 flex items-start justify-between pr-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs bg-muted px-1.5 py-0.5 rounded">#{index + 1}</span>
@@ -892,12 +874,13 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
               )}
             </div>
           </div>
-          <div className="text-right ml-3">
-            {isEditing ? (
-              <div className="space-y-1">
-                <Input
-                  type="number"
-                  value={editedItem.unitCost}
+          <div className="flex items-start gap-3">
+            <div className="text-right">
+              {isEditing ? (
+                <div className="space-y-1">
+                  <Input
+                    type="number"
+                    value={editedItem.unitCost}
                   onChange={(e) => setEditedItem({ ...editedItem, unitCost: parseFloat(e.target.value) || 0 })}
                   className="h-7 text-sm font-medium w-24 text-right"
                   step="0.01"
@@ -916,7 +899,38 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
               </>
             )}
           </div>
+          
+          {/* Mockup Thumbnail - Right Side */}
+          {allLineItemMockups.length > 0 && allLineItemMockups[0] ? (
+            isPdfUrl(allLineItemMockups[0].url) ? (
+              <PdfThumbnail
+                thumbnailUrl={allLineItemMockups[0].thumbnail_url}
+                pdfUrl={allLineItemMockups[0].url}
+                name={allLineItemMockups[0].name}
+                size="large"
+              />
+            ) : (
+              <button
+                onClick={() => onImageClick?.(allLineItemMockups, 0)}
+                className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-card border border-border hover:border-primary transition-colors cursor-pointer"
+              >
+                <img
+                  src={allLineItemMockups[0].url}
+                  alt={allLineItemMockups[0].name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </button>
+            )
+          ) : (
+            <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
+              <Image className="w-5 h-5 text-muted-foreground/50" weight="duotone" />
+            </div>
+          )}
         </div>
+      </div>
       </div>
 
       {/* Size Grid */}
