@@ -198,7 +198,7 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
   const mockups: string[] = [];
   
   return (
-    <div className="p-4 bg-secondary/30 rounded-lg flex gap-4 items-center">
+    <div className="p-4 bg-secondary/30 rounded-lg flex gap-4">
       <div className="flex-1 min-w-0 space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="text-xs bg-muted px-2 py-0.5 rounded font-medium">#{index + 1}</span>
@@ -233,7 +233,7 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
         )}
       </div>
       
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 self-center">
         <div className="w-24 h-24 bg-muted rounded-lg border border-border flex items-center justify-center">
           {mockups.length > 0 ? (
             <img src={mockups[0]} alt="Product mockup" className="w-full h-full object-cover rounded-lg" />
