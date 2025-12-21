@@ -47,25 +47,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-              </svg>
-            </div>
-            <h1 className="text-3xl font-bold">{formattedDate}</h1>
-          </div>
-          <p className="text-muted-foreground">Your print shop at a glance</p>
-        </div>
-        <div className="flex gap-2">
-          <Button className="bg-primary hover:bg-primary/90 text-background gap-2">
-            <span className="text-xl font-light">+</span>
-            New Quote
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <span className="text-xl font-light">+</span>
-            New Job
-          </Button>
+          <h1 className="text-3xl font-bold">{formattedDate}</h1>
         </div>
       </div>
 
