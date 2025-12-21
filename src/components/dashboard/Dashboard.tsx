@@ -1,22 +1,17 @@
 import { Order, Customer } from '@/lib/types';
 import { useProductionStats } from '@/lib/hooks';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Package,
-  Users,
-  Clock,
-  FileText,
-  Palette,
-  TShirt,
-  CheckCircle,
   Briefcase,
-  ArrowClockwise,
-  Warning
+  FileText,
+  Users as UsersIcon,
+  Printer,
+  CalendarBlank,
+  ArrowRight
 } from '@phosphor-icons/react';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { formatCurrency, formatDate, getOrdersNeedingAttention } from '@/lib/helpers';
+import { formatCurrency } from '@/lib/helpers';
 
 interface DashboardProps {
   orders: Order[];
@@ -25,315 +20,211 @@ interface DashboardProps {
 }
 
 export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
-  const { stats: productionStats, loading, error, refetch } = useProductionStats();
+  const { stats: productionStats, loading } = useProductionStats();
 
-  const ordersNeedingAttention = getOrdersNeedingAttention(orders);
+  const activeJobs = orders.filter(o => 
+    o.status !== 'COMPLETE' && o.status !== 'QUOTE'
+  );
 
-  // Calculate in-production total
-  const inProduction = productionStats
-    ? productionStats.screenprint + productionStats.embroidery + productionStats.dtg
-    : 0;
+  const followUpNeeded = orders.filter(o => o.status === 'QUOTE');
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground text-sm mt-1">Loading production stats...</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 animate-pulse">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="bg-card border-border">
-              <CardContent className="p-4">
-                <div className="h-4 bg-muted rounded w-16 mb-2" />
-                <div className="h-8 bg-muted rounded w-12" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const productionOrders = orders.filter(o => 
+    o.status === 'IN PRODUCTION'
+  );
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
-        </div>
-        <Card className="max-w-md mx-auto">
-          <CardContent className="pt-6 text-center">
-            <Warning size={48} className="mx-auto mb-4 text-destructive" />
-            <h3 className="text-lg font-semibold mb-2">Failed to Load Stats</h3>
-            <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-            <Button onClick={() => refetch()} variant="outline" className="gap-2">
-              <ArrowClockwise size={16} />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const totalInProduction = productionOrders.reduce((sum, o) => sum + o.total, 0);
+
+  const now = new Date();
+  const dateOptions: Intl.DateTimeFormatOptions = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  const formattedDate = now.toLocaleDateString('en-US', dateOptions);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground text-sm mt-1">
-          Production Overview
-        </p>
-      </div>
-
-      {/* Production Stats Grid - 8 cards */}
-      {productionStats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-          {/* Quotes */}
-          <Card className="bg-amber-500/10 border-amber-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-amber-600 mb-2">
-                <FileText size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Quotes</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.quote.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* Art */}
-          <Card className="bg-purple-500/10 border-purple-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-purple-600 mb-2">
-                <Palette size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Art</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.art.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* Screenprint */}
-          <Card className="bg-blue-500/10 border-blue-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-blue-600 mb-2">
-                <TShirt size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Screen</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.screenprint.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* Embroidery */}
-          <Card className="bg-pink-500/10 border-pink-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-pink-600 mb-2">
-                <TShirt size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Emb</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.embroidery.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* DTG */}
-          <Card className="bg-cyan-500/10 border-cyan-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-cyan-600 mb-2">
-                <TShirt size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">DTG</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.dtg.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* Fulfillment */}
-          <Card className="bg-orange-500/10 border-orange-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-orange-600 mb-2">
-                <Package size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Fulfill</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.fulfillment.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* Complete */}
-          <Card className="bg-green-500/10 border-green-500/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-green-600 mb-2">
-                <CheckCircle size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Done</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.complete.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          {/* Total */}
-          <Card className="bg-primary/10 border-primary/20 hover:shadow-lg transition-shadow cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-primary mb-2">
-                <Briefcase size={18} weight="fill" />
-                <span className="text-xs font-medium uppercase tracking-wide">Total</span>
-              </div>
-              <p className="text-2xl font-bold">{productionStats.total.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              In Production
-            </CardTitle>
-            <Briefcase className="w-4 h-4 text-muted-foreground" weight="bold" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{inProduction}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Screen + Embroidery + DTG
-            </p>
-            {productionStats && (
-              <div className="mt-3 flex gap-2 flex-wrap">
-                <Badge variant="secondary" className="text-xs">
-                  {productionStats.screenprint} screen
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {productionStats.embroidery} emb
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {productionStats.dtg} dtg
-                </Badge>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Quotes
-            </CardTitle>
-            <FileText className="w-4 h-4 text-muted-foreground" weight="bold" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {productionStats?.quote.toLocaleString() || 0}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+              </svg>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Awaiting customer approval
-            </p>
-            {productionStats && productionStats.art > 0 && (
-              <div className="mt-3">
-                <Badge variant="outline" className="text-xs">
-                  {productionStats.art} in art approval
-                </Badge>
-              </div>
-            )}
+            <h1 className="text-3xl font-bold">{formattedDate}</h1>
+          </div>
+          <p className="text-muted-foreground">Your print shop at a glance</p>
+        </div>
+        <div className="flex gap-2">
+          <Button className="bg-primary hover:bg-primary/90 text-background gap-2">
+            <span className="text-xl font-light">+</span>
+            New Quote
+          </Button>
+          <Button variant="outline" className="gap-2">
+            <span className="text-xl font-light">+</span>
+            New Job
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Active Jobs</h3>
+              <Briefcase className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-4xl font-bold">{activeJobs.length}</p>
+              <p className="text-xs text-muted-foreground">Not marked as complete</p>
+              <p className="text-sm font-medium text-primary">
+                {formatCurrency(totalInProduction)} in production
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ready for Delivery
-            </CardTitle>
-            <Package className="w-4 h-4 text-muted-foreground" weight="bold" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{productionStats?.fulfillment || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Jobs in fulfillment stage
-            </p>
-            {productionStats && (
-              <div className="mt-3">
-                <Badge className="text-xs bg-green-600">
-                  {productionStats.complete.toLocaleString()} completed all-time
-                </Badge>
-              </div>
-            )}
+        <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Follow-Up Needed</h3>
+              <FileText className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-4xl font-bold">{followUpNeeded.length}</p>
+              <p className="text-xs text-muted-foreground">Created this month · Not approved</p>
+              <p className="text-sm font-medium text-primary">
+                {formatCurrency(followUpNeeded.reduce((sum, o) => sum + o.total, 0))} potential value
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Production Status</h3>
+              <Printer className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-4xl font-bold">{productionOrders.length}</p>
+              <p className="text-xs text-muted-foreground">
+                {productionStats?.art || 0} pending approval
+              </p>
+              <p className="text-sm font-medium text-primary">
+                {productionStats?.fulfillment || 0} ready for pickup
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Total Customers</h3>
+              <UsersIcon className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-4xl font-bold">{customers.length}</p>
+              <p className="text-xs text-muted-foreground">0 jobs completed</p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Orders & Needs Attention */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base font-medium">Recent Orders</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {orders.length === 0 ? (
-              <p className="text-muted-foreground text-sm py-4 text-center">
-                No orders yet
+      <Card className="bg-card/50 border-border/50">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold">All Active Jobs</h2>
+              <p className="text-sm text-muted-foreground">
+                Jobs not marked as delivered, sorted by due date
               </p>
-            ) : (
-              orders.slice(0, 5).map((order) => (
-                <div
-                  key={order.id}
-                  onClick={() => onViewOrder(order.visual_id)}
-                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">#{order.visual_id}</span>
-                        {order.nickname && (
-                          <span className="text-muted-foreground text-sm">
-                            {order.nickname}
-                          </span>
-                        )}
+            </div>
+            <Button variant="ghost" className="gap-2 text-sm">
+              View Jobs Board
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-card/80 rounded-lg p-4 border border-border/50 animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-4 bg-muted rounded w-32" />
+                      <div className="h-3 bg-muted rounded w-48" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="h-6 bg-muted rounded w-20" />
+                      <div className="h-4 bg-muted rounded w-16" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activeJobs.length === 0 ? (
+            <div className="text-center py-12">
+              <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">No active jobs</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activeJobs.slice(0, 10).map((order) => {
+                const dueDate = new Date(order.due_date);
+                const isOverdue = dueDate < now;
+                const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                
+                return (
+                  <div
+                    key={order.id}
+                    onClick={() => onViewOrder(order.visual_id)}
+                    className="bg-card/80 rounded-lg p-4 border border-border/50 hover:border-border hover:bg-card transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="font-semibold">J-{order.visual_id}</h3>
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs font-medium"
+                          >
+                            {order.status.toLowerCase()}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{order.customer_name}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <CalendarBlank className="w-3 h-3" />
+                            <span>
+                              {isOverdue ? 'Overdue' : `Overdue`} {formatDate(order.due_date)} (
+                              {isOverdue ? `${Math.abs(daysUntilDue)}d` : `${daysUntilDue}d`})
+                            </span>
+                          </div>
+                          <span>$ {formatCurrency(order.total)}</span>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {order.customer_name}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">
+                          {order.line_items.reduce((sum, li) => sum + li.quantity, 0)} items
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={order.status} />
-                    <span className="text-sm font-medium">
-                      {formatCurrency(order.total)}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-base font-medium">Orders Needing Attention</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {ordersNeedingAttention.length === 0 ? (
-              <p className="text-muted-foreground text-sm py-4 text-center">
-                All orders are on track
-              </p>
-            ) : (
-              ordersNeedingAttention.slice(0, 5).map((order) => (
-                <div
-                  key={order.id}
-                  onClick={() => onViewOrder(order.visual_id)}
-                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">#{order.visual_id}</span>
-                      <StatusBadge status={order.status} />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Due: {formatDate(order.due_date)}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-destructive border-destructive/50">
-                    {new Date(order.due_date) < new Date() ? 'Overdue' : 'Pending'}
-                  </Badge>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
