@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Order, Transaction, LineItem, Imprint, ImprintLocation, ImprintMethod } from '@/lib/types';
+import { Order, Transaction, LineItem, Imprint, ImprintLocation, ImprintMethod, Mockup } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -203,11 +203,69 @@ export function OrderDetail({ order, transactions, onViewCustomer }: OrderDetail
 
 function LineItemCard({ item, index }: { item: LineItem; index: number }) {
   const [imprints, setImprints] = useState<Imprint[]>(item.imprints);
+  const [lineItemMockups, setLineItemMockups] = useState<Mockup[]>(item.mockups);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   
   const handleImprintUpdate = (updatedImprint: Imprint) => {
     setImprints(prev => prev.map(imp => 
       imp.id === updatedImprint.id ? updatedImprint : imp
     ));
+  };
+  
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      if (newFiles.length > 0) {
+        toast.success(`${newFiles.length} file${newFiles.length > 1 ? 's' : ''} added`);
+      }
+    }
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files) {
+      const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      if (newFiles.length > 0) {
+        toast.success(`${newFiles.length} file${newFiles.length > 1 ? 's' : ''} added`);
+      }
+    }
+  };
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+  
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+  
+  const handleUploadSave = () => {
+    const newMockups: Mockup[] = uploadedFiles.map(file => ({
+      url: URL.createObjectURL(file),
+      thumbnailUrl: URL.createObjectURL(file)
+    }));
+    setLineItemMockups(prev => [...prev, ...newMockups]);
+    toast.success(`${uploadedFiles.length} mockup${uploadedFiles.length > 1 ? 's' : ''} uploaded successfully`);
+    setUploadedFiles([]);
+    setShowUploadDialog(false);
   };
   
   return (
@@ -235,8 +293,8 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
         
         <div className="flex-shrink-0 self-center">
           <div className="w-24 h-24 bg-muted rounded-lg border border-border flex items-center justify-center overflow-hidden">
-            {item.mockups.length > 0 ? (
-              <img src={item.mockups[0].thumbnailUrl} alt="Product mockup" className="w-full h-full object-cover" />
+            {lineItemMockups.length > 0 ? (
+              <img src={lineItemMockups[0].thumbnailUrl} alt="Product mockup" className="w-full h-full object-cover" />
             ) : (
               <Image className="w-8 h-8 text-muted-foreground" weight="bold" />
             )}
@@ -244,14 +302,25 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
         </div>
       </div>
       
-      {item.mockups.length > 0 && (
-        <div className="pl-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
+      <div className="pl-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
             <FileImage className="w-3 h-3" weight="bold" />
             Line Item Mockups
           </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowUploadDialog(true)}
+            className="h-6 text-xs gap-1"
+          >
+            <Upload className="w-3 h-3" weight="bold" />
+            Upload
+          </Button>
+        </div>
+        {lineItemMockups.length > 0 ? (
           <div className="flex gap-2 flex-wrap">
-            {item.mockups.map((mockup, idx) => (
+            {lineItemMockups.map((mockup, idx) => (
               <a
                 key={idx}
                 href={mockup.url}
@@ -263,8 +332,98 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
               </a>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-xs text-muted-foreground italic">No mockups uploaded</div>
+        )}
+      </div>
+      
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Upload Line Item Mockups</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={`border-2 border-dashed rounded-lg p-8 transition-colors ${
+                isDragging 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <div className="flex flex-col items-center justify-center gap-3">
+                <Upload className="w-10 h-10 text-muted-foreground" weight="bold" />
+                <div className="text-center">
+                  <p className="text-sm font-medium">
+                    Drop mockup images here or{' '}
+                    <label className="text-primary hover:underline cursor-pointer">
+                      browse
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG, or other image files
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Selected Files ({uploadedFiles.length})</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {uploadedFiles.map((file, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg group"
+                    >
+                      <div className="flex-shrink-0 text-muted-foreground">
+                        <FileImage className="w-6 h-6" weight="bold" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(file.size)}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                      >
+                        <X className="w-4 h-4" weight="bold" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => {
+              setUploadedFiles([]);
+              setShowUploadDialog(false);
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUploadSave}
+              disabled={uploadedFiles.length === 0}
+            >
+              Upload {uploadedFiles.length > 0 && `(${uploadedFiles.length})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {item.production_files.length > 0 && (
         <div className="pl-4">
@@ -313,18 +472,34 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
 function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (imprint: Imprint) => void }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedImprint, setEditedImprint] = useState<Imprint>(imprint);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const [uploadedArtworkFiles, setUploadedArtworkFiles] = useState<File[]>([]);
+  const [uploadedMockupFiles, setUploadedMockupFiles] = useState<File[]>([]);
+  const [isDraggingArtwork, setIsDraggingArtwork] = useState(false);
+  const [isDraggingMockup, setIsDraggingMockup] = useState(false);
   
   const handleSave = () => {
-    if (uploadedFiles.length > 0) {
-      toast.success(`Changes saved with ${uploadedFiles.length} new file${uploadedFiles.length > 1 ? 's' : ''}`);
+    let updatedImprint = { ...editedImprint };
+    
+    if (uploadedMockupFiles.length > 0) {
+      const newMockups: Mockup[] = uploadedMockupFiles.map(file => ({
+        url: URL.createObjectURL(file),
+        thumbnailUrl: URL.createObjectURL(file)
+      }));
+      updatedImprint = {
+        ...updatedImprint,
+        mockups: [...updatedImprint.mockups, ...newMockups]
+      };
+    }
+    
+    if (uploadedArtworkFiles.length > 0 || uploadedMockupFiles.length > 0) {
+      toast.success(`Changes saved with ${uploadedArtworkFiles.length + uploadedMockupFiles.length} new file${uploadedArtworkFiles.length + uploadedMockupFiles.length > 1 ? 's' : ''}`);
     } else {
       toast.success('Changes saved');
     }
-    onUpdate(editedImprint);
+    onUpdate(updatedImprint);
     setIsEditing(false);
-    setUploadedFiles([]);
+    setUploadedArtworkFiles([]);
+    setUploadedMockupFiles([]);
   };
   
   const locationOptions: ImprintLocation[] = ['Front', 'Back', 'Left Chest', 'Right Sleeve', 'Left Sleeve', 'Neck'];
@@ -334,37 +509,70 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
     return method.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
   
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleArtworkFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      setUploadedArtworkFiles(prev => [...prev, ...newFiles]);
       toast.success(`${newFiles.length} file${newFiles.length > 1 ? 's' : ''} added`);
     }
   };
   
-  const handleDrop = (e: React.DragEvent) => {
+  const handleMockupFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      setUploadedMockupFiles(prev => [...prev, ...newFiles]);
+      toast.success(`${newFiles.length} mockup${newFiles.length > 1 ? 's' : ''} added`);
+    }
+  };
+  
+  const handleArtworkDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    setIsDraggingArtwork(false);
     const files = e.dataTransfer.files;
     if (files) {
       const newFiles = Array.from(files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      setUploadedArtworkFiles(prev => [...prev, ...newFiles]);
       toast.success(`${newFiles.length} file${newFiles.length > 1 ? 's' : ''} added`);
     }
   };
   
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleMockupDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(true);
+    setIsDraggingMockup(false);
+    const files = e.dataTransfer.files;
+    if (files) {
+      const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      setUploadedMockupFiles(prev => [...prev, ...newFiles]);
+      toast.success(`${newFiles.length} mockup${newFiles.length > 1 ? 's' : ''} added`);
+    }
   };
   
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleArtworkDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingArtwork(true);
   };
   
-  const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  const handleMockupDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingMockup(true);
+  };
+  
+  const handleArtworkDragLeave = () => {
+    setIsDraggingArtwork(false);
+  };
+  
+  const handleMockupDragLeave = () => {
+    setIsDraggingMockup(false);
+  };
+  
+  const removeArtworkFile = (index: number) => {
+    setUploadedArtworkFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const removeMockupFile = (index: number) => {
+    setUploadedMockupFiles(prev => prev.filter((_, i) => i !== index));
   };
   
   const getFileIcon = (file: File) => {
@@ -525,11 +733,11 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
               <Label>Artwork Files</Label>
               
               <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+                onDrop={handleArtworkDrop}
+                onDragOver={handleArtworkDragOver}
+                onDragLeave={handleArtworkDragLeave}
                 className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
-                  isDragging 
+                  isDraggingArtwork 
                     ? 'border-primary bg-primary/5' 
                     : 'border-border hover:border-primary/50'
                 }`}
@@ -545,7 +753,7 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
                           type="file"
                           multiple
                           accept="image/*,.pdf,.ai,.eps,.svg"
-                          onChange={handleFileSelect}
+                          onChange={handleArtworkFileSelect}
                           className="hidden"
                         />
                       </label>
@@ -557,11 +765,11 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
                 </div>
               </div>
               
-              {uploadedFiles.length > 0 && (
+              {uploadedArtworkFiles.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Uploaded Files ({uploadedFiles.length})</p>
+                  <p className="text-sm font-medium">Uploaded Files ({uploadedArtworkFiles.length})</p>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {uploadedFiles.map((file, index) => (
+                    {uploadedArtworkFiles.map((file, index) => (
                       <div 
                         key={index}
                         className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg group"
@@ -578,7 +786,7 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeFile(index)}
+                          onClick={() => removeArtworkFile(index)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
                         >
                           <X className="w-4 h-4" weight="bold" />
@@ -611,6 +819,94 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
                     >
                       View
                     </a>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-3 pt-2 border-t border-border">
+              <Label>Mockup Images</Label>
+              
+              <div
+                onDrop={handleMockupDrop}
+                onDragOver={handleMockupDragOver}
+                onDragLeave={handleMockupDragLeave}
+                className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
+                  isDraggingMockup 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <FileImage className="w-8 h-8 text-muted-foreground" weight="bold" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium">
+                      Drop mockup images here or{' '}
+                      <label className="text-primary hover:underline cursor-pointer">
+                        browse
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleMockupFileSelect}
+                          className="hidden"
+                        />
+                      </label>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG, or other image files
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {uploadedMockupFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Selected Mockups ({uploadedMockupFiles.length})</p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {uploadedMockupFiles.map((file, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center gap-3 p-2 bg-secondary/30 rounded-lg group"
+                      >
+                        <div className="flex-shrink-0 text-muted-foreground">
+                          <FileImage className="w-6 h-6" weight="bold" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(file.size)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMockupFile(index)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                        >
+                          <X className="w-4 h-4" weight="bold" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {editedImprint.mockups.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Current Mockups</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {editedImprint.mockups.map((mockup, idx) => (
+                      <a
+                        key={idx}
+                        href={mockup.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-20 h-20 bg-muted rounded border border-border overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all"
+                      >
+                        <img src={mockup.thumbnailUrl} alt={`Mockup ${idx + 1}`} className="w-full h-full object-cover" />
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
