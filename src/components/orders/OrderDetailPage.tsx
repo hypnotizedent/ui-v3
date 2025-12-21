@@ -809,8 +809,7 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0 flex items-start justify-between pr-3">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pr-3">
             <div className="flex items-center gap-1.5">
               <span className="text-xs bg-muted px-1.5 py-0.5 rounded">#{index + 1}</span>
               {isEditing ? (
@@ -874,13 +873,13 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
               )}
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="text-right">
-              {isEditing ? (
-                <div className="space-y-1">
-                  <Input
-                    type="number"
-                    value={editedItem.unitCost}
+          
+          <div className="text-right">
+            {isEditing ? (
+              <div className="space-y-1">
+                <Input
+                  type="number"
+                  value={editedItem.unitCost}
                   onChange={(e) => setEditedItem({ ...editedItem, unitCost: parseFloat(e.target.value) || 0 })}
                   className="h-7 text-sm font-medium w-24 text-right"
                   step="0.01"
@@ -901,7 +900,7 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
           </div>
           
           {/* Mockup Thumbnail - Right Side */}
-          {allLineItemMockups.length > 0 && allLineItemMockups[0] ? (
+          {allLineItemMockups.length > 0 && allLineItemMockups[0] && (
             isPdfUrl(allLineItemMockups[0].url) ? (
               <PdfThumbnail
                 thumbnailUrl={allLineItemMockups[0].thumbnail_url}
@@ -917,9 +916,12 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
                 <img
                   src={allLineItemMockups[0].url}
                   alt={allLineItemMockups[0].name}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            )
+          )}
         </div>
-      </div>
-      </div>
 
       {/* Size Grid */}
       <div className="overflow-x-auto">
@@ -940,18 +942,6 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
                   className="h-7 w-12 text-center text-xs p-0"
                   min="0"
                 />
-              ) : (
-                <span
-                  className={`px-1.5 py-0.5 rounded ${
-                    sizes[size] > 0
-                      ? 'bg-primary/20 text-primary font-medium'
-                      : 'text-muted-foreground/50'
-                  }`}
-                >
-                  onChange={(e) => handleSizeChange(size, e.target.value)}
-                  className="h-7 w-12 text-center text-xs p-0"
-              )}
-            </div>
               ) : (
                 <span
                   className={`px-1.5 py-0.5 rounded ${
@@ -1023,9 +1013,9 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
           </div>
         )}
       </div>
-      </div>
+    </div>
 
-      <ManageColumnsModal
+    <ManageColumnsModal
         open={manageColumnsOpen}
         onOpenChange={setManageColumnsOpen}
         config={columnConfig}
