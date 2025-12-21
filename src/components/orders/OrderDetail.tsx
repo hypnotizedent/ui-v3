@@ -1,9 +1,15 @@
-import { Order, Transaction, LineItem, Imprint } from '@/lib/types';
+import { useState } from 'react';
+import { Order, Transaction, LineItem, Imprint, ImprintLocation, ImprintMethod } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   User, Calendar, FileText, Printer, CreditCard, 
-  Image, CheckCircle, XCircle 
+  Image, CheckCircle, XCircle, Pencil 
 } from '@phosphor-icons/react';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { 
@@ -196,6 +202,13 @@ export function OrderDetail({ order, transactions, onViewCustomer }: OrderDetail
 
 function LineItemCard({ item, index }: { item: LineItem; index: number }) {
   const mockups: string[] = [];
+  const [imprints, setImprints] = useState<Imprint[]>(item.imprints);
+  
+  const handleImprintUpdate = (updatedImprint: Imprint) => {
+    setImprints(prev => prev.map(imp => 
+      imp.id === updatedImprint.id ? updatedImprint : imp
+    ));
+  };
   
   return (
     <div className="p-4 bg-secondary/30 rounded-lg flex gap-4">
@@ -218,15 +231,19 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
         
         <SizeGrid sizes={item.sizes} />
         
-        {item.imprints.length > 0 && (
+        {imprints.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-1">
               <Printer className="w-3 h-3" weight="bold" />
               Imprints
             </p>
             <div className="flex items-center gap-2 flex-wrap">
-              {item.imprints.map(imprint => (
-                <ImprintCard key={imprint.id} imprint={imprint} />
+              {imprints.map(imprint => (
+                <ImprintCard 
+                  key={imprint.id} 
+                  imprint={imprint} 
+                  onUpdate={handleImprintUpdate}
+                />
               ))}
             </div>
           </div>
@@ -246,28 +263,145 @@ function LineItemCard({ item, index }: { item: LineItem; index: number }) {
   );
 }
 
-function ImprintCard({ imprint }: { imprint: Imprint }) {
+function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (imprint: Imprint) => void }) {
   const mockups: string[] = [];
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedImprint, setEditedImprint] = useState<Imprint>(imprint);
+  
+  const handleSave = () => {
+    onUpdate(editedImprint);
+    setIsEditing(false);
+  };
+  
+  const locationOptions: ImprintLocation[] = ['Front', 'Back', 'Left Chest', 'Right Sleeve', 'Left Sleeve', 'Neck'];
+  const methodOptions: ImprintMethod[] = ['screen-print', 'dtg', 'embroidery', 'vinyl', 'digital-transfer'];
+  
+  const formatMethodLabel = (method: ImprintMethod) => {
+    return method.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
   
   return (
-    <div 
-      className="group relative w-10 h-10 bg-muted rounded border border-border flex-shrink-0 flex items-center justify-center hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
-      title={imprint.artwork ? `${imprint.artwork.filename} • ${imprint.colors} color${imprint.colors !== 1 ? 's' : ''} • ${imprint.width}" × ${imprint.height}"` : `${imprint.colors} color${imprint.colors !== 1 ? 's' : ''} • ${imprint.width}" × ${imprint.height}"`}
-    >
-      {mockups.length > 0 ? (
-        <img src={mockups[0]} alt="Mockup" className="w-full h-full object-cover rounded" />
-      ) : (
-        <Image className="w-4 h-4 text-muted-foreground" weight="bold" />
-      )}
-      {imprint.artwork && (
-        <div className="absolute -top-1 -right-1">
-          {imprint.artwork.approved ? (
-            <CheckCircle className="w-3 h-3 text-green-400 bg-background rounded-full" weight="fill" />
-          ) : (
-            <XCircle className="w-3 h-3 text-yellow-400 bg-background rounded-full" weight="fill" />
-          )}
+    <>
+      <div 
+        className="group relative w-10 h-10 bg-muted rounded border border-border flex-shrink-0 flex items-center justify-center hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
+        onClick={() => setIsEditing(true)}
+        title={imprint.artwork ? `${imprint.artwork.filename} • ${imprint.colors} color${imprint.colors !== 1 ? 's' : ''} • ${imprint.width}" × ${imprint.height}"` : `${imprint.colors} color${imprint.colors !== 1 ? 's' : ''} • ${imprint.width}" × ${imprint.height}"`}
+      >
+        {mockups.length > 0 ? (
+          <img src={mockups[0]} alt="Mockup" className="w-full h-full object-cover rounded" />
+        ) : (
+          <Image className="w-4 h-4 text-muted-foreground" weight="bold" />
+        )}
+        {imprint.artwork && (
+          <div className="absolute -top-1 -right-1">
+            {imprint.artwork.approved ? (
+              <CheckCircle className="w-3 h-3 text-green-400 bg-background rounded-full" weight="fill" />
+            ) : (
+              <XCircle className="w-3 h-3 text-yellow-400 bg-background rounded-full" weight="fill" />
+            )}
+          </div>
+        )}
+        <div className="absolute inset-0 bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+          <Pencil className="w-4 h-4 text-primary" weight="bold" />
         </div>
-      )}
-    </div>
+      </div>
+
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Imprint</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Select 
+                value={editedImprint.location} 
+                onValueChange={(value) => setEditedImprint({...editedImprint, location: value as ImprintLocation})}
+              >
+                <SelectTrigger id="location">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {locationOptions.map(loc => (
+                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="method">Method</Label>
+              <Select 
+                value={editedImprint.method} 
+                onValueChange={(value) => setEditedImprint({...editedImprint, method: value as ImprintMethod})}
+              >
+                <SelectTrigger id="method">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {methodOptions.map(method => (
+                    <SelectItem key={method} value={method}>{formatMethodLabel(method)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="width">Width (inches)</Label>
+                <Input 
+                  id="width"
+                  type="number"
+                  step="0.25"
+                  value={editedImprint.width}
+                  onChange={(e) => setEditedImprint({...editedImprint, width: parseFloat(e.target.value) || 0})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="height">Height (inches)</Label>
+                <Input 
+                  id="height"
+                  type="number"
+                  step="0.25"
+                  value={editedImprint.height}
+                  onChange={(e) => setEditedImprint({...editedImprint, height: parseFloat(e.target.value) || 0})}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="colors">Number of Colors</Label>
+              <Input 
+                id="colors"
+                type="number"
+                min="1"
+                value={editedImprint.colors}
+                onChange={(e) => setEditedImprint({...editedImprint, colors: parseInt(e.target.value) || 1})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="setup-fee">Setup Fee</Label>
+              <Input 
+                id="setup-fee"
+                type="number"
+                step="0.01"
+                value={editedImprint.setup_fee}
+                onChange={(e) => setEditedImprint({...editedImprint, setup_fee: parseFloat(e.target.value) || 0})}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsEditing(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
