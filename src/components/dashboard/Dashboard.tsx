@@ -72,7 +72,7 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
           <div className="flex items-center justify-between mb-4">
             <button 
               onClick={onNavigateToOrders}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold px-5 py-1.5 rounded-full transition-all shadow-sm hover:shadow-md hover:scale-105 active:scale-100"
+              className="border border-border/60 hover:border-primary/50 hover:bg-primary/5 text-foreground/70 hover:text-foreground text-xs font-medium px-5 py-1.5 rounded-full transition-all hover:scale-[1.02] active:scale-100"
             >
               All Orders
             </button>
