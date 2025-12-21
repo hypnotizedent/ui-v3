@@ -14,6 +14,13 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
   FileText,
   Image,
   Warning,
@@ -30,7 +37,9 @@ import {
   Stamp,
   PencilSimple,
   Check,
-  X
+  X,
+  Upload,
+  Plus
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
 import { SizeBreakdown } from '@/lib/types';
@@ -167,6 +176,387 @@ function mapSizesToGrid(sizes: OrderDetailLineItem['sizes']): Record<string, num
     '5XL': sizes.xxxxxl || 0,
     '6XL': 0,
   };
+}
+
+// Mockup upload dialog component
+interface MockupUploadDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpload: (files: File[]) => void;
+  title: string;
+}
+
+function MockupUploadDialog({ open, onOpenChange, onUpload, title }: MockupUploadDialogProps) {
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+
+  const validateFile = (file: File): string | null => {
+    if (file.size > MAX_FILE_SIZE) {
+      return `${file.name} is too large (max 10MB)`;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return `${file.name} is not a supported file type`;
+    }
+    return null;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      const validFiles: File[] = [];
+      const errors: string[] = [];
+
+      newFiles.forEach(file => {
+        const error = validateFile(file);
+        if (error) {
+          errors.push(error);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (errors.length > 0) {
+        setError(errors.join(', '));
+        toast.error(errors[0]);
+      } else {
+        setError(null);
+      }
+
+      if (validFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...validFiles]);
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      const validFiles: File[] = [];
+      const errors: string[] = [];
+
+      newFiles.forEach(file => {
+        const error = validateFile(file);
+        if (error) {
+          errors.push(error);
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (errors.length > 0) {
+        setError(errors.join(', '));
+        toast.error(errors[0]);
+      } else {
+        setError(null);
+      }
+
+      if (validFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...validFiles]);
+      }
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setError(null);
+  };
+
+  const handleUpload = () => {
+    if (uploadedFiles.length === 0) return;
+    onUpload(uploadedFiles);
+    setUploadedFiles([]);
+    setError(null);
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
+    setUploadedFiles([]);
+    setError(null);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+              {error}
+            </div>
+          )}
+          <div
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
+            onClick={() => document.getElementById('mockup-file-input')?.click()}
+          >
+            <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" weight="bold" />
+            <p className="text-sm font-medium mb-1">Drop files here or click to browse</p>
+            <p className="text-xs text-muted-foreground">Supports: JPG, PNG, GIF, WEBP, PDF (max 10MB per file)</p>
+            <input
+              id="mockup-file-input"
+              type="file"
+              multiple
+              accept="image/*,.pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
+          {uploadedFiles.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Selected Files ({uploadedFiles.length})</p>
+              <div className="space-y-1 max-h-60 overflow-y-auto">
+                {uploadedFiles.map((file, index) => (
+                  <div key={`${file.name}-${file.size}-${index}`} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                    {file.type.startsWith('image/') ? (
+                      <FileImage className="w-4 h-4 text-blue-400 flex-shrink-0" weight="fill" />
+                    ) : file.type === 'application/pdf' ? (
+                      <FilePdf className="w-4 h-4 text-red-400 flex-shrink-0" weight="fill" />
+                    ) : (
+                      <File className="w-4 h-4 text-muted-foreground flex-shrink-0" weight="bold" />
+                    )}
+                    <span className="text-sm flex-1 truncate">{file.name}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 flex-shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(index);
+                      }}
+                    >
+                      <X size={14} weight="bold" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleUpload} disabled={uploadedFiles.length === 0}>
+            Upload {uploadedFiles.length > 0 && `(${uploadedFiles.length})`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Add Line Item dialog component
+interface AddLineItemDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (lineItem: Partial<OrderDetailLineItem>) => void;
+}
+
+function AddLineItemDialog({ open, onOpenChange, onAdd }: AddLineItemDialogProps) {
+  const [description, setDescription] = useState('');
+  const [styleNumber, setStyleNumber] = useState('');
+  const [color, setColor] = useState('');
+  const [unitCost, setUnitCost] = useState('0');
+
+  const handleAdd = () => {
+    onAdd({
+      description,
+      styleNumber,
+      color,
+      unitCost: parseFloat(unitCost) || 0,
+      totalQuantity: 0,
+      totalCost: 0,
+      sizes: { xs: 0, s: 0, m: 0, l: 0, xl: 0, xxl: 0, xxxl: 0, xxxxl: 0, xxxxxl: 0, other: 0 },
+      imprints: []
+    });
+    setDescription('');
+    setStyleNumber('');
+    setColor('');
+    setUnitCost('0');
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
+    setDescription('');
+    setStyleNumber('');
+    setColor('');
+    setUnitCost('0');
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Line Item</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Description *</label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g., Gildan 5000 T-Shirt"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Style Number</label>
+              <Input
+                value={styleNumber}
+                onChange={(e) => setStyleNumber(e.target.value)}
+                placeholder="e.g., G5000"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Color</label>
+              <Input
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="e.g., Black"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Unit Cost</label>
+            <Input
+              type="number"
+              step="0.01"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
+              placeholder="0.00"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            You can add sizes and imprints after creating the line item.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleAdd} disabled={!description.trim()}>
+            <Plus className="w-4 h-4 mr-1.5" weight="bold" />
+            Add Line Item
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Add Imprint dialog component
+interface AddImprintDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (imprint: Partial<LineItemImprint>) => void;
+  lineItemDescription?: string;
+}
+
+function AddImprintDialog({ open, onOpenChange, onAdd, lineItemDescription }: AddImprintDialogProps) {
+  const [location, setLocation] = useState('');
+  const [decorationType, setDecorationType] = useState('');
+  const [description, setDescription] = useState('');
+  const [colors, setColors] = useState('');
+
+  const handleAdd = () => {
+    onAdd({
+      location,
+      decorationType,
+      description,
+      colors,
+      colorCount: 0,
+      width: null,
+      height: null,
+      mockups: []
+    });
+    setLocation('');
+    setDecorationType('');
+    setDescription('');
+    setColors('');
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
+    setLocation('');
+    setDecorationType('');
+    setDescription('');
+    setColors('');
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            Add Imprint {lineItemDescription && `to ${lineItemDescription}`}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Location *</label>
+              <Input
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., Front, Back"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Type</label>
+              <Input
+                value={decorationType}
+                onChange={(e) => setDecorationType(e.target.value)}
+                placeholder="e.g., Screen Print"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Description</label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe the imprint details..."
+              className="min-h-[80px] resize-none"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Colors</label>
+            <Input
+              value={colors}
+              onChange={(e) => setColors(e.target.value)}
+              placeholder="e.g., Black, White"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            You can upload mockups and add more details after creating the imprint.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleAdd} disabled={!location.trim()}>
+            <Plus className="w-4 h-4 mr-1.5" weight="bold" />
+            Add Imprint
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 interface LineItemsTableProps {
@@ -624,6 +1014,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
   const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
   const [modalIndex, setModalIndex] = useState(0);
   const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
+  const [addLineItemOpen, setAddLineItemOpen] = useState(false);
   
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
 
@@ -635,6 +1026,11 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
     setModalImages(images);
     setModalIndex(index);
     setModalOpen(true);
+  };
+
+  const handleAddLineItem = (lineItem: Partial<OrderDetailLineItem>) => {
+    toast.success(`Line item "${lineItem.description}" added`);
+    // In a real implementation, this would add the line item to the order
   };
 
   if (loading) {
@@ -837,9 +1233,7 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
               variant="outline"
               size="sm"
               className="gap-2 h-8"
-              onClick={() => {
-                // TODO: Implement add line item functionality
-              }}
+              onClick={() => setAddLineItemOpen(true)}
             >
               <Package className="w-4 h-4" weight="bold" />
               Add Line Item
@@ -985,6 +1379,12 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
         onClose={() => setModalOpen(false)}
         onNavigate={setModalIndex}
       />
+
+      <AddLineItemDialog
+        open={addLineItemOpen}
+        onOpenChange={setAddLineItemOpen}
+        onAdd={handleAddLineItem}
+      />
     </div>
   );
 }
@@ -1007,6 +1407,7 @@ interface ImprintCardProps {
 function ImprintCard({ imprint, onImageClick, isLineItemEditing }: ImprintCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedImprint, setEditedImprint] = useState(imprint);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
   const handleEdit = () => {
     setIsEditing(true);
@@ -1025,6 +1426,11 @@ function ImprintCard({ imprint, onImageClick, isLineItemEditing }: ImprintCardPr
   
   const handleDelete = () => {
     toast.success('Imprint deleted');
+  };
+
+  const handleMockupUpload = (files: File[]) => {
+    toast.success(`${files.length} mockup${files.length > 1 ? 's' : ''} uploaded successfully`);
+    // In a real implementation, this would upload the files and update the imprint
   };
   
   return (
@@ -1127,11 +1533,24 @@ function ImprintCard({ imprint, onImageClick, isLineItemEditing }: ImprintCardPr
       </div>
       
       {/* Mockups for this imprint */}
-      {imprint.mockups && imprint.mockups.length > 0 && (
-        <div className="pl-5 pt-1">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">
-            Mockups ({imprint.mockups.length})
+      <div className="pl-5 pt-1">
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+            Mockups ({imprint.mockups?.length || 0})
           </p>
+          {!isLineItemEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 text-[10px] px-1.5"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <Upload className="w-3 h-3 mr-1" weight="bold" />
+              Add
+            </Button>
+          )}
+        </div>
+        {imprint.mockups && imprint.mockups.length > 0 ? (
           <div className="flex items-center gap-1.5 flex-wrap">
             {imprint.mockups.map((mockup, idx) => (
               isPdfUrl(mockup.url) ? (
@@ -1169,8 +1588,17 @@ function ImprintCard({ imprint, onImageClick, isLineItemEditing }: ImprintCardPr
               )
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-[10px] text-muted-foreground/50 italic">No mockups yet</p>
+        )}
+      </div>
+
+      <MockupUploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onUpload={handleMockupUpload}
+        title={`Upload Mockups for ${imprint.location || 'Imprint'}`}
+      />
     </div>
   );
 }
@@ -1182,6 +1610,8 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
   const [editedItem, setEditedItem] = useState(item);
   const [editedSizes, setEditedSizes] = useState(mapSizesToGrid(item.sizes));
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
+  const [mockupUploadOpen, setMockupUploadOpen] = useState(false);
+  const [addImprintOpen, setAddImprintOpen] = useState(false);
   
   const sizes = isEditing ? editedSizes : mapSizesToGrid(item.sizes);
   const total = Object.values(sizes).reduce((sum, qty) => sum + qty, 0);
@@ -1214,6 +1644,16 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
   const handleSizeChange = (size: string, value: string) => {
     const numValue = parseInt(value) || 0;
     setEditedSizes(prev => ({ ...prev, [size]: numValue }));
+  };
+
+  const handleMockupUpload = (files: File[]) => {
+    toast.success(`${files.length} mockup${files.length > 1 ? 's' : ''} uploaded to line item`);
+    // In a real implementation, this would upload the files and update the line item
+  };
+
+  const handleAddImprint = (imprint: Partial<LineItemImprint>) => {
+    toast.success(`Imprint "${imprint.location}" added to line item`);
+    // In a real implementation, this would add the imprint to the line item
   };
 
   const lineItemMockups = item.mockup ? [item.mockup] : [];
@@ -1262,6 +1702,10 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
                 <DropdownMenuItem onClick={handleEdit} className="gap-2 cursor-pointer">
                   <PencilSimple className="w-4 h-4" weight="bold" />
                   Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setMockupUploadOpen(true)} className="gap-2 cursor-pointer">
+                  <Upload className="w-4 h-4" weight="bold" />
+                  Upload Mockup
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDuplicate} className="gap-2 cursor-pointer">
                   <Copy className="w-4 h-4" weight="bold" />
@@ -1475,9 +1919,7 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
               variant="ghost"
               size="sm"
               className="h-8 gap-2 border border-dashed border-border hover:border-primary hover:bg-primary/5"
-              onClick={() => {
-                toast.info('Add imprint functionality coming soon');
-              }}
+              onClick={() => setAddImprintOpen(true)}
             >
               <Printer className="w-3.5 h-3.5" weight="bold" />
               Add Imprint
@@ -1486,7 +1928,21 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
         )}
       </div>
 
-    <ManageColumnsModal
+      <MockupUploadDialog
+        open={mockupUploadOpen}
+        onOpenChange={setMockupUploadOpen}
+        onUpload={handleMockupUpload}
+        title={`Upload Mockups for ${item.description || 'Line Item'}`}
+      />
+
+      <AddImprintDialog
+        open={addImprintOpen}
+        onOpenChange={setAddImprintOpen}
+        onAdd={handleAddImprint}
+        lineItemDescription={item.description || item.styleNumber || undefined}
+      />
+
+      <ManageColumnsModal
         open={manageColumnsOpen}
         onOpenChange={setManageColumnsOpen}
         config={columnConfig}
