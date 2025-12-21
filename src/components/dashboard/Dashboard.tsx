@@ -103,12 +103,6 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                           <h3 className="font-semibold text-sm">
                             J-{order.visual_id}{order.nickname ? ` · ${order.nickname}` : ''}
                           </h3>
-                          <Badge 
-                            variant="secondary" 
-                            className="text-xs font-medium px-1.5 py-0"
-                          >
-                            {order.status.toLowerCase()}
-                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">{order.customer_name}</p>
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
