@@ -917,18 +917,6 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
                 <img
                   src={allLineItemMockups[0].url}
                   alt={allLineItemMockups[0].name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </button>
-            )
-          ) : (
-            <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-muted/50 border border-border flex items-center justify-center">
-              <Image className="w-5 h-5 text-muted-foreground/50" weight="duotone" />
-            </div>
-          )}
         </div>
       </div>
       </div>
@@ -952,6 +940,18 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
                   className="h-7 w-12 text-center text-xs p-0"
                   min="0"
                 />
+              ) : (
+                <span
+                  className={`px-1.5 py-0.5 rounded ${
+                    sizes[size] > 0
+                      ? 'bg-primary/20 text-primary font-medium'
+                      : 'text-muted-foreground/50'
+                  }`}
+                >
+                  onChange={(e) => handleSizeChange(size, e.target.value)}
+                  className="h-7 w-12 text-center text-xs p-0"
+              )}
+            </div>
               ) : (
                 <span
                   className={`px-1.5 py-0.5 rounded ${
