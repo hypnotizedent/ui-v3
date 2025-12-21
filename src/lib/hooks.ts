@@ -200,6 +200,19 @@ export interface LineItemMockup {
   thumbnail_url?: string | null
 }
 
+export interface LineItemImprint {
+  id: number
+  location: string | null
+  decorationType: string | null
+  description: string | null
+  colorCount: number | null
+  colors: string | null
+  width: number | null
+  height: number | null
+  hasUnderbase: boolean | null
+  stitchCount: number | null
+}
+
 export interface OrderDetailLineItem {
   id: number
   styleNumber: string | null
@@ -222,6 +235,7 @@ export interface OrderDetailLineItem {
     other: number
   }
   mockup: LineItemMockup | null
+  imprints: LineItemImprint[]
 }
 
 export interface OrderDetailCustomer {
@@ -345,6 +359,18 @@ export function useOrderDetail(visualId: string | null) {
             name: li.mockup.name,
             thumbnail_url: li.mockup.thumbnail_url || li.mockup.thumbnailUrl || null,
           } : null,
+          imprints: (li.imprints || []).map((imp: any) => ({
+            id: imp.id,
+            location: imp.location || null,
+            decorationType: imp.decorationType || imp.decoration_type || null,
+            description: imp.description || null,
+            colorCount: imp.colorCount || imp.color_count || null,
+            colors: imp.colors || null,
+            width: imp.width || null,
+            height: imp.height || null,
+            hasUnderbase: imp.hasUnderbase || imp.has_underbase || null,
+            stitchCount: imp.stitchCount || imp.stitch_count || null,
+          })),
         })),
       }
 

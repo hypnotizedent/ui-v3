@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks';
+import { useOrderDetail, type OrderDetail, type OrderDetailLineItem, type LineItemImprint } from '@/lib/hooks';
 import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,8 @@ import {
   DotsThree,
   Copy,
   Trash,
-  Columns
+  Columns,
+  Stamp
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
 import { SizeBreakdown } from '@/lib/types';
@@ -761,6 +762,34 @@ function LineItemCard({ item, index, orderStatus, imprintMockups, onImageClick, 
             </div>
           )}
         </div>
+
+        {/* Imprint Details from API */}
+        {item.imprints && item.imprints.length > 0 && (
+          <div className="mt-2 space-y-1.5">
+            {item.imprints.map((imprint) => (
+              <div key={imprint.id} className="flex items-start gap-2 p-2 bg-card/50 rounded border border-border/50">
+                <Stamp className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" weight="duotone" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-medium">
+                      {imprint.location || 'Imprint'}
+                    </span>
+                    {imprint.decorationType && (
+                      <Badge variant="secondary" className="text-[10px] px-1 py-0 bg-primary/10 text-primary">
+                        {imprint.decorationType}
+                      </Badge>
+                    )}
+                  </div>
+                  {imprint.description && imprint.description !== imprint.location && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">
+                      {imprint.description.split('\n').slice(1).join(' ').trim() || ''}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       </div>
 
