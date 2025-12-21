@@ -202,10 +202,8 @@ function App() {
       <aside className="w-56 border-r border-border bg-card/30 flex flex-col fixed h-screen">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <svg className="w-5 h-5 text-background" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-              </svg>
+            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
+              <span className="font-black text-lg text-primary-foreground">M</span>
             </div>
             <span className="font-bold text-lg">MINT PRINTS</span>
           </div>
