@@ -531,7 +531,7 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{imprint.artwork.filename}</p>
                       <p className="text-xs text-muted-foreground">
-                        {imprint.artwork.approved ? 'Approved' : 'Pending approval'} • {formatFileSize(imprint.artwork.file_size)}
+                      className="text-primary hover:underline text-xs"
                       </p>
                       {imprint.artwork.notes && (
                         <p className="text-xs text-muted-foreground italic mt-1">{imprint.artwork.notes}</p>
