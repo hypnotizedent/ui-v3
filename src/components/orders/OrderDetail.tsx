@@ -602,9 +602,6 @@ function ImprintCard({ imprint, onUpdate }: { imprint: Imprint; onUpdate: (impri
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{imprint.artwork.filename}</p>
-                      {imprint.artwork.notes && (
-                        <p className="text-xs text-muted-foreground italic mt-1">{imprint.artwork.notes}</p>
-                      )}
                     </div>
                     <a
                       href={imprint.artwork.file_url}
