@@ -171,7 +171,8 @@ const createOrder = (
             colors: 2,
             width: 12,
             height: 14,
-            description: 'Full front logo'
+            description: 'Full front logo',
+            artwork: null
           }
         ]
       }

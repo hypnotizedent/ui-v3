@@ -43,6 +43,17 @@ export interface Status {
   order: number
 }
 
+export interface Artwork {
+  id: string
+  imprint_id: string
+  file_url: string
+  filename: string
+  file_size: number
+  approved: boolean
+  uploaded_at: string
+  notes: string
+}
+
 export interface Imprint {
   id: string
   type: 'screen_print' | 'dtg' | 'embroidery' | 'vinyl' | 'digital_transfer'
@@ -51,6 +62,7 @@ export interface Imprint {
   width: number
   height: number
   description: string
+  artwork: Artwork | null
 }
 
 export interface Size {
@@ -267,7 +279,8 @@ function transformLineItem(apiLineItem: APILineItem, statusName: string): LineIt
     colors: 1,
     width: 12,
     height: 14,
-    description: apiLineItem.category || 'Standard imprint'
+    description: apiLineItem.category || 'Standard imprint',
+    artwork: null
   }
 
   return {
