@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useCustomersList, type CustomerListItem } from '@/lib/hooks';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,14 +10,36 @@ import {
   CaretLeft,
   CaretRight,
   ArrowClockwise,
-  Warning
+  Warning,
+  Buildings,
+  Envelope,
+  Phone,
+  MapPin,
+  CurrencyDollar,
+  Clock
 } from '@phosphor-icons/react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface CustomersListPageProps {
   onViewCustomer: (customerId: string) => void;
 }
 
 const PAGE_SIZE = 50;
+
+const getTierColor = (tier?: string) => {
+  switch (tier?.toLowerCase()) {
+    case 'platinum':
+      return 'bg-slate-100 text-slate-900 border-slate-300';
+    case 'gold':
+      return 'bg-amber-500 text-slate-900 border-amber-600';
+    case 'silver':
+      return 'bg-slate-300 text-slate-900 border-slate-400';
+    case 'bronze':
+      return 'bg-amber-700 text-amber-100 border-amber-800';
+    default:
+      return 'bg-muted text-muted-foreground border-border';
+  }
+};
 
 export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
   const [searchInput, setSearchInput] = useState('');
@@ -104,7 +127,6 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
         </p>
       </div>
 
-      {/* Search */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -127,7 +149,6 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
         )}
       </div>
 
-      {/* Customers Table */}
       {customers.length === 0 ? (
         <Card className="bg-card border-border">
           <CardContent className="py-8 text-center">
@@ -138,65 +159,90 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-card border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Name</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Company</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Email</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Phone</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Location</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Orders</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customers.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    onClick={() => onViewCustomer(String(customer.id))}
-                    className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors"
-                  >
-                    <td className="px-3 py-2">
-                      <span className="font-medium text-sm">{customer.name}</span>
-                    </td>
-                    <td className="px-3 py-2 text-sm text-muted-foreground">
-                      {customer.company || '—'}
-                    </td>
-                    <td className="px-3 py-2 text-sm">
-                      {customer.email ? (
-                        <a
-                          href={`mailto:${customer.email}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-primary hover:underline"
-                        >
-                          {customer.email}
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-sm text-muted-foreground">
-                      {customer.phone || '—'}
-                    </td>
-                    <td className="px-3 py-2 text-sm text-muted-foreground">
-                      {customer.city && customer.state
-                        ? `${customer.city}, ${customer.state}`
-                        : customer.city || customer.state || '—'}
-                    </td>
-                    <td className="px-3 py-2 text-right font-medium text-sm">
-                      {customer.orders_count}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+        <div className="space-y-3">
+          {customers.map((customer) => {
+            const lastOrderDate = customer.last_order_date 
+              ? formatDistanceToNow(new Date(customer.last_order_date), { addSuffix: true })
+              : 'Never';
+
+            return (
+              <Card 
+                key={customer.id}
+                onClick={() => onViewCustomer(String(customer.id))}
+                className="bg-card/80 hover:bg-card border-border cursor-pointer transition-all hover:border-primary/50 overflow-hidden group"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-semibold text-foreground">
+                          {customer.name}
+                        </h3>
+                        <Badge className={`${getTierColor(customer.tier)} uppercase text-xs font-bold px-2 py-0.5`}>
+                          {customer.tier}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+                        {customer.company && (
+                          <div className="flex items-center gap-1.5">
+                            <Buildings className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{customer.company}</span>
+                          </div>
+                        )}
+                        {customer.email && (
+                          <div className="flex items-center gap-1.5">
+                            <Envelope className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{customer.email}</span>
+                          </div>
+                        )}
+                        {customer.phone && (
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="w-4 h-4 flex-shrink-0" />
+                            <span>{customer.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-6 text-right">
+                      <div>
+                        <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground mb-0.5">
+                          <CurrencyDollar className="w-3.5 h-3.5" />
+                          <span>Total Revenue</span>
+                        </div>
+                        <p className="text-lg font-semibold text-primary">
+                          ${customer.total_revenue.toFixed(2)}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground mb-0.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Last Order</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground">
+                          {lastOrderDate}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Orders
+                        </div>
+                        <p className="text-2xl font-bold text-foreground">
+                          {customer.orders_count}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       )}
 
-      {/* Pagination (only when not searching) */}
       {!searchQuery && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">

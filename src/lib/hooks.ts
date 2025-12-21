@@ -454,6 +454,9 @@ export interface CustomerListItem {
     country?: string
   }
   orders_count: number
+  total_revenue: number
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  last_order_date: string | null
   created_at: string
 }
 
@@ -516,6 +519,9 @@ export function useCustomersList(options?: {
           country: c.shippingAddress?.country || c.shipping_address?.country || undefined,
         } : undefined,
         orders_count: c.orders_count || 0,
+        total_revenue: parseFloat(c.total_revenue || c.totalRevenue || '0') || 0,
+        tier: c.tier || 'bronze',
+        last_order_date: c.last_order_date || c.lastOrderDate || null,
         created_at: c.created_at || '',
       }))
 
@@ -591,6 +597,9 @@ export function useCustomerDetail(customerId: string | null) {
           country: found.shippingAddress?.country || found.shipping_address?.country || undefined,
         } : undefined,
         orders_count: found.orders_count || 0,
+        total_revenue: parseFloat(found.total_revenue || found.totalRevenue || '0') || 0,
+        tier: found.tier || 'bronze',
+        last_order_date: found.last_order_date || found.lastOrderDate || null,
         created_at: found.created_at || '',
       }
       setCustomer(customerData)
