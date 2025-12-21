@@ -77,14 +77,14 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
 
   if (loading && orders.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Orders</h2>
-          <p className="text-muted-foreground text-sm mt-1">Loading orders...</p>
+          <h2 className="text-xl font-semibold tracking-tight">Orders</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">Loading orders...</p>
         </div>
-        <div className="animate-pulse space-y-3">
+        <div className="animate-pulse space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-card rounded-lg border border-border" />
+            <div key={i} className="h-14 bg-card rounded-lg border border-border" />
           ))}
         </div>
       </div>
@@ -93,16 +93,16 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Orders</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Orders</h2>
         </div>
         <Card className="max-w-md mx-auto">
-          <CardContent className="pt-6 text-center">
-            <Warning size={48} className="mx-auto mb-4 text-destructive" />
-            <h3 className="text-lg font-semibold mb-2">Failed to Load Orders</h3>
-            <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-            <Button onClick={() => refetch()} variant="outline" className="gap-2">
+          <CardContent className="pt-6 pb-6 text-center">
+            <Warning size={40} className="mx-auto mb-3 text-destructive" />
+            <h3 className="text-base font-semibold mb-1">Failed to Load Orders</h3>
+            <p className="text-xs text-muted-foreground mb-3">{error.message}</p>
+            <Button onClick={() => refetch()} variant="outline" size="sm" className="gap-2 h-8">
               <ArrowClockwise size={16} />
               Try Again
             </Button>
@@ -113,16 +113,16 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Orders</h2>
-        <p className="text-muted-foreground text-sm mt-1">
+        <h2 className="text-xl font-semibold tracking-tight">Orders</h2>
+        <p className="text-muted-foreground text-xs mt-0.5">
           {total.toLocaleString()} total orders
         </p>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -130,11 +130,11 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
             placeholder="Search by order #, customer, or nickname..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-card border-border"
+            className="pl-9 bg-card border-border h-9"
           />
         </div>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full sm:w-[180px] bg-card border-border">
+          <SelectTrigger className="w-full sm:w-[180px] bg-card border-border h-9">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -153,9 +153,9 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
       {/* Orders Table */}
       {filteredOrders.length === 0 ? (
         <Card className="bg-card border-border">
-          <CardContent className="py-12 text-center">
-            <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" weight="duotone" />
-            <p className="text-muted-foreground">
+          <CardContent className="py-8 text-center">
+            <Package className="w-10 h-10 mx-auto text-muted-foreground mb-3" weight="duotone" />
+            <p className="text-sm text-muted-foreground">
               {orders.length === 0 ? 'No orders found' : 'No orders match your search'}
             </p>
           </CardContent>
@@ -166,11 +166,11 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Order</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Customer</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Due</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Total</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Order</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Customer</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Status</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Due</th>
+                  <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-3 py-2">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -180,29 +180,29 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
                     onClick={() => onViewOrder(order.visual_id)}
                     className="border-b border-border/50 hover:bg-secondary/30 cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <div>
-                        <span className="font-medium">#{order.visual_id}</span>
+                        <span className="font-medium text-sm">#{order.visual_id}</span>
                         {order.order_nickname && (
-                          <span className="text-muted-foreground text-sm ml-2 truncate max-w-[150px] inline-block align-bottom">
+                          <span className="text-muted-foreground text-xs ml-2 truncate max-w-[150px] inline-block align-bottom">
                             {order.order_nickname}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm">{order.customer_name}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2 text-sm">{order.customer_name}</td>
+                    <td className="px-3 py-2">
                       <Badge
                         variant="secondary"
-                        className={`${getAPIStatusColor(order.printavo_status_name)} font-medium text-xs`}
+                        className={`${getAPIStatusColor(order.printavo_status_name)} font-medium text-xs px-1.5 py-0`}
                       >
                         {order.printavo_status_name}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-3 py-2 text-sm text-muted-foreground">
                       {order.due_date ? formatDate(order.due_date) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right font-medium">
+                    <td className="px-3 py-2 text-right font-medium text-sm">
                       {formatCurrency(order.total_amount)}
                     </td>
                   </tr>
@@ -216,7 +216,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of {total.toLocaleString()}
           </p>
           <div className="flex items-center gap-2">
@@ -225,12 +225,12 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
               size="sm"
               onClick={handlePrevPage}
               disabled={page === 0 || loading}
-              className="gap-1"
+              className="gap-1 h-8"
             >
               <CaretLeft size={16} weight="bold" />
               Previous
             </Button>
-            <span className="text-sm text-muted-foreground px-2">
+            <span className="text-xs text-muted-foreground px-2">
               Page {page + 1} of {totalPages}
             </span>
             <Button
@@ -238,7 +238,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
               size="sm"
               onClick={handleNextPage}
               disabled={page >= totalPages - 1 || loading}
-              className="gap-1"
+              className="gap-1 h-8"
             >
               Next
               <CaretRight size={16} weight="bold" />

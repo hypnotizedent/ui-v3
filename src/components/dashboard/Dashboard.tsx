@@ -44,22 +44,22 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
   const formattedDate = now.toLocaleDateString('en-US', dateOptions);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{formattedDate}</h1>
+          <h1 className="text-2xl font-bold">{formattedDate}</h1>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Active Jobs</h3>
-              <Briefcase className="w-5 h-5 text-muted-foreground" />
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Active Jobs</h3>
+              <Briefcase className="w-4 h-4 text-muted-foreground" />
             </div>
-            <div className="space-y-1">
-              <p className="text-4xl font-bold">{activeJobs.length}</p>
+            <div className="space-y-0.5">
+              <p className="text-3xl font-bold leading-none">{activeJobs.length}</p>
               <p className="text-xs text-muted-foreground">Not marked as complete</p>
               <p className="text-sm font-medium text-primary">
                 {formatCurrency(totalInProduction)} in production
@@ -69,13 +69,13 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
         </Card>
 
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Follow-Up Needed</h3>
-              <FileText className="w-5 h-5 text-muted-foreground" />
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Follow-Up Needed</h3>
+              <FileText className="w-4 h-4 text-muted-foreground" />
             </div>
-            <div className="space-y-1">
-              <p className="text-4xl font-bold">{followUpNeeded.length}</p>
+            <div className="space-y-0.5">
+              <p className="text-3xl font-bold leading-none">{followUpNeeded.length}</p>
               <p className="text-xs text-muted-foreground">Created this month · Not approved</p>
               <p className="text-sm font-medium text-primary">
                 {formatCurrency(followUpNeeded.reduce((sum, o) => sum + o.total, 0))} potential value
@@ -85,13 +85,13 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
         </Card>
 
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Production Status</h3>
-              <Printer className="w-5 h-5 text-muted-foreground" />
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Production Status</h3>
+              <Printer className="w-4 h-4 text-muted-foreground" />
             </div>
-            <div className="space-y-1">
-              <p className="text-4xl font-bold">{productionOrders.length}</p>
+            <div className="space-y-0.5">
+              <p className="text-3xl font-bold leading-none">{productionOrders.length}</p>
               <p className="text-xs text-muted-foreground">
                 {productionStats?.art || 0} pending approval
               </p>
@@ -103,13 +103,13 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
         </Card>
 
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-muted-foreground">Total Customers</h3>
-              <UsersIcon className="w-5 h-5 text-muted-foreground" />
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Customers</h3>
+              <UsersIcon className="w-4 h-4 text-muted-foreground" />
             </div>
-            <div className="space-y-1">
-              <p className="text-4xl font-bold">{customers.length}</p>
+            <div className="space-y-0.5">
+              <p className="text-3xl font-bold leading-none">{customers.length}</p>
               <p className="text-xs text-muted-foreground">0 jobs completed</p>
             </div>
           </CardContent>
@@ -117,24 +117,24 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
       </div>
 
       <Card className="bg-card/50 border-border/50">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold">All Active Jobs</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-base font-semibold">All Active Jobs</h2>
+              <p className="text-xs text-muted-foreground">
                 Jobs not marked as delivered, sorted by due date
               </p>
             </div>
-            <Button variant="ghost" className="gap-2 text-sm">
+            <Button variant="ghost" size="sm" className="gap-2 text-sm h-8">
               View Jobs Board
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
 
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-card/80 rounded-lg p-4 border border-border/50 animate-pulse">
+                <div key={i} className="bg-card/80 rounded-lg p-3 border border-border/50 animate-pulse">
                   <div className="flex items-center justify-between">
                     <div className="space-y-2 flex-1">
                       <div className="h-4 bg-muted rounded w-32" />
@@ -149,12 +149,12 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
               ))}
             </div>
           ) : activeJobs.length === 0 ? (
-            <div className="text-center py-12">
-              <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No active jobs</p>
+            <div className="text-center py-8">
+              <Briefcase className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No active jobs</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {activeJobs.slice(0, 10).map((order) => {
                 const dueDate = new Date(order.due_date);
                 const isOverdue = dueDate < now;
@@ -164,21 +164,21 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
                   <div
                     key={order.id}
                     onClick={() => onViewOrder(order.visual_id)}
-                    className="bg-card/80 rounded-lg p-4 border border-border/50 hover:border-border hover:bg-card transition-colors cursor-pointer"
+                    className="bg-card/80 rounded-lg p-3 border border-border/50 hover:border-border hover:bg-card transition-colors cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-semibold">J-{order.visual_id}</h3>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-semibold text-sm">J-{order.visual_id}</h3>
                           <Badge 
                             variant="secondary" 
-                            className="text-xs font-medium"
+                            className="text-xs font-medium px-1.5 py-0"
                           >
                             {order.status.toLowerCase()}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{order.customer_name}</p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">{order.customer_name}</p>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <CalendarBlank className="w-3 h-3" />
                             <span>
@@ -190,7 +190,7 @@ export function Dashboard({ orders, customers, onViewOrder }: DashboardProps) {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium text-muted-foreground mb-1">
+                        <p className="text-xs font-medium text-muted-foreground">
                           {order.line_items.reduce((sum, li) => sum + li.quantity, 0)} items
                         </p>
                       </div>
