@@ -180,16 +180,37 @@ interface EditingCell {
   value: string | number;
 }
 
+interface EditingImprintCell {
+  imprintId: number;
+  field: string;
+  value: string | number;
+}
+
 function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
   const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+  const [editingImprintCell, setEditingImprintCell] = useState<EditingImprintCell | null>(null);
   const [editedItems, setEditedItems] = useState<Record<string, Partial<OrderDetailLineItem>>>({}); 
+  const [editedImprints, setEditedImprints] = useState<Record<number, Partial<LineItemImprint>>>({}); 
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set(items.map(i => i.id)));
   
   const sizeColumns = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'] as const;
   const visibleSizeColumns = sizeColumns.filter(size => 
     currentColumnConfig.sizes.adult[size as keyof typeof currentColumnConfig.sizes.adult]
   );
+  
+  const toggleExpanded = (itemId: number) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
   
   const mapSizesToDisplay = (sizes: OrderDetailLineItem['sizes']): Record<string, number> => {
     return {
@@ -260,9 +281,61 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
     }
   };
 
+  const getImprintValue = (imprint: LineItemImprint, field: string): string | number => {
+    const edited = editedImprints[imprint.id];
+    if (edited && field in edited) {
+      const val = edited[field as keyof typeof edited];
+      return val !== undefined && val !== null ? val as (string | number) : '';
+    }
+    
+    if (field === 'location') return imprint.location || '';
+    if (field === 'decorationType') return imprint.decorationType || '';
+    if (field === 'description') return imprint.description || '';
+    if (field === 'colorCount') return imprint.colorCount || 0;
+    if (field === 'colors') return imprint.colors || '';
+    if (field === 'width') return imprint.width || '';
+    if (field === 'height') return imprint.height || '';
+    return '';
+  };
+
+  const handleImprintCellClick = (imprintId: number, field: string, value: string | number) => {
+    setEditingImprintCell({ imprintId, field, value });
+  };
+
+  const handleImprintCellChange = (value: string) => {
+    if (!editingImprintCell) return;
+    
+    setEditedImprints((prev) => ({
+      ...prev,
+      [editingImprintCell.imprintId]: {
+        ...prev[editingImprintCell.imprintId],
+        [editingImprintCell.field]: ['colorCount', 'width', 'height'].includes(editingImprintCell.field)
+          ? parseFloat(value) || 0
+          : value,
+      },
+    }));
+    
+    setEditingImprintCell({ ...editingImprintCell, value });
+  };
+
+  const handleImprintCellBlur = () => {
+    if (editingImprintCell) {
+      toast.success('Imprint updated');
+      setEditingImprintCell(null);
+    }
+  };
+
+  const handleImprintKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleImprintCellBlur();
+    } else if (e.key === 'Escape') {
+      setEditingImprintCell(null);
+    }
+  };
+
   const renderEditableCell = (item: OrderDetailLineItem, field: string, align: 'left' | 'center' | 'right' = 'left') => {
     const value = getItemValue(item, field);
-    const isEditing = editingCell?.itemId === item.id && editingCell?.field === field;
+    const isEditing = editingCell?.itemId === String(item.id) && editingCell?.field === field;
     const isEmpty = value === '' || value === null || (typeof value === 'number' && value === 0);
     const displayValue = field === 'unitCost' ? formatCurrency(Number(value)) : (isEmpty ? '-' : String(value));
     
@@ -272,7 +345,7 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
     return (
       <td 
         className={`${paddingClass} py-1.5 align-top cursor-pointer hover:bg-primary/5 transition-colors group relative ${alignmentClass}`}
-        onClick={() => !isEditing && handleCellClick(item.id, field, value)}
+        onClick={() => !isEditing && handleCellClick(String(item.id), field, value)}
       >
         {isEditing ? (
           <Input
@@ -301,12 +374,55 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
     );
   };
 
+  const renderEditableImprintCell = (imprint: LineItemImprint, field: string, align: 'left' | 'center' | 'right' = 'left', colSpan: number = 1) => {
+    const value = getImprintValue(imprint, field);
+    const isEditing = editingImprintCell?.imprintId === imprint.id && editingImprintCell?.field === field;
+    const isEmpty = value === '' || value === null || (typeof value === 'number' && value === 0);
+    const displayValue = isEmpty ? '-' : String(value);
+    
+    const alignmentClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
+    
+    return (
+      <td 
+        colSpan={colSpan}
+        className={`px-3 py-1.5 align-top cursor-pointer hover:bg-primary/5 transition-colors group relative ${alignmentClass}`}
+        onClick={() => !isEditing && handleImprintCellClick(imprint.id, field, value)}
+      >
+        {isEditing ? (
+          <Input
+            autoFocus
+            type={['colorCount', 'width', 'height'].includes(field) ? 'number' : 'text'}
+            value={String(editingImprintCell.value)}
+            onChange={(e) => handleImprintCellChange(e.target.value)}
+            onBlur={handleImprintCellBlur}
+            onKeyDown={handleImprintKeyDown}
+            className={`h-7 text-xs ${alignmentClass} py-0 px-2 border-primary focus-visible:ring-1`}
+            step={['width', 'height'].includes(field) ? '0.01' : '1'}
+            min="0"
+          />
+        ) : (
+          <div className="flex items-center gap-1 h-7 py-1">
+            <span className={`flex-1 ${isEmpty ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>
+              {displayValue}
+            </span>
+            <PencilSimple 
+              className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" 
+              weight="bold" 
+            />
+          </div>
+        )}
+      </td>
+    );
+  };
+
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-muted/50 border-b border-border">
+              <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap w-8">
+              </th>
               {currentColumnConfig.itemNumber && (
                 <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">
                   Item #
@@ -347,7 +463,7 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
           <tbody>
             {items.map((item, idx) => {
               const sizes = mapSizesToDisplay(item.sizes);
-              const editedSizes = editedItems[item.id] || {};
+              const editedSizes = editedItems[String(item.id)] || {};
               const currentSizes = { ...sizes, ...editedSizes };
               
               const totalQty = visibleSizeColumns.reduce((sum, size) => {
@@ -358,43 +474,136 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
               
               const unitCost = getItemValue(item, 'unitCost');
               const totalCost = totalQty * Number(unitCost);
+              const isExpanded = expandedItems.has(item.id);
+              const hasImprints = item.imprints && item.imprints.length > 0;
               
               return (
-                <tr key={item.id} className="border-b border-border last:border-b-0 hover:bg-muted/10 transition-colors">
-                  {currentColumnConfig.itemNumber && renderEditableCell(item, 'styleNumber', 'left')}
-                  {currentColumnConfig.color && renderEditableCell(item, 'color', 'left')}
-                  {renderEditableCell(item, 'description', 'left')}
-                  {visibleSizeColumns.map(size => renderEditableCell(item, `size-${size}`, 'center'))}
-                  {currentColumnConfig.quantity && (
+                <>
+                  {/* Line Item Row */}
+                  <tr key={item.id} className="border-b border-border hover:bg-muted/10 transition-colors">
+                    <td className="px-3 py-1.5 align-top">
+                      <div className="h-7 flex items-center">
+                        {hasImprints && (
+                          <button
+                            onClick={() => toggleExpanded(item.id)}
+                            className="p-0.5 hover:bg-muted rounded transition-colors"
+                            title={isExpanded ? 'Collapse imprints' : 'Expand imprints'}
+                          >
+                            <svg
+                              className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    {currentColumnConfig.itemNumber && renderEditableCell(item, 'styleNumber', 'left')}
+                    {currentColumnConfig.color && renderEditableCell(item, 'color', 'left')}
+                    {renderEditableCell(item, 'description', 'left')}
+                    {visibleSizeColumns.map(size => renderEditableCell(item, `size-${size}`, 'center'))}
+                    {currentColumnConfig.quantity && (
+                      <td className="px-3 py-1.5 text-center align-top">
+                        <div className="h-7 flex items-center justify-center">
+                          <span className="text-foreground font-medium">
+                            {totalQty}
+                          </span>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-3 py-1.5 text-center align-top">
                       <div className="h-7 flex items-center justify-center">
                         <span className="text-foreground font-medium">
-                          {totalQty}
+                          {item.totalQuantity}
                         </span>
                       </div>
                     </td>
-                  )}
-                  <td className="px-3 py-1.5 text-center align-top">
-                    <div className="h-7 flex items-center justify-center">
-                      <span className="text-foreground font-medium">
-                        {item.totalQuantity}
-                      </span>
-                    </div>
-                  </td>
-                  {renderEditableCell(item, 'unitCost', 'right')}
-                  <td className="px-3 py-1.5 text-center align-top">
-                    <div className="h-7 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-foreground" weight="bold" />
-                    </div>
-                  </td>
-                  <td className="px-3 py-1.5 text-right align-top">
-                    <div className="h-7 flex items-center justify-end">
-                      <span className="text-foreground font-medium">
-                        {formatCurrency(totalCost)}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
+                    {renderEditableCell(item, 'unitCost', 'right')}
+                    <td className="px-3 py-1.5 text-center align-top">
+                      <div className="h-7 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-foreground" weight="bold" />
+                      </div>
+                    </td>
+                    <td className="px-3 py-1.5 text-right align-top">
+                      <div className="h-7 flex items-center justify-end">
+                        <span className="text-foreground font-medium">
+                          {formatCurrency(totalCost)}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Imprint Rows */}
+                  {isExpanded && hasImprints && item.imprints.map((imprint, imprintIdx) => (
+                    <tr key={`imprint-${imprint.id}`} className="bg-gradient-to-r from-muted/40 to-muted/20 border-b border-border/50 hover:from-muted/50 hover:to-muted/30 transition-colors">
+                      <td className="px-3 py-1.5 align-top">
+                        <div className="h-7 flex items-center justify-center">
+                          <div className="w-1 h-4 bg-primary/30 rounded-full"></div>
+                        </div>
+                      </td>
+                      {currentColumnConfig.itemNumber && (
+                        <td className="px-3 py-1.5 align-top">
+                          <div className="h-7 flex items-center">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
+                              {imprint.decorationType || 'Imprint'}
+                            </Badge>
+                          </div>
+                        </td>
+                      )}
+                      {currentColumnConfig.color && (
+                        <td className="px-3 py-1.5 align-top"></td>
+                      )}
+                      {renderEditableImprintCell(imprint, 'description', 'left', 1)}
+                      {renderEditableImprintCell(imprint, 'location', 'left', Math.max(2, Math.floor(visibleSizeColumns.length / 4)))}
+                      {renderEditableImprintCell(imprint, 'colors', 'left', Math.max(2, Math.floor(visibleSizeColumns.length / 4)))}
+                      <td 
+                        className="px-3 py-1.5 align-top" 
+                        colSpan={visibleSizeColumns.length - Math.floor(visibleSizeColumns.length / 4) * 2}
+                      >
+                        <div className="h-7 flex items-center gap-2">
+                          {imprint.mockups && imprint.mockups.length > 0 && (
+                            <div className="flex gap-1">
+                              {imprint.mockups.slice(0, 3).map((mockup, idx) => (
+                                <button
+                                  key={mockup.id}
+                                  onClick={() => {
+                                    const allMockups = imprint.mockups?.map(m => ({
+                                      url: m.url,
+                                      name: m.name || 'Imprint mockup',
+                                      id: String(m.id)
+                                    })) || [];
+                                    onImageClick?.(allMockups, idx);
+                                  }}
+                                  className="w-7 h-7 flex-shrink-0 rounded border border-border bg-card hover:border-primary hover:shadow-sm transition-all cursor-pointer overflow-hidden"
+                                  title={mockup.name || 'Mockup'}
+                                >
+                                  <img
+                                    src={mockup.url}
+                                    alt={mockup.name || 'Imprint mockup'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                </button>
+                              ))}
+                              {imprint.mockups.length > 3 && (
+                                <span className="text-[10px] text-muted-foreground self-center">
+                                  +{imprint.mockups.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      {currentColumnConfig.quantity && <td></td>}
+                      <td colSpan={4}></td>
+                    </tr>
+                  ))}
+                </>
               );
             })}
           </tbody>
