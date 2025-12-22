@@ -59,7 +59,7 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
             <Badge
               variant="secondary"
               onClick={onNavigateToOrders}
-              className="text-xs font-medium px-2 py-0.5 cursor-pointer hover:bg-secondary/80 transition-colors border border-[#10B981]"
+              className="text-xs font-medium px-2 py-0.5 cursor-pointer hover:bg-[#10B981] hover:text-white transition-colors border border-[#10B981]"
             >
               All Orders
             </Badge>
