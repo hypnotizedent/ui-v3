@@ -333,6 +333,7 @@ export function useOrderDetail(visualId: string | null) {
         name: m.name || 'Imprint Mockup',
         thumbnail_url: m.thumbnail_url || m.thumbnailUrl || null,
       }));
+      console.log('🖼️ Order-level imprintMockups:', orderImprintMockups);
 
       // Map API response to our type
       const orderDetail: OrderDetail = {
@@ -379,6 +380,7 @@ export function useOrderDetail(visualId: string | null) {
                   thumbnail_url: m.thumbnail_url || m.thumbnailUrl || null,
                 }))
               : orderImprintMockups;
+            console.log('🖼️ Imprint mockups assigned:', { imprintId: imp.id, mockups: imprintMockups });
 
             return {
               id: imp.id,
