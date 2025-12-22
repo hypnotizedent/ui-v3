@@ -5,56 +5,69 @@ Wire this Spark UI to the live Mint OS API so the dashboard displays real produc
 
 ---
 
-## 🎯 HIGH PRIORITY - v2.2.0 Quote System (December 2025)
+## 🎯 CURRENT STATUS - v2.2.1 Order Detail Page (December 22, 2025)
 
-### Goal: Create new quotes/orders in Mint OS (replace Printavo)
+### Completed Today
+- [x] Quotes nav and routes added
+- [x] Unified detail page (quotes use OrderDetailPage)
+- [x] Quote-to-order conversion button
+- [x] Quote API hooks created
+- [x] quote-adapter.ts transforms quote → order shape
+- [x] /api/v2/quotes endpoints working
 
-**Phase 1 - Core Quote Builder (Day 1-2)**
-- [ ] Add "Quotes" to sidebar navigation
-- [ ] Create /quotes route → QuotesList page
-- [ ] Create /quotes/new route → QuoteBuilder page
-- [ ] Wire "New Order" button → navigate to /quotes/new
-- [ ] Port QuoteBuilder.tsx from PrintShopPro (633 lines)
-- [ ] Port CustomerSearch.tsx (172 lines)
-- [ ] Wire to real API: GET/POST /api/v2/quotes
+### Order Detail Page - What Works
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Header with order # | ✅ | Shows orderNumber/quoteNumber |
+| Customer info bar | ✅ | Name, email, phone |
+| Line items table | ✅ | With sizes grid |
+| Pricing totals | ✅ | Subtotal, tax, total |
+| Status display | ✅ | Color-coded badges |
+| Convert to Order | ✅ | Green button for quotes |
+| Imprint details | ✅ | Location, type, colors |
 
-**Phase 2 - Line Items (Day 2)**
-- [ ] Port LineItemGrid.tsx (1,161 lines) or create simplified version
-- [ ] Wire to: POST/PUT/DELETE /api/v2/quotes/:id/line-items
-- [ ] Port PricingSummary.tsx (115 lines)
-- [ ] Auto-calculate totals on changes
+### Order Detail Page - Issues
+| Issue | Severity | Root Cause |
+|-------|----------|------------|
+| Mockups not showing | HIGH | API returns null for mockup field |
+| Artwork gallery empty | HIGH | artworkFiles[] empty from API |
+| No image upload | HIGH | API endpoint missing |
+| Edits don't persist | HIGH | No API calls on save |
+| No line item add/delete | MEDIUM | API endpoints needed |
 
-**Phase 3 - Convert to Order (Day 2-3)**
-- [ ] Add "Convert to Order" button
-- [ ] Wire to: POST /api/v2/quotes/:id/convert
-- [ ] Navigate to new order after conversion
-- [ ] Success notification
+### Next Steps - UI (v2.2.1+)
 
-**API Endpoints (To Build)**
-```
-GET    /api/v2/quotes
-POST   /api/v2/quotes
-GET    /api/v2/quotes/:id
-PUT    /api/v2/quotes/:id
-POST   /api/v2/quotes/:id/line-items
-POST   /api/v2/quotes/:id/convert
-```
+1. **Fix Mockup Display (API side)**
+   - [ ] Check ronny-ops for mockup data in DB
+   - [ ] Update API to return mockup URLs
+   - [ ] Verify images load from files.ronny.works
 
-**Reference Docs**
-- docs/ROADMAP_v2x_WIRE_APIS.md - Version plan
-- docs/PORT_QUOTE_BUILDER.md - Porting checklist
-- docs/DISCOVERY_QUOTE_BUILDER_UI.md - PrintShopPro analysis
+2. **Port from print-shop-pro**
+   - [ ] ArtworkUpload.tsx (242 lines) - file upload
+   - [ ] ProductMockup.tsx (361 lines) - mockup display
+   - [ ] DecorationManager.tsx (1,319 lines) - imprint editing
+   - [ ] LineItemGrid.tsx (1,161 lines) - full editor
 
-### Blocked Until API Ready
-- [ ] Customer create (POST /api/customers) - ronny-ops building
-- [ ] Customer edit (PUT /api/customers/:id) - ronny-ops building
+3. **Wire Saves to API**
+   - [ ] Line item edits → PUT /api/orders/:id/line-items/:id
+   - [ ] Add line item → POST /api/orders/:id/line-items
+   - [ ] Image upload → POST /api/orders/:id/artwork
+   - [ ] Status change → PUT /api/orders/:id/status
 
-### After v2.2.0: Quick Wins
-| Feature | Effort | Impact |
-|---------|--------|--------|
-| Reports Dashboard | 1 day | Business insights |
-| Record Payment button | 2 hours | Daily workflow |
-| Shipping labels | 1-2 days | Fulfillment |
+4. **Blocked Until API Ready**
+   - [ ] Customer create (POST /api/customers)
+   - [ ] Customer edit (PUT /api/customers/:id)
+   - [ ] Mockup upload endpoint
+
+### print-shop-pro Components to Port
+| Component | Lines | Purpose | Priority |
+|-----------|-------|---------|----------|
+| ArtworkUpload.tsx | 242 | File upload with drag-drop | HIGH |
+| ProductMockup.tsx | 361 | Mockup image display | HIGH |
+| LineItemGrid.tsx | 1,161 | Full line item editor | HIGH |
+| DecorationManager.tsx | 1,319 | Imprint/decoration editing | MEDIUM |
+| PricingSummary.tsx | 115 | Pricing calculations | LOW |
+| JobDetail.tsx | 709 | Order detail layout | REFERENCE |
 
 ---
 
@@ -63,12 +76,13 @@ POST   /api/v2/quotes/:id/convert
 | Doc | Purpose |
 |-----|---------|
 | docs/ROADMAP_v2x_WIRE_APIS.md | Version roadmap |
+| docs/PLAN_UNIFIED_DETAIL_PAGE.md | Unified order/quote detail page |
+| docs/AUDIT_ORDER_DETAIL_FEATURES.md | Feature audit & mockup investigation |
 | docs/PORT_QUOTE_BUILDER.md | Quote Builder porting plan |
 | docs/DISCOVERY_QUOTE_BUILDER_UI.md | PrintShopPro analysis |
 | docs/PLAN_ORDER_DETAIL_v220.md | Order detail improvements |
 | docs/DIAG_ORDER_DETAIL_PAGE.md | Order detail audit |
 | docs/DIAG_PRINTSHOPPRO_COMPARISON.md | UI comparison |
-| docs/DIAG_CUSTOMER_CARD_v214.md | Customer card audit |
 
 ---
 
