@@ -234,6 +234,79 @@ interface APICustomer {
 }
 
 // =============================================================================
+// ORDER DETAIL API TYPES (camelCase - different from list API!)
+// =============================================================================
+
+interface APIOrderDetailSizes {
+  xs: number
+  s: number
+  m: number
+  l: number
+  xl: number
+  xxl: number
+  xxxl: number
+  xxxxl?: number
+  xxxxxl?: number
+  other: number
+}
+
+interface APIOrderDetailImprint {
+  id: number
+  location: string
+  decorationType: string
+  description: string | null
+  colorCount: number | null
+  colors: string
+  width: number | null
+  height: number | null
+}
+
+interface APIOrderDetailLineItem {
+  id: number
+  styleNumber: string | null
+  description: string | null
+  color: string | null
+  category: string | null
+  unitCost: number
+  totalCost: number
+  totalQuantity: number
+  sizes: APIOrderDetailSizes
+  imprints: APIOrderDetailImprint[]
+  mockup: string | null  // URL or null
+}
+
+interface APIOrderDetail {
+  id: number
+  orderNumber: string
+  orderNickname: string | null
+  status: string
+  printavoStatusName: string
+  printavoId: number | null
+  dueDate: string | null
+  customerDueDate: string | null
+  createdAt: string
+  updatedAt: string
+  totalAmount: number
+  amountOutstanding: number
+  notes: string | null
+  productionNotes: string | null
+  customerPo: string | null
+  customer: {
+    id: number
+    company: string
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+  } | null
+  lineItems: APIOrderDetailLineItem[]
+  artworkFiles: any[]
+  artworkCount: number
+  productionFiles: any[]
+  statusHistory: any[]
+}
+
+// =============================================================================
 // STATUS MAPPING
 // =============================================================================
 
@@ -437,6 +510,152 @@ function transformCustomer(apiCustomer: APICustomer): Customer {
 }
 
 // =============================================================================
+// ORDER DETAIL TRANSFORMATION (camelCase API response)
+// =============================================================================
+
+function mapDecorationType(decorationType: string): Imprint['type'] {
+  const dt = (decorationType || '').toLowerCase()
+  if (dt.includes('embroid')) return 'embroidery'
+  if (dt.includes('dtg') || dt.includes('direct to garment')) return 'dtg'
+  if (dt.includes('vinyl') || dt.includes('heat')) return 'vinyl'
+  if (dt.includes('digital')) return 'digital_transfer'
+  return 'screen_print'
+}
+
+function transformDetailSizes(sizes: APIOrderDetailSizes): Size[] {
+  const result: Size[] = []
+  if (sizes.xs > 0) result.push({ size: 'XS', quantity: sizes.xs })
+  if (sizes.s > 0) result.push({ size: 'S', quantity: sizes.s })
+  if (sizes.m > 0) result.push({ size: 'M', quantity: sizes.m })
+  if (sizes.l > 0) result.push({ size: 'L', quantity: sizes.l })
+  if (sizes.xl > 0) result.push({ size: 'XL', quantity: sizes.xl })
+  if (sizes.xxl > 0) result.push({ size: '2XL', quantity: sizes.xxl })
+  if (sizes.xxxl > 0) result.push({ size: '3XL', quantity: sizes.xxxl })
+  if (sizes.xxxxl && sizes.xxxxl > 0) result.push({ size: '4XL', quantity: sizes.xxxxl })
+  if (sizes.xxxxxl && sizes.xxxxxl > 0) result.push({ size: '5XL', quantity: sizes.xxxxxl })
+  if (sizes.other > 0) result.push({ size: 'Other', quantity: sizes.other })
+  return result
+}
+
+function transformDetailImprint(apiImprint: APIOrderDetailImprint): Imprint {
+  return {
+    id: String(apiImprint.id),
+    type: mapDecorationType(apiImprint.decorationType),
+    location: apiImprint.location || 'Front Center',
+    colors: apiImprint.colorCount || 1,
+    width: apiImprint.width || 12,
+    height: apiImprint.height || 14,
+    description: apiImprint.description || apiImprint.decorationType || '',
+    artwork: null,
+    mockups: []
+  }
+}
+
+function transformDetailLineItem(apiLineItem: APIOrderDetailLineItem): LineItem {
+  const sizes = transformDetailSizes(apiLineItem.sizes)
+  const quantity = apiLineItem.totalQuantity || sizes.reduce((sum, s) => sum + s.quantity, 0)
+
+  // Transform real imprints from API
+  const imprints: Imprint[] = apiLineItem.imprints && apiLineItem.imprints.length > 0
+    ? apiLineItem.imprints.map(transformDetailImprint)
+    : [{
+        id: `imp-${apiLineItem.id}`,
+        type: 'screen_print',
+        location: 'Front Center',
+        colors: 1,
+        width: 12,
+        height: 14,
+        description: apiLineItem.category || 'Standard imprint',
+        artwork: null,
+        mockups: []
+      }]
+
+  // Handle mockup - can be a single URL string
+  const mockups: Mockup[] = apiLineItem.mockup
+    ? [{ url: apiLineItem.mockup, thumbnailUrl: apiLineItem.mockup }]
+    : []
+
+  return {
+    id: String(apiLineItem.id),
+    product: {
+      name: apiLineItem.description || apiLineItem.styleNumber || 'Unknown Product',
+      sku: apiLineItem.styleNumber || '',
+      color: apiLineItem.color || '',
+      brand: ''
+    },
+    sizes,
+    quantity,
+    unit_price: apiLineItem.unitCost || 0,
+    subtotal: apiLineItem.totalCost || (apiLineItem.unitCost * quantity),
+    imprints,
+    mockups,
+    production_files: []
+  }
+}
+
+function transformOrderDetail(apiOrder: APIOrderDetail): Order {
+  const status = mapStatus(apiOrder.printavoStatusName || apiOrder.status)
+  const lineItems = (apiOrder.lineItems || []).map(transformDetailLineItem)
+
+  // Build customer from nested object if available
+  const customer: Customer = apiOrder.customer
+    ? {
+        id: String(apiOrder.customer.id),
+        name: `${apiOrder.customer.firstName || ''} ${apiOrder.customer.lastName || ''}`.trim() || apiOrder.customer.company || 'Unknown',
+        email: apiOrder.customer.email || '',
+        phone: apiOrder.customer.phone || '',
+        company: apiOrder.customer.company || ''
+      }
+    : {
+        id: '0',
+        name: 'Unknown Customer',
+        email: '',
+        phone: '',
+        company: ''
+      }
+
+  const total = apiOrder.totalAmount || 0
+  const amountOutstanding = apiOrder.amountOutstanding || 0
+  const amountPaid = total - amountOutstanding
+
+  return {
+    id: String(apiOrder.id),
+    visual_id: apiOrder.orderNumber || String(apiOrder.id),
+    printavo_id: apiOrder.printavoId,
+    nickname: apiOrder.orderNickname || '',
+    status,
+    customer_id: customer.id,
+    customer,
+    line_items: lineItems,
+    payments: [],
+    tasks: [],
+    artwork_files: apiOrder.artworkFiles || [],
+    artwork_count: apiOrder.artworkCount || 0,
+    subtotal: total,  // API doesn't separate subtotal
+    discount: 0,
+    discount_percent: 0,
+    sales_tax: 0,
+    sales_tax_percent: 0,
+    total,
+    amount_paid: amountPaid,
+    amount_outstanding: amountOutstanding,
+    due_date: apiOrder.dueDate || '',
+    order_date: apiOrder.createdAt || '',
+    created_at: apiOrder.createdAt || '',
+    updated_at: apiOrder.updatedAt || '',
+    customer_note: apiOrder.notes || '',
+    production_note: apiOrder.productionNotes || '',
+    public_url: '',
+    workorder_url: ''
+  }
+}
+
+// Helper for detecting PDF mockups
+export function isPDF(url: string): boolean {
+  return url?.toLowerCase().endsWith('.pdf') || false
+}
+
+// =============================================================================
 // API FETCH FUNCTIONS
 // =============================================================================
 
@@ -496,9 +715,15 @@ export async function fetchOrderById(id: string): Promise<Order | null> {
 
   const response = await fetch(`${API_BASE_URL}/api/orders/${id}`)
   if (!response.ok) return null
-  
+
   const data = await response.json()
-  return transformOrder(data.order || data)
+  // Order detail API returns camelCase, use dedicated transformer
+  const order = transformOrderDetail(data as APIOrderDetail)
+  // Detail API doesn't return visual_id, use the lookup ID
+  if (!order.visual_id || order.visual_id === String(order.id)) {
+    order.visual_id = id
+  }
+  return order
 }
 
 export async function fetchCustomerById(id: string): Promise<Customer | null> {
