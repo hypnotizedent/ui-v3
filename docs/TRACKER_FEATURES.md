@@ -8,12 +8,13 @@
 
 | Feature | Plan Doc | Priority | Effort |
 |---------|----------|----------|--------|
-| Dynamic size columns with toggle | `PLAN_DYNAMIC_SIZE_COLUMNS.md` | HIGH | 3-4h |
 | Imprint CRUD (add/edit/delete) | - | HIGH | 4-6h |
 | Artwork upload | - | MEDIUM | 3-4h |
 | Line item add (inline) | `PLAN_v224_FIXES.md` | MEDIUM | 2-3h |
 | Customer address display | `AUDIT_UI_QA_DEC22.md` | LOW | 1h |
 | Edit persistence (save to API) | `AUDIT_UI_WIRING_GAPS.md` | MEDIUM | 4-6h |
+| Add quotes to global search | `AUDIT_SEARCH_SYSTEMS.md` | LOW | 1h |
+| Cmd+K keyboard shortcut | `AUDIT_SEARCH_SYSTEMS.md` | LOW | 30m |
 
 ---
 
@@ -29,6 +30,8 @@
 
 | Version | Features | Date |
 |---------|----------|------|
+| v2.4.0 | Unified global search with typeahead dropdown | Dec 22, 2025 |
+| v2.3.0 | Dynamic size columns (baby, youth, adult) | Dec 22, 2025 |
 | v2.2.5 | Remove mock data injection, empty states, size column collapse | Dec 22, 2025 |
 | v2.2.4 | Pagination fix, global search, imprint modal fix, quotes cleanup | Dec 22, 2025 |
 | v2.2.3 | Reports page with production stats | Dec 22, 2025 |
@@ -43,6 +46,7 @@
 
 | Document | Purpose |
 |----------|---------|
+| `AUDIT_SEARCH_SYSTEMS.md` | Global search audit & implementation plan |
 | `PLAN_DYNAMIC_SIZE_COLUMNS.md` | Dynamic size columns implementation |
 | `AUDIT_ORDER_DETAIL_PAGE.md` | Order detail page audit & mock data findings |
 | `AUDIT_UI_QA_DEC22.md` | UI QA audit with 12 issues |
