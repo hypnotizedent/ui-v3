@@ -1,16 +1,29 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useCustomersList, type CustomerListItem } from '@/lib/hooks';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   MagnifyingGlass,
   Users,
   CaretLeft,
   CaretRight,
   ArrowClockwise,
-  Warning
+  Warning,
+  FunnelSimple
 } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -19,6 +32,9 @@ interface CustomersListPageProps {
 }
 
 const PAGE_SIZE = 50;
+
+type SortOption = 'recent' | 'name' | 'revenue' | 'orders';
+type TierOption = 'all' | 'platinum' | 'gold' | 'silver' | 'bronze';
 
 const getTierColor = (tier?: string) => {
   switch (tier?.toLowerCase()) {
@@ -39,6 +55,8 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [tierFilter, setTierFilter] = useState<TierOption>('all');
 
   const offset = page * PAGE_SIZE;
 
@@ -46,9 +64,12 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
     limit: PAGE_SIZE,
     offset: searchQuery ? undefined : offset,
     search: searchQuery || undefined,
+    sort: searchQuery ? undefined : sortBy,
+    tier: searchQuery ? undefined : tierFilter,
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const hasActiveFilters = sortBy !== 'recent' || tierFilter !== 'all';
 
   const handleSearch = () => {
     setSearchQuery(searchInput);
@@ -75,6 +96,22 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
     setPage(p => Math.min(totalPages - 1, p + 1));
   };
 
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
+    setPage(0);
+  };
+
+  const handleTierChange = (value: TierOption) => {
+    setTierFilter(value);
+    setPage(0);
+  };
+
+  const clearFilters = () => {
+    setSortBy('recent');
+    setTierFilter('all');
+    setPage(0);
+  };
+
   if (loading && customers.length === 0) {
     return (
       <div className="space-y-4">
@@ -84,7 +121,7 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
         </div>
         <div className="animate-pulse space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-14 bg-card rounded-lg border border-border" />
+            <div key={i} className="h-16 bg-card rounded-lg border border-border" />
           ))}
         </div>
       </div>
@@ -141,6 +178,69 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
             Clear
           </Button>
         )}
+
+        {/* Filter Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={hasActiveFilters ? "default" : "outline"}
+              size="sm"
+              className="h-9 gap-1.5"
+            >
+              <FunnelSimple size={16} />
+              Filter
+              {hasActiveFilters && <span className="text-xs">({tierFilter !== 'all' ? 1 : 0 + (sortBy !== 'recent' ? 1 : 0)})</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" align="end">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Filters</h4>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-7 text-xs px-2"
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Sort By</label>
+                <Select value={sortBy} onValueChange={(v) => handleSortChange(v as SortOption)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Recent Activity</SelectItem>
+                    <SelectItem value="name">Name (A-Z)</SelectItem>
+                    <SelectItem value="revenue">Revenue (High to Low)</SelectItem>
+                    <SelectItem value="orders">Orders (High to Low)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Filter by Tier</label>
+                <Select value={tierFilter} onValueChange={(v) => handleTierChange(v as TierOption)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tiers</SelectItem>
+                    <SelectItem value="platinum">Platinum</SelectItem>
+                    <SelectItem value="gold">Gold</SelectItem>
+                    <SelectItem value="silver">Silver</SelectItem>
+                    <SelectItem value="bronze">Bronze</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {customers.length === 0 ? (
@@ -153,9 +253,9 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-0.5">
+        <div className="space-y-2">
           {customers.map((customer) => {
-            const lastOrderDate = customer.last_order_date 
+            const lastOrderDate = customer.last_order_date
               ? formatDistanceToNow(new Date(customer.last_order_date), { addSuffix: true })
               : 'Never';
 
@@ -163,31 +263,31 @@ export function CustomersListPage({ onViewCustomer }: CustomersListPageProps) {
               <Card
                 key={customer.id}
                 onClick={() => onViewCustomer(String(customer.id))}
-                className="bg-card/50 hover:bg-card/80 border-border/50 cursor-pointer transition-all hover:border-border overflow-hidden group"
+                className="bg-card/50 hover:bg-accent/50 border-border/50 cursor-pointer transition-colors hover:border-border"
               >
-                <CardContent className="px-3 py-2">
-                  <div className="flex items-center justify-between gap-3">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-semibold text-foreground truncate">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-semibold text-foreground truncate">
                           {customer.name}
                         </h3>
-                        <Badge className={`${getTierColor(customer.tier)} uppercase text-[10px] font-semibold px-1 py-0 h-3.5`}>
+                        <Badge className={`${getTierColor(customer.tier)} uppercase text-[10px] font-semibold px-1.5 py-0 h-4`}>
                           {customer.tier}
                         </Badge>
                       </div>
                       {customer.company && (
-                        <p className="text-xs text-muted-foreground truncate">
+                        <p className="text-sm text-muted-foreground truncate mt-0.5">
                           {customer.company}
                         </p>
                       )}
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        ${customer.total_revenue.toFixed(2)}
+                      <p className="text-base font-semibold text-foreground">
+                        ${customer.total_revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         {customer.orders_count} order{customer.orders_count !== 1 ? 's' : ''} · {lastOrderDate}
                       </p>
                     </div>

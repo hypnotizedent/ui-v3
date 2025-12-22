@@ -552,6 +552,8 @@ export function useCustomersList(options?: {
   limit?: number
   offset?: number
   search?: string
+  sort?: 'name' | 'revenue' | 'orders' | 'recent'
+  tier?: 'all' | 'platinum' | 'gold' | 'silver' | 'bronze'
 }) {
   const [customers, setCustomers] = useState<CustomerListItem[]>([])
   const [total, setTotal] = useState(0)
@@ -567,10 +569,12 @@ export function useCustomersList(options?: {
         // Use search endpoint
         url = `${API_BASE_URL}/api/customers/search?q=${encodeURIComponent(options.search)}`
       } else {
-        // Use list endpoint with pagination
+        // Use list endpoint with pagination, sorting, and filtering
         const params = new URLSearchParams()
         if (options?.limit) params.set('limit', String(options.limit))
         if (options?.offset) params.set('offset', String(options.offset))
+        if (options?.sort) params.set('sort', options.sort)
+        if (options?.tier && options.tier !== 'all') params.set('tier', options.tier)
         url = `${API_BASE_URL}/api/customers?${params}`
       }
 
@@ -616,7 +620,7 @@ export function useCustomersList(options?: {
     } finally {
       setLoading(false)
     }
-  }, [options?.limit, options?.offset, options?.search])
+  }, [options?.limit, options?.offset, options?.search, options?.sort, options?.tier])
 
   useEffect(() => {
     load()
