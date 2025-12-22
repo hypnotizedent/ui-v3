@@ -118,9 +118,10 @@ export interface Customer {
     state: string
     zip: string
   }
-  orders_count?: number
-  total_revenue?: number
-  tier?: 'bronze' | 'silver' | 'gold' | 'platinum'
+  orders_count: number
+  total_revenue: number
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  last_order_date?: string
 }
 
 export interface Order {
@@ -130,6 +131,9 @@ export interface Order {
   nickname: string | null
   status: OrderStatus
   customer_id: string
+  customer_name: string
+  customer_company: string
+  line_items_count: number
   customer: Customer
   line_items: LineItem[]
   payments: Payment[]
@@ -166,6 +170,7 @@ interface APIOrder {
   status: string
   printavo_status_name: string
   customer_name: string
+  customer_company: string | null
   customer_id: number | null
   due_date: string | null
   created_at: string
@@ -173,6 +178,7 @@ interface APIOrder {
   subtotal: string | number
   tax: string | number
   total: string | number
+  total_amount: string | number
   amount_paid: string | number
   amount_outstanding: string | number
   production_notes: string | null
@@ -230,6 +236,9 @@ interface APICustomer {
   phone: string | null
   company: string | null
   orders_count: number
+  total_revenue: string | number | null
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | null
+  last_order_date: string | null
   created_at: string
 }
 
@@ -447,23 +456,31 @@ function transformLineItem(apiLineItem: APILineItem, statusName: string): LineIt
 
 function transformOrder(apiOrder: APIOrder): Order {
   const status = mapStatus(apiOrder.printavo_status_name || apiOrder.status)
-  const lineItems = (apiOrder.line_items || []).map(li => 
+  const lineItems = (apiOrder.line_items || []).map(li =>
     transformLineItem(li, apiOrder.printavo_status_name || '')
   )
 
   const subtotal = parseFloat(String(apiOrder.subtotal)) || 0
   const tax = parseFloat(String(apiOrder.tax)) || 0
-  const total = parseFloat(String(apiOrder.total)) || 0
+  // Use total_amount (API field) or total as fallback
+  const total = parseFloat(String(apiOrder.total_amount || apiOrder.total)) || 0
   const amountPaid = parseFloat(String(apiOrder.amount_paid)) || 0
   const amountOutstanding = parseFloat(String(apiOrder.amount_outstanding)) || total - amountPaid
+
+  // Extract customer name and company from API
+  const customerName = apiOrder.customer_name || 'Unknown Customer'
+  const customerCompany = apiOrder.customer_company || ''
 
   // Create customer object from order data
   const customer: Customer = {
     id: String(apiOrder.customer_id || 0),
-    name: apiOrder.customer_name || 'Unknown Customer',
+    name: customerName,
     email: '',
     phone: '',
-    company: ''
+    company: customerCompany,
+    orders_count: 0,
+    total_revenue: 0,
+    tier: 'bronze'
   }
 
   return {
@@ -473,6 +490,9 @@ function transformOrder(apiOrder: APIOrder): Order {
     nickname: apiOrder.order_nickname || '',
     status,
     customer_id: String(apiOrder.customer_id || 0),
+    customer_name: customerName,
+    customer_company: customerCompany,
+    line_items_count: (apiOrder.line_items || []).length,
     customer,
     line_items: lineItems,
     payments: [],  // Will populate from transactions if available
@@ -505,7 +525,10 @@ function transformCustomer(apiCustomer: APICustomer): Customer {
     email: apiCustomer.email || '',
     phone: apiCustomer.phone || '',
     company: apiCustomer.company || '',
-    orders_count: apiCustomer.orders_count || 0
+    orders_count: apiCustomer.orders_count || 0,
+    total_revenue: parseFloat(String(apiCustomer.total_revenue)) || 0,
+    tier: apiCustomer.tier || 'bronze',
+    last_order_date: apiCustomer.last_order_date || undefined
   }
 }
 
@@ -597,21 +620,33 @@ function transformOrderDetail(apiOrder: APIOrderDetail): Order {
   const status = mapStatus(apiOrder.printavoStatusName || apiOrder.status)
   const lineItems = (apiOrder.lineItems || []).map(transformDetailLineItem)
 
-  // Build customer from nested object if available
+  // Build customer name and company from nested object
+  const customerName = apiOrder.customer
+    ? `${apiOrder.customer.firstName || ''} ${apiOrder.customer.lastName || ''}`.trim() || apiOrder.customer.company || 'Unknown'
+    : 'Unknown Customer'
+  const customerCompany = apiOrder.customer?.company || ''
+
+  // Build customer object
   const customer: Customer = apiOrder.customer
     ? {
         id: String(apiOrder.customer.id),
-        name: `${apiOrder.customer.firstName || ''} ${apiOrder.customer.lastName || ''}`.trim() || apiOrder.customer.company || 'Unknown',
+        name: customerName,
         email: apiOrder.customer.email || '',
         phone: apiOrder.customer.phone || '',
-        company: apiOrder.customer.company || ''
+        company: customerCompany,
+        orders_count: 0,
+        total_revenue: 0,
+        tier: 'bronze'
       }
     : {
         id: '0',
         name: 'Unknown Customer',
         email: '',
         phone: '',
-        company: ''
+        company: '',
+        orders_count: 0,
+        total_revenue: 0,
+        tier: 'bronze'
       }
 
   const total = apiOrder.totalAmount || 0
@@ -625,6 +660,9 @@ function transformOrderDetail(apiOrder: APIOrderDetail): Order {
     nickname: apiOrder.orderNickname || '',
     status,
     customer_id: customer.id,
+    customer_name: customerName,
+    customer_company: customerCompany,
+    line_items_count: (apiOrder.lineItems || []).length,
     customer,
     line_items: lineItems,
     payments: [],

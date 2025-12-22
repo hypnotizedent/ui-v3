@@ -14,10 +14,11 @@ export interface Customer {
   email: string;
   phone: string;
   company: string;
-  address: Address;
+  address?: Address;
   tier: CustomerTier;
   orders_count: number;
   total_revenue: number;
+  last_order_date?: string;
 }
 
 // Legacy status types (for existing components)
@@ -106,6 +107,8 @@ export interface Order {
   visual_id: string;
   customer_id: string;
   customer_name: string;
+  customer_company?: string;
+  line_items_count?: number;
   status: OrderStatus;
   line_items: LineItem[];
   subtotal: number;

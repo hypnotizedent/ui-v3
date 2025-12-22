@@ -91,6 +91,7 @@ export function CustomersList({ customers, onViewCustomer }: CustomersListProps)
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Company</th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Tier</th>
                   <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Orders</th>
+                  <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Last Order</th>
                   <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wide px-4 py-3">Revenue</th>
                 </tr>
               </thead>
@@ -113,6 +114,11 @@ export function CustomersList({ customers, onViewCustomer }: CustomersListProps)
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
                       {customer.orders_count}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {customer.last_order_date
+                        ? new Date(customer.last_order_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : '—'}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
                       {formatCurrency(customer.total_revenue)}

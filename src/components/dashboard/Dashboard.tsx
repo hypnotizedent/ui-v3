@@ -106,6 +106,9 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                           </h3>
                         </div>
                         <p className="text-xs text-muted-foreground">{order.customer_name}</p>
+                        {order.customer_company && order.customer_company !== order.customer_name && (
+                          <p className="text-xs text-muted-foreground/70">{order.customer_company}</p>
+                        )}
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <CalendarBlank className="w-3 h-3" />
@@ -118,7 +121,7 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-medium text-muted-foreground">
-                          {order.line_items.reduce((sum, li) => sum + li.quantity, 0)} items
+                          {order.line_items_count ?? order.line_items?.length ?? 0} items
                         </p>
                       </div>
                     </div>
