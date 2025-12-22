@@ -569,7 +569,9 @@ function AddImprintDialog({ open, onOpenChange, onAdd, lineItemDescription }: Ad
 
 interface LineItemsTableProps {
   items: OrderDetailLineItem[];
+  orderId: number;
   onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
+  onRefetch: () => void;
 }
 
 interface EditingCell {
@@ -584,7 +586,7 @@ interface EditingImprintCell {
   value: string | number;
 }
 
-function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
+function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTableProps) {
   const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
@@ -673,9 +675,25 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
     setEditingCell({ ...editingCell, value });
   };
 
-  const handleCellBlur = () => {
+  const handleCellBlur = async () => {
     if (editingCell) {
-      toast.success('Cell updated');
+      const itemId = parseInt(editingCell.itemId);
+      const edited = editedItems[editingCell.itemId] || {};
+
+      try {
+        const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${orderId}/line-items/${itemId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(edited),
+        });
+        if (!response.ok) throw new Error('Failed to update line item');
+
+        toast.success('Cell updated');
+        onRefetch();
+      } catch (err) {
+        toast.error('Failed to update line item');
+        console.error('Cell update error:', err);
+      }
       setEditingCell(null);
     }
   };
@@ -1138,16 +1156,15 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
 
     setStatusUpdating(true);
     try {
-      // TODO: Wire to API once PATCH /api/orders/:id/status exists
-      // const response = await fetch(`${API_BASE}/api/orders/${order.id}/status`, {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ status: newStatus }),
-      // });
-      // if (!response.ok) throw new Error('Failed to update status');
+      const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${order.id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) throw new Error('Failed to update status');
 
       toast.success(`Status changed to ${newStatus}`);
-      // refetch(); // Uncomment when API is wired
+      refetch();
     } catch (err) {
       toast.error('Failed to update status');
       console.error('Status update error:', err);
@@ -1179,9 +1196,29 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
     setModalOpen(true);
   };
 
-  const handleAddLineItem = (lineItem: Partial<OrderDetailLineItem>) => {
-    toast.success(`Line item "${lineItem.description}" added`);
-    // In a real implementation, this would add the line item to the order
+  const handleAddLineItem = async (lineItem: Partial<OrderDetailLineItem>) => {
+    if (!order) return;
+
+    try {
+      const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${order.id}/line-items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: lineItem.description,
+          styleNumber: lineItem.styleNumber,
+          color: lineItem.color,
+          unitCost: lineItem.unitCost || 0,
+          sizes: lineItem.sizes || {},
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to add line item');
+
+      toast.success(`Line item "${lineItem.description}" added`);
+      refetch();
+    } catch (err) {
+      toast.error('Failed to add line item');
+      console.error('Add line item error:', err);
+    }
   };
 
   if (loading) {
@@ -1404,7 +1441,9 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
           ) : (
             <LineItemsTable
               items={order.lineItems}
+              orderId={order.id}
               onImageClick={openImageModal}
+              onRefetch={refetch}
             />
           )}
           
@@ -1573,10 +1612,12 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
 interface LineItemCardProps {
   item: OrderDetailLineItem;
   index: number;
+  orderId: number;
   orderStatus: string;
   onImageClick?: (images: Array<{ url: string; name: string; id: string }>, index: number) => void;
   columnConfig: ColumnConfig;
   onConfigChange: (config: ColumnConfig) => void;
+  onRefetch: () => void;
 }
 
 interface ImprintCardProps {
@@ -1786,7 +1827,7 @@ function ImprintCard({ imprint, onImageClick, isLineItemEditing }: ImprintCardPr
 
 const ADULT_SIZE_LABELS = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'] as const;
 
-function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, onConfigChange }: LineItemCardProps) {
+function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnConfig, onConfigChange, onRefetch }: LineItemCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedItem, setEditedItem] = useState(item);
   const [editedSizes, setEditedSizes] = useState(mapSizesToGrid(item.sizes));
@@ -1797,23 +1838,72 @@ function LineItemCard({ item, index, orderStatus, onImageClick, columnConfig, on
   const sizes = isEditing ? editedSizes : mapSizesToGrid(item.sizes);
   const total = Object.values(sizes).reduce((sum, qty) => sum + qty, 0);
   
-  const handleDuplicate = () => {
-    toast.success('Line item duplicated');
+  const handleDuplicate = async () => {
+    try {
+      const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${orderId}/line-items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: item.description,
+          styleNumber: item.styleNumber,
+          color: item.color,
+          unitCost: item.unitCost,
+          sizes: item.sizes,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to duplicate line item');
+
+      toast.success('Line item duplicated');
+      onRefetch();
+    } catch (err) {
+      toast.error('Failed to duplicate line item');
+      console.error('Duplicate error:', err);
+    }
   };
-  
-  const handleDelete = () => {
-    toast.success('Line item deleted');
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${orderId}/line-items/${item.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete line item');
+
+      toast.success('Line item deleted');
+      onRefetch();
+    } catch (err) {
+      toast.error('Failed to delete line item');
+      console.error('Delete error:', err);
+    }
   };
-  
+
   const handleEdit = () => {
     setIsEditing(true);
     setEditedItem(item);
     setEditedSizes(mapSizesToGrid(item.sizes));
   };
-  
-  const handleSave = () => {
-    toast.success('Line item updated');
-    setIsEditing(false);
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${orderId}/line-items/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: editedItem.description,
+          styleNumber: editedItem.styleNumber,
+          color: editedItem.color,
+          unitCost: editedItem.unitCost,
+          sizes: editedSizes,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to update line item');
+
+      toast.success('Line item updated');
+      setIsEditing(false);
+      onRefetch();
+    } catch (err) {
+      toast.error('Failed to update line item');
+      console.error('Update error:', err);
+    }
   };
   
   const handleCancel = () => {
