@@ -1422,6 +1422,14 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
                   Due {formatDate(order.dueDate)}
                 </span>
               )}
+              {order.customerDueDate && order.customerDueDate !== order.dueDate && (
+                <>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-blue-400">
+                    Customer Due {formatDate(order.customerDueDate)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -1458,6 +1466,33 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
               <Package className="w-4 h-4" weight="bold" />
               Add Line Item
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Summary */}
+      <Card className="bg-card/50 border-border">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="text-sm font-medium">Payment Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="py-3">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm max-w-xs">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="text-right">{formatCurrency(order.totalAmount - order.salesTax)}</span>
+
+            <span className="text-muted-foreground">Tax</span>
+            <span className="text-right">{formatCurrency(order.salesTax)}</span>
+
+            <span className="text-muted-foreground font-medium pt-1 border-t border-border">Total</span>
+            <span className="text-right font-medium pt-1 border-t border-border">{formatCurrency(order.totalAmount)}</span>
+
+            <span className="text-muted-foreground">Paid</span>
+            <span className="text-right text-green-400">{formatCurrency(paid)}</span>
+
+            <span className="text-muted-foreground">Outstanding</span>
+            <span className={`text-right ${balance > 0 ? 'text-yellow-400 font-medium' : 'text-green-400'}`}>
+              {formatCurrency(balance)}
+            </span>
           </div>
         </CardContent>
       </Card>

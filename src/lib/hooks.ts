@@ -279,7 +279,9 @@ export interface OrderDetail {
   printavoStatusName: string
   totalAmount: number
   amountOutstanding: number
+  salesTax: number
   dueDate: string | null
+  customerDueDate: string | null
   createdAt: string
   updatedAt: string
   customer: OrderDetailCustomer
@@ -341,7 +343,9 @@ export function useOrderDetail(visualId: string | null) {
         printavoStatusName: data.printavoStatusName || data.printavo_status_name || data.status || '',
         totalAmount: parseFloat(data.totalAmount) || parseFloat(data.total_amount) || 0,
         amountOutstanding: parseFloat(data.amountOutstanding) || parseFloat(data.amount_outstanding) || 0,
+        salesTax: parseFloat(data.salesTax) || parseFloat(data.sales_tax) || 0,
         dueDate: data.dueDate || data.due_date || null,
+        customerDueDate: data.customerDueDate || data.customer_due_date || null,
         createdAt: data.createdAt || data.created_at || '',
         updatedAt: data.updatedAt || data.updated_at || '',
         customer: {
