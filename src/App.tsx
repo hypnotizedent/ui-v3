@@ -11,6 +11,7 @@ import { createQuote } from '@/lib/quote-api';
 // QuoteBuilderPage replaced by OrderDetailPage with mode="quote"
 import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
+import ReportsPage from '@/pages/ReportsPage';
 import { Button } from '@/components/ui/button';
 
 // Map API status to component status
@@ -60,7 +61,7 @@ function App() {
   const { orders: apiOrders, loading: ordersLoading } = useOrders({ limit: 100 });
   const { customers: apiCustomers, loading: customersLoading } = useCustomers({ limit: 100 });
   
-  console.log('App loaded - Spark UI v2.2.2', { ordersCount: apiOrders.length, customersCount: apiCustomers.length });
+  console.log('App loaded - Spark UI v2.2.3', { ordersCount: apiOrders.length, customersCount: apiCustomers.length });
   
   // Transform API orders to match component types
   const orders = apiOrders.map(o => ({
@@ -243,6 +244,8 @@ function App() {
             onViewOrder={handleViewOrder}
           />
         ) : null;
+      case 'reports':
+        return <ReportsPage />;
       default:
         return null;
     }
@@ -263,7 +266,7 @@ function App() {
               <circle cx="26" cy="6" r="1" fill="#10B981"/>
             </svg>
             <span className="font-bold text-lg tracking-wide">MINT PRINTS</span>
-            <span className="text-[8px] text-muted-foreground ml-1">v2.2.2</span>
+            <span className="text-[8px] text-muted-foreground ml-1">v2.2.3</span>
           </div>
         </div>
         
@@ -310,9 +313,10 @@ function App() {
             Customers
           </Button>
           
-          <Button 
-            variant="ghost"
+          <Button
+            variant={currentView === 'reports' ? 'secondary' : 'ghost'}
             size="sm"
+            onClick={() => setCurrentView('reports')}
             className="w-full justify-start gap-2 h-8"
           >
             <ChartLine weight="bold" className="w-4 h-4" />

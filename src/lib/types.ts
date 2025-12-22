@@ -135,4 +135,4 @@ export interface Transaction {
   notes: string;
 }
 
-export type View = 'dashboard' | 'orders' | 'order-detail' | 'quotes' | 'quote-builder' | 'customers' | 'customer-detail';
+export type View = 'dashboard' | 'orders' | 'order-detail' | 'quotes' | 'quote-builder' | 'customers' | 'customer-detail' | 'reports';
