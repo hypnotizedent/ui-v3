@@ -5,6 +5,27 @@ Wire this Spark UI to the live Mint OS API so the dashboard displays real produc
 
 ---
 
+## 🎯 CURRENT PRIORITIES (Updated: Dec 22, 2025)
+
+### ⏳ WAITING ON API FIXES
+Do NOT proceed with UI wiring until ronny-ops completes Tier 1:
+- line_items JOIN fix
+- customer fields fix
+- customer aggregates
+
+### After API Ready:
+- [ ] Update api-adapter.ts with new fields
+- [ ] Wire customer_company to order cards
+- [ ] Wire customer aggregates to customer list
+- [ ] Test all views with real data
+
+### Reference Docs
+- docs/API_GAP_ANALYSIS.md - What UI needs vs what API returns
+- docs/API_FIX_PRIORITIES.md - Prioritized fix list
+- docs/AUDIT_UI_DATA_FIELDS.md - All 70 fields analyzed
+
+---
+
 ## 📊 BACKEND STATUS (COMPLETE - DO NOT MODIFY)
 
 | Entity | Count | Status |
