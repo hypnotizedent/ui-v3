@@ -149,6 +149,7 @@ export interface Order {
   amount_paid: number
   amount_outstanding: number
   due_date: string
+  customer_due_date: string
   order_date: string
   created_at: string
   updated_at: string
@@ -173,6 +174,7 @@ interface APIOrder {
   customer_company: string | null
   customer_id: number | null
   due_date: string | null
+  customer_due_date: string | null
   created_at: string
   updated_at: string
   subtotal: string | number
@@ -215,6 +217,7 @@ interface APILineItem {
   color: string | null
   category: string | null
   quantity: number
+  total_quantity: number
   price: string | number
   size_xs: number
   size_s: number
@@ -409,7 +412,7 @@ function transformImprint(apiImprint: APIImprint, fallbackType: Imprint['type'])
 
 function transformLineItem(apiLineItem: APILineItem, statusName: string): LineItem {
   const sizes = transformSizes(apiLineItem)
-  const quantity = sizes.reduce((sum, s) => sum + s.quantity, 0) || apiLineItem.quantity || 0
+  const quantity = sizes.reduce((sum, s) => sum + s.quantity, 0) || apiLineItem.total_quantity || apiLineItem.quantity || 0
   const unitPrice = parseFloat(String(apiLineItem.price)) || 0
   
   const fallbackImprintType = inferImprintType(statusName, apiLineItem.category)
@@ -508,6 +511,7 @@ function transformOrder(apiOrder: APIOrder): Order {
     amount_paid: amountPaid,
     amount_outstanding: amountOutstanding,
     due_date: apiOrder.due_date || '',
+    customer_due_date: apiOrder.customer_due_date || '',
     order_date: apiOrder.created_at || '',
     created_at: apiOrder.created_at || '',
     updated_at: apiOrder.updated_at || '',
@@ -678,6 +682,7 @@ function transformOrderDetail(apiOrder: APIOrderDetail): Order {
     amount_paid: amountPaid,
     amount_outstanding: amountOutstanding,
     due_date: apiOrder.dueDate || '',
+    customer_due_date: apiOrder.customerDueDate || '',
     order_date: apiOrder.createdAt || '',
     created_at: apiOrder.createdAt || '',
     updated_at: apiOrder.updatedAt || '',

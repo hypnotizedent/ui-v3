@@ -212,3 +212,101 @@ interface LineItem {
 | `src/components/dashboard/Dashboard.tsx` | Fix double $, add date null check |
 | `src/lib/api-adapter.ts` | Add `total_pieces` calculation |
 | `src/lib/types.ts` | Add `total_pieces?: number` to Order |
+
+---
+
+## Pieces Count = 0 Investigation (v2.1.1)
+
+> Audited: December 22, 2025
+
+### Symptom
+Order cards show `0 pcs` instead of actual quantities (e.g., `20 pcs`).
+
+### Root Cause Found
+
+**The bug is a field name mismatch in `api-adapter.ts`:**
+
+```
+API returns:       line_items[].total_quantity = 20
+Adapter expects:   apiLineItem.quantity (undefined/null)
+Dashboard reads:   item.quantity (0)
+```
+
+### Detailed Trace
+
+**1. API Response (`/api/orders?limit=1`):**
+```json
+{
+  "line_items": [{
+    "id": 125364,
+    "total_quantity": 20,    // ← Correct value
+    "quantity": null         // ← This field is null
+  }]
+}
+```
+
+**2. APILineItem Interface (api-adapter.ts:211-229):**
+```typescript
+interface APILineItem {
+  quantity: number           // ← Interface expects "quantity"
+  // ...no total_quantity defined!
+}
+```
+
+**3. transformLineItem Function (api-adapter.ts:~410):**
+```typescript
+const quantity = sizes.reduce((sum, s) => sum + s.quantity, 0)
+                 || apiLineItem.quantity   // ← Looks for "quantity" (null)
+                 || 0                      // ← Falls back to 0
+```
+
+**4. Dashboard.tsx Calculation:**
+```typescript
+const totalPieces = order.line_items?.reduce(
+  (sum, item) => sum + (item.quantity || 0),  // ← Reads 0
+  0
+) || 0;
+```
+
+### Fix Required
+
+**In `api-adapter.ts`:**
+
+1. Add `total_quantity` to `APILineItem` interface:
+```typescript
+interface APILineItem {
+  quantity: number
+  total_quantity: number  // ← ADD THIS
+  // ...
+}
+```
+
+2. Update `transformLineItem` to use `total_quantity`:
+```typescript
+const quantity = sizes.reduce((sum, s) => sum + s.quantity, 0)
+                 || apiLineItem.total_quantity  // ← USE THIS
+                 || apiLineItem.quantity
+                 || 0
+```
+
+### Verification Commands
+
+```bash
+# Confirm API returns total_quantity
+curl -s "https://mintprints-api.ronny.works/api/orders?limit=1" | \
+  jq '.orders[0].line_items[0] | {total_quantity, quantity}'
+
+# Expected output:
+# { "total_quantity": 20, "quantity": null }
+```
+
+### Summary
+
+| Layer | Field | Value |
+|-------|-------|-------|
+| API | `total_quantity` | `20` |
+| API | `quantity` | `null` |
+| Adapter Interface | `quantity` | defined |
+| Adapter Interface | `total_quantity` | **MISSING** |
+| Transform | reads | `quantity` (null) → 0 |
+| Dashboard | displays | `0 pcs` |

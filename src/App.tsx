@@ -57,7 +57,7 @@ function App() {
   const { orders: apiOrders, loading: ordersLoading } = useOrders({ limit: 100 });
   const { customers: apiCustomers, loading: customersLoading } = useCustomers({ limit: 100 });
   
-  console.log('App loaded - Spark UI v2.1.1', { ordersCount: apiOrders.length, customersCount: apiCustomers.length });
+  console.log('App loaded - Spark UI v2.1.2', { ordersCount: apiOrders.length, customersCount: apiCustomers.length });
   
   // Transform API orders to match component types
   const orders = apiOrders.map(o => ({
@@ -103,6 +103,7 @@ function App() {
     tax: o.sales_tax,
     total: o.total,
     due_date: o.due_date,
+    customer_due_date: o.customer_due_date || undefined,
     created_at: o.created_at,
     production_notes: o.production_note,
     nickname: o.nickname || undefined
@@ -215,7 +216,7 @@ function App() {
               <circle cx="26" cy="6" r="1" fill="#10B981"/>
             </svg>
             <span className="font-bold text-lg tracking-wide">MINT PRINTS</span>
-            <span className="text-[8px] text-muted-foreground ml-1">v2.1.1</span>
+            <span className="text-[8px] text-muted-foreground ml-1">v2.1.2</span>
           </div>
         </div>
         

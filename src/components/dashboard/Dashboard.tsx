@@ -76,8 +76,8 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                 // Calculate total pieces from line items
                 const totalPieces = order.line_items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
 
-                // Safe date handling
-                const displayDate = order.due_date;
+                // Safe date handling with fallback chain
+                const displayDate = order.due_date || order.customer_due_date || order.created_at;
                 const hasValidDate = displayDate && displayDate !== '' && !isNaN(new Date(displayDate).getTime());
 
                 return (
@@ -86,7 +86,7 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                     onClick={() => onViewOrder(order.visual_id)}
                     className="bg-card/80 rounded-lg p-3 border border-border/50 hover:border-border hover:bg-card transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <h3 className="text-sm">
@@ -100,20 +100,13 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
                             <span className="text-muted-foreground/60"> ({order.customer_company})</span>
                           )}
                         </p>
-                        {hasValidDate && (
-                          <p className="text-xs text-muted-foreground/70 mt-0.5">
-                            Due {formatDate(displayDate)}
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground/70 mt-0.5">
+                          {totalPieces} pcs{hasValidDate && ` · Due ${formatDate(displayDate)}`}
+                        </p>
                       </div>
-                      <div className="text-right flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground">
-                          {totalPieces} pcs
-                        </span>
-                        <span className="text-sm font-medium">
-                          {formatCurrency(order.total)}
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium">
+                        {formatCurrency(order.total)}
+                      </span>
                     </div>
                   </div>
                 );

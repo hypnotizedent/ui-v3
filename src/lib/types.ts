@@ -115,6 +115,7 @@ export interface Order {
   tax: number;
   total: number;
   due_date: string;
+  customer_due_date?: string;
   created_at: string;
   production_notes: string;
   nickname?: string;
