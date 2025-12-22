@@ -13,6 +13,7 @@ import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
 import ReportsPage from '@/pages/ReportsPage';
 import { Button } from '@/components/ui/button';
+import { GlobalSearch } from '@/components/search/GlobalSearch';
 
 // Map API status to component status
 function mapApiStatus(status: ApiOrderStatus): OrderStatus {
@@ -65,9 +66,8 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
-  const [globalSearch, setGlobalSearch] = useState('');
 
-  console.log('App loaded - Spark UI v2.3.0', {
+  console.log('App loaded - Spark UI v2.4.0', {
     ordersCount: apiOrders?.length || 0,
     customersCount: apiCustomers?.length || 0,
     ordersError,
@@ -155,21 +155,6 @@ function App() {
   }));
 
   const transactions: Transaction[] = [];
-
-  const handleGlobalSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && globalSearch.trim()) {
-      const searchTerm = globalSearch.trim();
-      // If it looks like an order number (all digits), go directly to order detail
-      if (/^\d+$/.test(searchTerm)) {
-        setSelectedOrderId(searchTerm);
-        setCurrentView('order-detail');
-      } else {
-        // Otherwise, go to orders page (search will happen client-side there)
-        setCurrentView('orders');
-      }
-      setGlobalSearch(''); // Clear search after navigation
-    }
-  };
 
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
@@ -299,7 +284,7 @@ function App() {
               <circle cx="26" cy="6" r="1" fill="#10B981"/>
             </svg>
             <span className="font-bold text-lg tracking-wide">MINT PRINTS</span>
-            <span className="text-[8px] text-muted-foreground ml-1">v2.3.0</span>
+            <span className="text-[8px] text-muted-foreground ml-1">v2.4.0</span>
           </div>
         </div>
         
@@ -407,19 +392,25 @@ function App() {
                   Back
                 </Button>
               )}
-              <div className="relative w-96">
-                <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search by order # or customer..."
-                  value={globalSearch}
-                  onChange={(e) => setGlobalSearch(e.target.value)}
-                  onKeyDown={handleGlobalSearch}
-                  className="w-full pl-9 pr-3 py-1.5 bg-card/50 border border-border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
+              <GlobalSearch
+                orders={(apiOrders || []).map(o => ({
+                  id: o.id,
+                  visual_id: o.visual_id,
+                  order_nickname: o.order_nickname || null,
+                  customer_name: o.customer?.name || 'Unknown',
+                  status: o.status,
+                  total_amount: parseFloat(o.total) || 0,
+                }))}
+                customers={(apiCustomers || []).map(c => ({
+                  id: c.id,
+                  name: c.name,
+                  company: c.company || null,
+                  email: c.email || null,
+                }))}
+                onSelectOrder={handleViewOrder}
+                onSelectCustomer={handleViewCustomer}
+                className="w-96"
+              />
             </div>
             
             <div className="flex items-center gap-2">
