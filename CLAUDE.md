@@ -119,9 +119,10 @@ curl -s "https://mintprints-api.ronny.works/api/customers?limit=5" | jq
 ```
 
 ### Test Order IDs with Complete Data
-- **13689** - Papa's Raw Bar (has mockups)
+- **6978** - Has 25 line items with mockups ✅
 - **13648** - Has imprints
-- **6978** - Verified working
+- **13689** - Papa's Raw Bar (mockups NOT in API response - needs API fix)
+- **16** - Has line items with mockups
 
 ---
 

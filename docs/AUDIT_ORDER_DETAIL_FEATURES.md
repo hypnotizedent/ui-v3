@@ -26,8 +26,10 @@
 ```
 
 ### Root Cause
-- **API is not returning mockup data** even for orders that should have them
-- The database has 31,920 mockups but they're not being joined in the API query
+- **Some orders have mockups, some don't** - inconsistent data in DB
+- Order 6978: ✅ Has 25 line items with mockups
+- Order 13689: ❌ Returns null for mockups (needs API investigation)
+- The database has 31,920 mockups but not all are linked to line items
 - `artworkFiles` array is always empty
 
 ### Current Rendering (ui-v3)
@@ -35,7 +37,13 @@
 - **Line:** 930-946 (line item mockup column)
 - **Line:** 1013-1041 (imprint mockups)
 - **Uses:** `item.mockup.url`, `item.mockup.thumbnail_url`
-- **Status:** Code is correct, waiting on API to return data
+- **Status:** ✅ Code is correct, works for orders with mockup data
+
+### Verified Working (December 22, 2025)
+- **Order 6978**: 25 line items, all have mockups
+- **Frontend transform**: hooks.ts correctly maps `thumbnailUrl` → `thumbnail_url`
+- **Image URLs**: Return HTTP 200 from files.ronny.works
+- **Test in browser**: Navigate to /orders/6978 to verify mockup display
 
 ### Fix Required (ronny-ops)
 1. Check `dashboard-api/src/routes/orders.ts` for mockup joins
