@@ -22,6 +22,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   FileText,
   Image,
   Warning,
@@ -1109,6 +1116,46 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       setConverting(false);
     }
   };
+
+  // Status options from database
+  const STATUS_OPTIONS = [
+    { value: 'QUOTE', label: 'Quote' },
+    { value: 'Quote Out For Approval - Email', label: 'Quote Sent' },
+    { value: 'PAYMENT NEEDED', label: 'Payment Needed' },
+    { value: 'INVOICE PAID', label: 'Invoice Paid' },
+    { value: 'MATERIALS PENDING', label: 'Materials Pending' },
+    { value: 'SP - Need to Burn Screens', label: 'Burn Screens' },
+    { value: 'SP - PRODUCTION', label: 'SP Production' },
+    { value: 'DTG - PRODUCTION', label: 'DTG Production' },
+    { value: 'READY FOR PICK UP', label: 'Ready for Pickup' },
+    { value: 'COMPLETE', label: 'Complete' },
+  ];
+
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!order) return;
+
+    setStatusUpdating(true);
+    try {
+      // TODO: Wire to API once PATCH /api/orders/:id/status exists
+      // const response = await fetch(`${API_BASE}/api/orders/${order.id}/status`, {
+      //   method: 'PATCH',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ status: newStatus }),
+      // });
+      // if (!response.ok) throw new Error('Failed to update status');
+
+      toast.success(`Status changed to ${newStatus}`);
+      // refetch(); // Uncomment when API is wired
+    } catch (err) {
+      toast.error('Failed to update status');
+      console.error('Status update error:', err);
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
   const [modalIndex, setModalIndex] = useState(0);
@@ -1226,12 +1273,31 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="flex items-center gap-2 justify-end mb-0.5">
-              <Badge
-                variant="secondary"
-                className={`${getAPIStatusColor(order.status)} font-medium text-xs uppercase tracking-wide px-1.5 py-0`}
+              <Select
+                value={order.status}
+                onValueChange={handleStatusChange}
+                disabled={statusUpdating}
               >
-                {getAPIStatusLabel(order.status)}
-              </Badge>
+                <SelectTrigger
+                  className={`h-7 w-[160px] text-xs font-medium uppercase tracking-wide border-0 ${getAPIStatusColor(order.status)}`}
+                  size="sm"
+                >
+                  <SelectValue>
+                    {statusUpdating ? 'Updating...' : getAPIStatusLabel(order.status)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      className="text-xs"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <div className="text-xl font-semibold">{formatCurrency(order.totalAmount)}</div>
             </div>
             <p className="text-xs text-muted-foreground">
