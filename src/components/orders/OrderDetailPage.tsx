@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useOrderDetail, type OrderDetail, type OrderDetailLineItem, type LineItemImprint } from '@/lib/hooks';
+import { useOrderDetail, useQuoteDetail, type OrderDetail, type OrderDetailLineItem, type LineItemImprint, type QuoteAsOrder } from '@/lib/hooks';
+import { convertToOrder } from '@/lib/quote-api';
 import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -1075,10 +1076,39 @@ function LineItemsTable({ items, onImageClick }: LineItemsTableProps) {
 interface OrderDetailPageProps {
   visualId: string;
   onViewCustomer: (customerId: string) => void;
+  mode?: 'order' | 'quote';
+  onConvertSuccess?: (orderId: string) => void;
 }
 
-export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPageProps) {
-  const { order, loading, error, refetch } = useOrderDetail(visualId);
+export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onConvertSuccess }: OrderDetailPageProps) {
+  // Use different hooks based on mode
+  const orderHook = useOrderDetail(mode === 'order' ? visualId : null);
+  const quoteHook = useQuoteDetail(mode === 'quote' ? visualId : null);
+
+  const { order, loading, error, refetch } = mode === 'order' ? orderHook : quoteHook;
+  const [converting, setConverting] = useState(false);
+
+  // Helper to check if this is a quote
+  const isQuote = mode === 'quote' || (order && 'isQuote' in order && order.isQuote);
+
+  // Handle convert to order
+  const handleConvertToOrder = async () => {
+    if (!order || !isQuote) return;
+
+    setConverting(true);
+    try {
+      const result = await convertToOrder(order.id);
+      toast.success(`Converted to Order #${result.visual_id}`);
+      if (onConvertSuccess) {
+        onConvertSuccess(result.visual_id);
+      }
+    } catch (err) {
+      toast.error('Failed to convert quote to order');
+      console.error('Convert error:', err);
+    } finally {
+      setConverting(false);
+    }
+  };
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImages, setModalImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
   const [modalIndex, setModalIndex] = useState(0);
@@ -1211,6 +1241,16 @@ export function OrderDetailPage({ visualId, onViewCustomer }: OrderDetailPagePro
               </span>
             </p>
           </div>
+          {/* Convert to Order button for quotes */}
+          {isQuote && (
+            <Button
+              onClick={handleConvertToOrder}
+              disabled={converting}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {converting ? 'Converting...' : 'Convert to Order'}
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">

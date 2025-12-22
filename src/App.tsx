@@ -7,7 +7,8 @@ import { Dashboard } from '@/components/dashboard/Dashboard';
 import { OrdersList } from '@/components/orders/OrdersList';
 import { OrderDetailPage } from '@/components/orders/OrderDetailPage';
 import { QuotesListPage } from '@/components/quotes/QuotesListPage';
-import { QuoteBuilderPage } from '@/components/quotes/QuoteBuilderPage';
+import { createQuote } from '@/lib/quote-api';
+// QuoteBuilderPage replaced by OrderDetailPage with mode="quote"
 import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
 import { Button } from '@/components/ui/button';
@@ -151,9 +152,18 @@ function App() {
     setCurrentView('quote-builder');
   };
 
-  const handleNewQuote = () => {
-    setSelectedQuoteId(null);
-    setCurrentView('quote-builder');
+  const handleNewQuote = async () => {
+    try {
+      // Create a new draft quote via API
+      const newQuote = await createQuote({});
+      setSelectedQuoteId(String(newQuote.id));
+      setCurrentView('quote-builder');
+    } catch (err) {
+      console.error('Failed to create quote:', err);
+      // Still navigate but without a quote ID - will show error state
+      setSelectedQuoteId(null);
+      setCurrentView('quotes');
+    }
   };
 
   const handleBack = () => {
@@ -207,12 +217,19 @@ function App() {
           />
         );
       case 'quote-builder':
-        return (
-          <QuoteBuilderPage
-            quoteId={selectedQuoteId}
-            onBack={() => { setCurrentView('quotes'); setSelectedQuoteId(null); }}
+        return selectedQuoteId ? (
+          <OrderDetailPage
+            visualId={selectedQuoteId}
+            mode="quote"
+            onViewCustomer={handleViewCustomer}
+            onConvertSuccess={(orderId) => {
+              // After conversion, navigate to the new order
+              setSelectedOrderId(orderId);
+              setCurrentView('order-detail');
+              setSelectedQuoteId(null);
+            }}
           />
-        );
+        ) : null;
       case 'customers':
         return (
           <CustomersListPage

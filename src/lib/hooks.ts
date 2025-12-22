@@ -19,6 +19,20 @@ import {
   type Customer,
   type Payment
 } from './api-adapter'
+import { transformQuoteToOrder, type QuoteAsOrder } from './quote-adapter'
+
+// Re-export for backwards compatibility
+export {
+  fetchOrders,
+  fetchCustomers,
+  fetchDashboardStats,
+  fetchOrderById,
+  fetchCustomerById,
+  fetchOrderPayments,
+  type Order,
+  type Customer,
+  type Payment
+} from './api-adapter'
 
 // =============================================================================
 // Types
@@ -860,3 +874,53 @@ export function useOrderPayments(orderId: string | null) {
 
   return { payments, loading, error, refetch: load }
 }
+
+// =============================================================================
+// useQuoteDetail - Fetch single quote by ID and transform to OrderDetail shape
+// =============================================================================
+
+const API_BASE_URL_V2 = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works'
+
+export function useQuoteDetail(quoteId: string | null) {
+  const [order, setOrder] = useState<QuoteAsOrder | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    if (!quoteId) {
+      setOrder(null)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${API_BASE_URL_V2}/api/v2/quotes/${quoteId}`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Quote not found')
+        }
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      // Transform quote to order shape
+      const transformed = transformQuoteToOrder(data)
+      setOrder(transformed)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch quote'))
+    } finally {
+      setLoading(false)
+    }
+  }, [quoteId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { order, loading, error, refetch: load }
+}
+
+// Re-export QuoteAsOrder type
+export type { QuoteAsOrder }
