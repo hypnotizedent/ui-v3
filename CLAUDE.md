@@ -29,11 +29,125 @@ Wire this Spark UI to the live Mint OS API so the dashboard displays real produc
 ### Order Detail Page - Issues
 | Issue | Severity | Root Cause |
 |-------|----------|------------|
-| Mockups not showing | HIGH | API returns null for mockup field |
-| Artwork gallery empty | HIGH | artworkFiles[] empty from API |
-| No image upload | HIGH | API endpoint missing |
-| Edits don't persist | HIGH | No API calls on save |
+| Mockups not showing (some orders) | MEDIUM | Order 6978 has 25 mockups ✅, Order 13689 has 1 ✅ |
+| No status dropdown | HIGH | API endpoint missing, UI not built |
+| Edits don't persist | HIGH | 8 handlers show toast only, no API calls |
 | No line item add/delete | MEDIUM | API endpoints needed |
+| Artwork gallery empty | MEDIUM | artworkFiles[] empty from API |
+
+---
+
+## 🚀 IMPLEMENTATION PLAN: Status Dropdown (v2.2.2)
+
+### Overview
+Replace static status Badge with clickable Select dropdown that calls API.
+
+### Prerequisites (ronny-ops)
+```bash
+# API endpoint needed - doesn't exist yet
+PATCH /api/orders/:id/status
+Body: { "status": "COMPLETE" }
+Returns: { "success": true, "order": {...} }
+```
+
+### Step 1: Check API Endpoint
+```bash
+# Test if endpoint exists
+curl -X PATCH "https://mintprints-api.ronny.works/api/orders/6978/status" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "SP - PRODUCTION"}'
+```
+
+**Current Result:** `{"error": "Not found"}` - **NEEDS BUILDING IN RONNY-OPS**
+
+### Step 2: Available Status Values (from DB)
+```
+COMPLETE
+DTG - PRODUCTION
+INVOICE PAID
+MATERIALS PENDING
+PAYMENT NEEDED
+QUOTE
+Quote Out For Approval - Email
+READY FOR PICK UP
+SP - Need to Burn Screens
+```
+
+### Step 3: UI Location
+**File:** `src/components/orders/OrderDetailPage.tsx`
+**Lines:** 1229-1234 (current Badge display)
+
+```typescript
+// CURRENT (line 1229-1234):
+<Badge
+  variant="secondary"
+  className={`${getAPIStatusColor(order.status)} font-medium text-xs uppercase tracking-wide px-1.5 py-0`}
+>
+  {getAPIStatusLabel(order.status)}
+</Badge>
+
+// REPLACE WITH:
+<Select value={order.status} onValueChange={handleStatusChange}>
+  <SelectTrigger className={`w-[180px] h-7 ${getAPIStatusColor(order.status)}`}>
+    <SelectValue />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="QUOTE">Quote</SelectItem>
+    <SelectItem value="Quote Out For Approval - Email">Quote Sent</SelectItem>
+    <SelectItem value="PAYMENT NEEDED">Payment Needed</SelectItem>
+    <SelectItem value="INVOICE PAID">Invoice Paid</SelectItem>
+    <SelectItem value="MATERIALS PENDING">Materials Pending</SelectItem>
+    <SelectItem value="SP - Need to Burn Screens">Burn Screens</SelectItem>
+    <SelectItem value="SP - PRODUCTION">SP Production</SelectItem>
+    <SelectItem value="DTG - PRODUCTION">DTG Production</SelectItem>
+    <SelectItem value="READY FOR PICK UP">Ready for Pickup</SelectItem>
+    <SelectItem value="COMPLETE">Complete</SelectItem>
+  </SelectContent>
+</Select>
+```
+
+### Step 4: Handler Implementation
+```typescript
+// Add after line ~1095 (handleConvertToOrder)
+const handleStatusChange = async (newStatus: string) => {
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/orders/${order.id}/status`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      }
+    );
+
+    if (!response.ok) throw new Error('Failed to update status');
+
+    toast.success(`Status changed to ${newStatus}`);
+    refetch(); // Refresh order data
+  } catch (error) {
+    toast.error('Failed to update status');
+  }
+};
+```
+
+### Step 5: Imports Needed
+```typescript
+// Add to imports at top of file
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+```
+
+### Testing
+1. Navigate to `/orders/6978`
+2. Click status dropdown
+3. Select new status
+4. Verify toast shows success
+5. Refresh page - status should persist
+
+### PrintShopPro Reference
+**File:** `~/spark/print-shop-pro/src/components/JobDetail.tsx`
+**Lines:** 386-400
+
+---
 
 ### Next Steps - UI (v2.2.1+)
 
