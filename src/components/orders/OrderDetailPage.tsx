@@ -1479,6 +1479,54 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
     }
   };
 
+  // Handle create new customer
+  const handleCreateCustomer = async () => {
+    if (!customerForm.name.trim()) {
+      toast.error('Customer name is required');
+      return;
+    }
+
+    setSavingCustomer(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/customers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: customerForm.name.split(' ')[0] || customerForm.name,
+          last_name: customerForm.name.split(' ').slice(1).join(' ') || '',
+          email: customerForm.email || null,
+          phone: customerForm.phone || null,
+          company: customerForm.company || null,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create customer');
+
+      const data = await response.json();
+      const newCustomer = {
+        id: data.customer?.id || data.id,
+        name: customerForm.name,
+        email: customerForm.email || null,
+        phone: customerForm.phone || null,
+        company: customerForm.company || null,
+      };
+
+      toast.success('Customer created');
+      setShowCreateCustomer(false);
+      setCustomerForm({ name: '', email: '', phone: '', company: '' });
+
+      // Select the new customer in create mode
+      if (mode === 'create') {
+        setNewOrder({ ...newOrder, customer: newCustomer });
+      }
+    } catch (error) {
+      console.error('Failed to create customer:', error);
+      toast.error('Failed to create customer');
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
+
   // Handle save draft (create mode)
   const handleSaveDraft = async () => {
     if (!newOrder.customer) {
@@ -2230,6 +2278,64 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
             </Button>
             <Button onClick={handleSaveCustomer} disabled={savingCustomer}>
               {savingCustomer ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Customer Dialog */}
+      <Dialog open={showCreateCustomer} onOpenChange={(open) => {
+        setShowCreateCustomer(open);
+        if (!open) setCustomerForm({ name: '', email: '', phone: '', company: '' });
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Customer</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Name *</label>
+              <Input
+                value={customerForm.name}
+                onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                placeholder="Customer name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Email</label>
+              <Input
+                type="email"
+                value={customerForm.email}
+                onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Phone</label>
+              <Input
+                value={customerForm.phone}
+                onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                placeholder="Phone number"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Company</label>
+              <Input
+                value={customerForm.company}
+                onChange={(e) => setCustomerForm({ ...customerForm, company: e.target.value })}
+                placeholder="Company name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowCreateCustomer(false);
+              setCustomerForm({ name: '', email: '', phone: '', company: '' });
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateCustomer} disabled={savingCustomer || !customerForm.name.trim()}>
+              {savingCustomer ? 'Creating...' : 'Create Customer'}
             </Button>
           </DialogFooter>
         </DialogContent>
