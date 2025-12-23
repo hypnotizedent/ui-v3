@@ -108,6 +108,29 @@ curl -s "https://mintprints-api.ronny.works/api/health" | jq
 - **API:** `/api/production-stats` returning 4,661 quotes, 8,228 complete, 12,905 total
 - [ ] Verified: Reports page shows production stats
 
+### 10. Order Detail - Line Item Totals (CRITICAL)
+- **Status:** DEPLOYED - NEEDS VERIFICATION
+- **Commit:** `b15bbaf`
+- **File:** `src/components/orders/OrderDetailPage.tsx` lines 1202-1216
+- **Issue:** Line item totals showed $0.00 because calculation used size column sum which was 0
+- **Fix:** Now uses `item.totalCost` or calculates from `item.totalQuantity × unitCost`
+- [ ] Verified: Line item totals display correctly (e.g., 34 × $5.00 = $170.00)
+
+### 11. Order Detail - Size Columns Visibility
+- **Status:** DEPLOYED - NEEDS VERIFICATION
+- **Commit:** `151226e`
+- **File:** `src/components/orders/OrderDetailPage.tsx` lines 826-845
+- **Issue:** Size columns (XS, S, M, L, XL, 2XL, 3XL) were hidden even when data existed
+- **Fix:** Show size columns if enabled in config OR if they have data
+- [ ] Verified: Size columns (XS, S, M, L, XL, 2XL, 3XL) visible with quantities
+
+### 12. Order Detail - Customer Edit Button
+- **Status:** DEPLOYED - NEEDS VERIFICATION
+- **Commit:** `f312856`
+- **File:** `src/components/orders/OrderDetailPage.tsx` lines 1839-1847
+- **Fix:** Added pencil icon next to customer name for editing
+- [ ] Verified: Pencil icon appears next to customer name
+
 ---
 
 ## Known Issues Not Yet Fixed
