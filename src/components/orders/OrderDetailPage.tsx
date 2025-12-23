@@ -55,6 +55,8 @@ import { SizeBreakdown } from '@/lib/types';
 import { ImageModal } from '@/components/shared/ImageModal';
 import { ManageColumnsModal, ColumnConfig, DEFAULT_COLUMN_CONFIG } from './ManageColumnsModal';
 import { CustomerSelector } from './CustomerSelector';
+import { ImprintCard } from './ImprintCard';
+import { MoreActionsMenu } from './MoreActionsMenu';
 import { toast } from 'sonner';
 
 const API_BASE = 'https://mintprints-api.ronny.works';
@@ -1294,119 +1296,41 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
                     </td>
                   </tr>
                   
-                  {/* Imprint Rows */}
-                  {isExpanded && hasImprints && item.imprints.map((imprint, imprintIdx) => (
-                    <tr key={`imprint-${imprint.id}`} className="bg-gradient-to-r from-muted/40 to-muted/20 border-b border-border/50 hover:from-muted/50 hover:to-muted/30 transition-colors">
-                      <td className="px-3 py-1.5 align-top">
-                        <div className="h-7 flex items-center justify-center">
+                  {/* Imprint Cards Row */}
+                  {isExpanded && (
+                    <tr className="bg-muted/20 border-b border-border/50">
+                      <td className="px-3 py-2 align-top">
+                        <div className="flex items-start justify-center pt-0.5">
                           <div className="w-1 h-4 bg-primary/30 rounded-full"></div>
                         </div>
                       </td>
-                      {currentColumnConfig.itemNumber && (
-                        <td className="px-3 py-1.5 align-top">
-                          <div className="h-7 flex items-center">
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
-                              {imprint.decorationType || 'Imprint'}
-                            </Badge>
-                          </div>
-                        </td>
-                      )}
-                      {currentColumnConfig.color && (
-                        <td className="px-3 py-1.5 align-top"></td>
-                      )}
-                      {renderEditableImprintCell(imprint, 'description', 'left', 1)}
-                      <td className="px-3 py-1.5 align-top text-center">
-                        <div className="h-7 flex items-center justify-center gap-1">
-                          {imprint.mockups && imprint.mockups.length > 0 ? (
+                      <td colSpan={100} className="px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mr-1">
+                            Decorations:
+                          </span>
+                          {hasImprints ? (
                             <>
-                              {imprint.mockups.slice(0, 2).map((mockup, idx) => (
-                                <button
-                                  key={mockup.id}
-                                  onClick={() => {
-                                    const allMockups = imprint.mockups?.map(m => ({
-                                      // Use thumbnail for display, fall back to URL (handles PDF files)
-                                      url: m.thumbnail_url || m.url,
-                                      name: m.name || 'Imprint mockup',
-                                      id: String(m.id)
-                                    })) || [];
-                                    onImageClick?.(allMockups, idx);
-                                  }}
-                                  className="w-7 h-7 flex-shrink-0 rounded border border-border bg-card hover:border-primary hover:shadow-sm transition-all cursor-pointer overflow-hidden"
-                                  title={mockup.name || 'Mockup'}
-                                >
-                                  <img
-                                    src={mockup.thumbnail_url || mockup.url}
-                                    alt={mockup.name || 'Imprint mockup'}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).style.display = 'none';
-                                    }}
-                                  />
-                                </button>
+                              {item.imprints.map((imprint) => (
+                                <ImprintCard
+                                  key={imprint.id}
+                                  imprint={imprint}
+                                  onDelete={() => handleDeleteImprint(imprint.id)}
+                                  onImageClick={onImageClick}
+                                />
                               ))}
-                              {imprint.mockups.length > 2 && (
-                                <span className="text-[9px] text-muted-foreground">
-                                  +{imprint.mockups.length - 2}
-                                </span>
-                              )}
                             </>
                           ) : (
-                            <span className="text-muted-foreground/30 text-xs">-</span>
+                            <span className="text-xs text-muted-foreground">None</span>
                           )}
-                        </div>
-                      </td>
-                      {renderEditableImprintCell(imprint, 'location', 'left', Math.max(1, Math.floor(visibleSizeColumns.length / 4)))}
-                      {renderEditableImprintCell(imprint, 'colors', 'left', Math.max(1, Math.floor(visibleSizeColumns.length / 4)))}
-                      <td
-                        className="px-3 py-1.5 align-top"
-                        colSpan={Math.max(1, visibleSizeColumns.length - Math.floor(visibleSizeColumns.length / 3) * 2)}
-                      >
-                        <div className="h-7 flex items-center gap-1 text-xs text-muted-foreground">
-                          {imprint.width && imprint.height && (
-                            <span>{imprint.width}" × {imprint.height}"</span>
-                          )}
-                        </div>
-                      </td>
-                      {currentColumnConfig.quantity && <td></td>}
-                      <td colSpan={3}></td>
-                      <td className="px-2 py-1.5 align-top">
-                        <div className="h-7 flex items-center justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeleteImprint(imprint.id)}
-                            title="Delete imprint"
-                          >
-                            <Trash size={14} weight="bold" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-
-                  {/* No Imprints Empty State */}
-                  {isExpanded && !hasImprints && (
-                    <tr className="bg-muted/20 border-b border-border/50">
-                      <td className="px-3 py-1.5 align-top">
-                        <div className="h-7 flex items-center justify-center">
-                          <div className="w-1 h-4 bg-muted-foreground/20 rounded-full"></div>
-                        </div>
-                      </td>
-                      <td
-                        colSpan={100}
-                        className="px-3 py-3"
-                      >
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>No imprints for this line item</span>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-6 text-xs gap-1 px-2"
+                            className="h-7 text-xs gap-1 px-2 ml-1"
                             onClick={() => handleAddImprintForItem(item.id)}
                           >
                             <Plus size={12} weight="bold" />
-                            Add Imprint
+                            Add
                           </Button>
                         </div>
                       </td>
@@ -1628,7 +1552,13 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   const [modalIndex, setModalIndex] = useState(0);
   const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
   const [addLineItemOpen, setAddLineItemOpen] = useState(false);
-  
+  const [inlineNewItem, setInlineNewItem] = useState<{
+    description: string;
+    styleNumber: string;
+    color: string;
+    unitCost: number;
+  } | null>(null);
+
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
 
   // Debug logging
@@ -1878,15 +1808,23 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
             </Button>
           )}
           {!isCreateMode && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <DotsThree size={20} weight="bold" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <MoreActionsMenu
+              onDuplicate={() => toast.info('Duplicate order coming soon')}
+              onPrint={() => window.print()}
+              onEmail={() => {
+                if (displayOrder.customer.email) {
+                  window.location.href = `mailto:${displayOrder.customer.email}?subject=Order ${displayOrder.orderNumber}`;
+                } else {
+                  toast.error('No customer email on file');
+                }
+              }}
+              onArchive={() => toast.info('Archive coming soon')}
+              onDelete={() => {
+                if (confirm('Are you sure you want to delete this order? This cannot be undone.')) {
+                  toast.info('Delete order coming soon');
+                }
+              }}
+            />
           )}
         </div>
       </div>
@@ -2042,18 +1980,103 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
             />
           )}
 
+          {/* Inline New Line Item Row */}
+          {inlineNewItem && (
+            <div className="mt-3 p-3 bg-muted/30 border border-dashed border-primary/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 grid grid-cols-4 gap-3">
+                  <Input
+                    autoFocus
+                    placeholder="Description *"
+                    value={inlineNewItem.description}
+                    onChange={(e) => setInlineNewItem({ ...inlineNewItem, description: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setInlineNewItem(null);
+                    }}
+                    className="bg-background"
+                  />
+                  <Input
+                    placeholder="SKU / Style #"
+                    value={inlineNewItem.styleNumber}
+                    onChange={(e) => setInlineNewItem({ ...inlineNewItem, styleNumber: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setInlineNewItem(null);
+                    }}
+                    className="bg-background"
+                  />
+                  <Input
+                    placeholder="Color"
+                    value={inlineNewItem.color}
+                    onChange={(e) => setInlineNewItem({ ...inlineNewItem, color: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setInlineNewItem(null);
+                    }}
+                    className="bg-background"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Unit Price"
+                    value={inlineNewItem.unitCost || ''}
+                    onChange={(e) => setInlineNewItem({ ...inlineNewItem, unitCost: parseFloat(e.target.value) || 0 })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setInlineNewItem(null);
+                      if (e.key === 'Enter' && inlineNewItem.description) {
+                        handleAddLineItem(inlineNewItem);
+                        setInlineNewItem(null);
+                      }
+                    }}
+                    className="bg-background"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1"
+                    disabled={!inlineNewItem.description}
+                    onClick={() => {
+                      handleAddLineItem(inlineNewItem);
+                      setInlineNewItem(null);
+                    }}
+                  >
+                    <Check size={14} weight="bold" />
+                    Add
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => setInlineNewItem(null)}
+                  >
+                    <X size={14} weight="bold" />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Press Enter to save, Escape to cancel. You can add sizes and imprints after.
+              </p>
+            </div>
+          )}
+
           {/* Add Line Item Button */}
-          <div className="pt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 h-8"
-              onClick={() => setAddLineItemOpen(true)}
-            >
-              <Package className="w-4 h-4" weight="bold" />
-              Add Line Item
-            </Button>
-          </div>
+          {!inlineNewItem && (
+            <div className="pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 h-8"
+                onClick={() => setInlineNewItem({
+                  description: '',
+                  styleNumber: '',
+                  color: '',
+                  unitCost: 0
+                })}
+              >
+                <Package className="w-4 h-4" weight="bold" />
+                Add Line Item
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
