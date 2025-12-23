@@ -29,6 +29,8 @@ import {
   Trash,
   Warning,
   ArrowClockwise,
+  Image,
+  FilePdf,
 } from '@phosphor-icons/react'
 import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks'
 import type { PSPLineItem } from '@/lib/printshoppro-types'
@@ -382,6 +384,89 @@ export function OrderDetailPagePSP({
             />
           )}
         </div>
+
+        {/* Mockups Section */}
+        {(() => {
+          // Collect all mockups from line items and imprints
+          const allMockups: Array<{ id: string; url: string; name: string; thumbnail_url?: string | null; source: string }> = []
+
+          order.lineItems.forEach((item, itemIndex) => {
+            // Line item level mockup
+            if (item.mockup) {
+              allMockups.push({
+                ...item.mockup,
+                source: `Line ${itemIndex + 1}: ${item.description || item.styleNumber || 'Item'}`
+              })
+            }
+            // Imprint level mockups
+            item.imprints.forEach((imprint) => {
+              imprint.mockups.forEach((mockup) => {
+                allMockups.push({
+                  ...mockup,
+                  source: `${imprint.location || 'Imprint'} - ${item.description || item.styleNumber || 'Item'}`
+                })
+              })
+            })
+          })
+
+          if (allMockups.length === 0) return null
+
+          const isPDF = (url: string) => url?.toLowerCase().endsWith('.pdf')
+
+          return (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Image size={20} className="text-muted-foreground" />
+                    <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Mockups & Artwork
+                    </span>
+                    <Badge variant="secondary" className="text-xs">
+                      {allMockups.length}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {allMockups.map((mockup, index) => (
+                    <div
+                      key={mockup.id || index}
+                      className="group relative aspect-square bg-muted rounded-lg overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                    >
+                      {isPDF(mockup.url) ? (
+                        <a
+                          href={mockup.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col items-center justify-center h-full text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <FilePdf size={48} />
+                          <span className="text-xs mt-2">View PDF</span>
+                        </a>
+                      ) : (
+                        <a href={mockup.url} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={mockup.thumbnail_url || mockup.url}
+                            alt={mockup.name || 'Mockup'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = mockup.url // Fallback to full URL
+                            }}
+                          />
+                        </a>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="text-xs text-white truncate">{mockup.source}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )
+        })()}
 
         <Separator />
 
