@@ -287,7 +287,7 @@ export function OrderDetailPagePSP({
                     <DropdownMenuSeparator />
                   </>
                 )}
-                <DropdownMenuItem onClick={() => toast.info('Duplicate coming soon')}>
+                <DropdownMenuItem onClick={() => {}} disabled>
                   <Copy size={18} className="mr-2" />
                   Duplicate {isQuote ? 'Quote' : 'Order'}
                 </DropdownMenuItem>
@@ -297,11 +297,8 @@ export function OrderDetailPagePSP({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => {
-                    if (confirm('Are you sure you want to delete this?')) {
-                      toast.info('Delete coming soon')
-                    }
-                  }}
+                  onClick={() => {}}
+                  disabled
                   className="text-destructive"
                 >
                   <Trash size={18} className="mr-2" />
@@ -344,7 +341,7 @@ export function OrderDetailPagePSP({
                 phone: order.customer.phone || null,
               } : null}
               onSelect={() => {}}
-              onCreateNew={() => toast.info('Create customer coming soon')}
+              onCreateNew={() => {}}
             />
           </div>
           <div>
@@ -584,10 +581,10 @@ export function OrderDetailPagePSP({
         {/* Footer Bar - PrintShopPro style */}
         <div className="flex items-center justify-between gap-3 bg-muted/50 border border-border rounded-lg p-4">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => toast.info('History coming soon')}>
+            <Button variant="outline" size="sm" disabled>
               History
             </Button>
-            <Button variant="outline" size="sm" onClick={() => toast.info('Payments coming soon')}>
+            <Button variant="outline" size="sm" disabled>
               <CurrencyDollar size={16} className="mr-2" />
               Payments
               {order.amountOutstanding > 0 && (
@@ -596,7 +593,7 @@ export function OrderDetailPagePSP({
                 </Badge>
               )}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => toast.info('Messages coming soon')}>
+            <Button variant="outline" size="sm" disabled>
               Messages
             </Button>
           </div>

@@ -1851,19 +1851,12 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
             )}
             {!isCreateMode && (
               <MoreActionsMenu
-                onDuplicate={() => toast.info('Duplicate order coming soon')}
                 onPrint={() => window.print()}
                 onEmail={() => {
                   if (displayOrder.customer.email) {
                     window.location.href = `mailto:${displayOrder.customer.email}?subject=Order ${displayOrder.orderNumber}`;
                   } else {
                     toast.error('No customer email on file');
-                  }
-                }}
-                onArchive={() => toast.info('Archive coming soon')}
-                onDelete={() => {
-                  if (confirm('Are you sure you want to delete this order? This cannot be undone.')) {
-                    toast.info('Delete order coming soon');
                   }
                 }}
               />
