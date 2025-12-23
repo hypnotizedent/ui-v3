@@ -1828,13 +1828,24 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
               />
             ) : (
               <>
-                <button
-                  onClick={() => onViewCustomer(String(displayOrder.customer.id))}
-                  className="font-medium text-foreground hover:text-primary hover:underline"
-                  disabled={isCreateMode}
-                >
-                  {displayOrder.customer.name}
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => onViewCustomer(String(displayOrder.customer.id))}
+                    className="font-medium text-foreground hover:text-primary hover:underline"
+                    disabled={isCreateMode}
+                  >
+                    {displayOrder.customer.name}
+                  </button>
+                  {!isCreateMode && displayOrder.customer.id > 0 && (
+                    <button
+                      onClick={() => onViewCustomer(String(displayOrder.customer.id))}
+                      className="p-0.5 text-muted-foreground hover:text-primary rounded transition-colors"
+                      title="Edit customer"
+                    >
+                      <PencilSimple size={12} weight="bold" />
+                    </button>
+                  )}
+                </div>
                 {displayOrder.customer.company && (
                   <>
                     <span className="text-foreground/40">·</span>
