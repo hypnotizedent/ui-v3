@@ -283,8 +283,10 @@ function App() {
               <circle cx="8" cy="24" r="1.5" fill="#10B981"/>
               <circle cx="26" cy="6" r="1" fill="#10B981"/>
             </svg>
-            <span className="font-bold text-lg tracking-wide">MINT PRINTS</span>
-            <span className="text-[8px] text-muted-foreground ml-1">v2.4.0</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-lg tracking-wide leading-none">MINT PRINTS</span>
+              <span className="text-[8px] text-muted-foreground mt-0.5">v2.4.0</span>
+            </div>
           </div>
         </div>
         
