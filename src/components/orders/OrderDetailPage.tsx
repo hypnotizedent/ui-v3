@@ -1671,171 +1671,6 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
     }
   };
 
-  // Render create mode UI
-  if (isCreateMode) {
-    return (
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">New Order</h2>
-            <p className="text-sm text-muted-foreground">Create a new order or quote</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleSaveDraft}
-              disabled={saving || !newOrder.customer}
-              className="gap-2"
-            >
-              {saving ? (
-                <CircleNotch className="w-4 h-4 animate-spin" />
-              ) : (
-                <Check className="w-4 h-4" />
-              )}
-              Save Order
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-4">
-          {/* Main content */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Customer Selection */}
-            <CustomerSelector
-              selected={newOrder.customer}
-              onSelect={(customer) => setNewOrder(prev => ({ ...prev, customer }))}
-              onCreateNew={() => setShowCreateCustomer(true)}
-            />
-
-            {/* Order Details */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium">Order Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm text-muted-foreground block mb-1.5">Job Name / Nickname</label>
-                  <Input
-                    value={newOrder.nickname}
-                    onChange={(e) => setNewOrder(prev => ({ ...prev, nickname: e.target.value }))}
-                    placeholder="e.g., Company T-Shirts, Event Merch..."
-                    className="bg-secondary"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground block mb-1.5">Due Date</label>
-                  <Input
-                    type="date"
-                    value={newOrder.dueDate}
-                    onChange={(e) => setNewOrder(prev => ({ ...prev, dueDate: e.target.value }))}
-                    className="bg-secondary"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground block mb-1.5">Customer Notes</label>
-                  <Textarea
-                    value={newOrder.notes}
-                    onChange={(e) => setNewOrder(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Notes visible to customer..."
-                    className="bg-secondary min-h-[80px]"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground block mb-1.5">Production Notes (Internal)</label>
-                  <Textarea
-                    value={newOrder.productionNotes}
-                    onChange={(e) => setNewOrder(prev => ({ ...prev, productionNotes: e.target.value }))}
-                    placeholder="Internal production notes..."
-                    className="bg-secondary min-h-[80px]"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Line Items placeholder */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-medium">Line Items</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Save the order first, then add line items</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4">
-            {/* Status */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium">Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select
-                  value={newOrder.status}
-                  onValueChange={(value) => setNewOrder(prev => ({ ...prev, status: value }))}
-                >
-                  <SelectTrigger className="bg-secondary">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="QUOTE">Quote</SelectItem>
-                    <SelectItem value="Quote Out For Approval - Email">Quote Sent</SelectItem>
-                    <SelectItem value="PAYMENT NEEDED">Payment Needed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-
-            {/* Summary */}
-            <Card className="bg-card border-border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium">Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Line Items</span>
-                  <span>0</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-medium">
-                  <span>Total</span>
-                  <span>$0.00</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Create Customer Dialog - placeholder */}
-        <Dialog open={showCreateCustomer} onOpenChange={setShowCreateCustomer}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Customer</DialogTitle>
-            </DialogHeader>
-            <div className="py-4 text-center text-muted-foreground">
-              <p>Customer creation coming soon.</p>
-              <p className="text-sm mt-2">For now, create customers in Printavo.</p>
-            </div>
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => setShowCreateCustomer(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="space-y-4">
@@ -1890,7 +1725,47 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
     );
   }
 
-  if (!order) {
+  // For create mode, use a virtual empty order
+  // For view mode, show "not found" if order is missing
+  const displayOrder = isCreateMode ? {
+    id: 0,
+    orderNumber: 'NEW',
+    orderNickname: newOrder.nickname || null,
+    status: newOrder.status,
+    printavoStatusName: newOrder.status,
+    totalAmount: 0,
+    amountOutstanding: 0,
+    salesTax: 0,
+    dueDate: newOrder.dueDate || null,
+    customerDueDate: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    customer: newOrder.customer ? {
+      id: newOrder.customer.id,
+      name: newOrder.customer.name,
+      email: newOrder.customer.email,
+      phone: newOrder.customer.phone,
+      company: newOrder.customer.company,
+      city: null,
+      state: null,
+    } : {
+      id: 0,
+      name: '',
+      email: null,
+      phone: null,
+      company: null,
+      city: null,
+      state: null,
+    },
+    customerPo: null,
+    notes: newOrder.notes || null,
+    productionNotes: newOrder.productionNotes || null,
+    artworkCount: 0,
+    artworkFiles: [],
+    lineItems: [],
+  } : order;
+
+  if (!displayOrder) {
     return (
       <div className="space-y-4">
         <Card className="max-w-md mx-auto">
@@ -1907,12 +1782,12 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   }
 
   // Calculate total from line items if order total is missing/zero
-  const calculatedTotal = order.totalAmount > 0
-    ? order.totalAmount
-    : order.lineItems?.reduce((sum, li) => sum + (li.totalCost || 0), 0) || 0;
+  const calculatedTotal = displayOrder.totalAmount > 0
+    ? displayOrder.totalAmount
+    : displayOrder.lineItems?.reduce((sum, li) => sum + (li.totalCost || 0), 0) || 0;
 
-  const balance = order.amountOutstanding;
-  const paid = calculatedTotal - order.amountOutstanding;
+  const balance = displayOrder.amountOutstanding;
+  const paid = calculatedTotal - displayOrder.amountOutstanding;
 
   return (
     <div className="space-y-3">
@@ -1920,27 +1795,38 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">
-            #{order.orderNumber}
-            {order.orderNickname && (
-              <span className="text-muted-foreground"> · {order.orderNickname}</span>
+            {isCreateMode ? (
+              <>
+                New Order
+                {newOrder.nickname && (
+                  <span className="text-muted-foreground"> · {newOrder.nickname}</span>
+                )}
+              </>
+            ) : (
+              <>
+                #{displayOrder.orderNumber}
+                {displayOrder.orderNickname && (
+                  <span className="text-muted-foreground"> · {displayOrder.orderNickname}</span>
+                )}
+                <span className="text-[10px] text-emerald-500 ml-2 font-normal">● Updated</span>
+              </>
             )}
-            <span className="text-[10px] text-emerald-500 ml-2 font-normal">● Updated</span>
           </h2>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="flex items-center gap-2 justify-end mb-0.5">
               <Select
-                value={order.status}
-                onValueChange={handleStatusChange}
+                value={displayOrder.status}
+                onValueChange={isCreateMode ? (v) => setNewOrder(prev => ({ ...prev, status: v })) : handleStatusChange}
                 disabled={statusUpdating}
               >
                 <SelectTrigger
-                  className={`h-7 w-[160px] text-xs font-medium uppercase tracking-wide border-0 ${getAPIStatusColor(order.status)}`}
+                  className={`h-7 w-[160px] text-xs font-medium uppercase tracking-wide border-0 ${getAPIStatusColor(displayOrder.status)}`}
                   size="sm"
                 >
                   <SelectValue>
-                    {statusUpdating ? 'Updating...' : getAPIStatusLabel(order.status)}
+                    {statusUpdating ? 'Updating...' : getAPIStatusLabel(displayOrder.status)}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -1957,14 +1843,32 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
               </Select>
               <div className="text-xl font-semibold">{formatCurrency(calculatedTotal)}</div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Balance:{' '}
-              <span className={balance > 0 ? 'text-yellow-400' : 'text-green-400'}>
-                {formatCurrency(balance)}
-              </span>
-            </p>
+            {!isCreateMode && (
+              <p className="text-xs text-muted-foreground">
+                Balance:{' '}
+                <span className={balance > 0 ? 'text-yellow-400' : 'text-green-400'}>
+                  {formatCurrency(balance)}
+                </span>
+              </p>
+            )}
           </div>
-          {isQuote && (
+          {isCreateMode && (
+            <Button
+              onClick={handleSaveDraft}
+              disabled={saving || !newOrder.customer}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {saving ? (
+                <>
+                  <CircleNotch size={16} className="animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                'Save Order'
+              )}
+            </Button>
+          )}
+          {isQuote && !isCreateMode && (
             <Button
               onClick={handleConvertToOrder}
               disabled={converting}
@@ -1973,15 +1877,17 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
               {converting ? 'Converting...' : 'Convert to Order'}
             </Button>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <DotsThree size={20} weight="bold" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!isCreateMode && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <DotsThree size={20} weight="bold" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -1991,77 +1897,112 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             {/* Customer Info - Left */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => onViewCustomer(String(order.customer.id))}
-                  className="font-semibold text-sm text-foreground hover:text-primary hover:underline text-left"
-                >
-                  {order.customer.name}
-                </button>
-                {order.customer.company && (
-                  <>
-                    <span className="text-muted-foreground text-xs">·</span>
-                    <span className="text-muted-foreground text-xs">{order.customer.company}</span>
-                  </>
-                )}
-                <button
-                  onClick={handleEditCustomer}
-                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                  title="Edit customer"
-                >
-                  <PencilSimple size={12} weight="bold" />
-                </button>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                {order.customer.email && (
-                  <a href={`mailto:${order.customer.email}`} className="hover:text-foreground">
-                    {order.customer.email}
-                  </a>
-                )}
-                {order.customer.email && order.customer.phone && <span>·</span>}
-                {order.customer.phone && (
-                  <a href={`tel:${order.customer.phone}`} className="hover:text-foreground">
-                    {order.customer.phone}
-                  </a>
-                )}
-                {(order.customer.city || order.customer.state) && (
-                  <>
-                    {(order.customer.email || order.customer.phone) && <span>·</span>}
-                    <span>
-                      {[order.customer.city, order.customer.state].filter(Boolean).join(', ')}
-                    </span>
-                  </>
-                )}
-              </div>
+              {isCreateMode && !newOrder.customer ? (
+                <CustomerSelector
+                  selected={newOrder.customer}
+                  onSelect={(customer) => setNewOrder(prev => ({ ...prev, customer }))}
+                  onCreateNew={() => setShowCreateCustomer(true)}
+                />
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => onViewCustomer(String(displayOrder.customer.id))}
+                      className="font-semibold text-sm text-foreground hover:text-primary hover:underline text-left"
+                      disabled={isCreateMode}
+                    >
+                      {displayOrder.customer.name}
+                    </button>
+                    {displayOrder.customer.company && (
+                      <>
+                        <span className="text-muted-foreground text-xs">·</span>
+                        <span className="text-muted-foreground text-xs">{displayOrder.customer.company}</span>
+                      </>
+                    )}
+                    {isCreateMode ? (
+                      <button
+                        onClick={() => setNewOrder(prev => ({ ...prev, customer: null }))}
+                        className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Change customer"
+                      >
+                        <X size={12} weight="bold" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleEditCustomer}
+                        className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Edit customer"
+                      >
+                        <PencilSimple size={12} weight="bold" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                    {displayOrder.customer.email && (
+                      <a href={`mailto:${displayOrder.customer.email}`} className="hover:text-foreground">
+                        {displayOrder.customer.email}
+                      </a>
+                    )}
+                    {displayOrder.customer.email && displayOrder.customer.phone && <span>·</span>}
+                    {displayOrder.customer.phone && (
+                      <a href={`tel:${displayOrder.customer.phone}`} className="hover:text-foreground">
+                        {displayOrder.customer.phone}
+                      </a>
+                    )}
+                    {(displayOrder.customer.city || displayOrder.customer.state) && (
+                      <>
+                        {(displayOrder.customer.email || displayOrder.customer.phone) && <span>·</span>}
+                        <span>
+                          {[displayOrder.customer.city, displayOrder.customer.state].filter(Boolean).join(', ')}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Dates - Right */}
             <div className="flex items-center gap-2 text-xs flex-wrap">
-              {order.createdAt && (
+              {isCreateMode ? (
+                <div className="flex items-center gap-2">
+                  <label className="text-muted-foreground">Due:</label>
+                  <Input
+                    type="date"
+                    value={newOrder.dueDate}
+                    onChange={(e) => setNewOrder(prev => ({ ...prev, dueDate: e.target.value }))}
+                    className="h-7 w-auto text-xs"
+                  />
+                </div>
+              ) : (
                 <>
-                  <span className="text-muted-foreground">Created {formatDate(order.createdAt)}</span>
-                  <span className="text-muted-foreground">·</span>
-                </>
-              )}
-              {order.dueDate && (
-                <span
-                  className={`text-muted-foreground ${
-                    new Date(order.dueDate) < new Date() &&
-                    order.status.toLowerCase() !== 'complete' &&
-                    order.status.toLowerCase() !== 'shipped'
-                      ? 'text-destructive font-medium'
-                      : ''
-                  }`}
-                >
-                  Due {formatDate(order.dueDate)}
-                </span>
-              )}
-              {order.customerDueDate && order.customerDueDate !== order.dueDate && (
-                <>
-                  <span className="text-muted-foreground">·</span>
-                  <span className="text-blue-400">
-                    Customer Due {formatDate(order.customerDueDate)}
-                  </span>
+                  {displayOrder.createdAt && (
+                    <>
+                      <span className="text-muted-foreground">Created {formatDate(displayOrder.createdAt)}</span>
+                      <span className="text-muted-foreground">·</span>
+                    </>
+                  )}
+                  {displayOrder.dueDate && (
+                    <span
+                      className={`text-muted-foreground ${
+                        new Date(displayOrder.dueDate) < new Date() &&
+                        displayOrder.status.toLowerCase() !== 'complete' &&
+                        displayOrder.status.toLowerCase() !== 'shipped'
+                          ? 'text-destructive font-medium'
+                          : ''
+                      }`}
+                    >
+                      Due {formatDate(displayOrder.dueDate)}
+                    </span>
+                  )}
+                  {displayOrder.customerDueDate && displayOrder.customerDueDate !== displayOrder.dueDate && (
+                    <>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="text-blue-400">
+                        Customer Due {formatDate(displayOrder.customerDueDate)}
+                      </span>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -2074,21 +2015,33 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
           {/* Line Items Section Header */}
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium">Line Items</h3>
+            {isCreateMode && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground">Job Name:</label>
+                <Input
+                  type="text"
+                  value={newOrder.nickname}
+                  onChange={(e) => setNewOrder(prev => ({ ...prev, nickname: e.target.value }))}
+                  placeholder="e.g. Summer Event Shirts"
+                  className="h-7 w-48 text-xs"
+                />
+              </div>
+            )}
           </div>
-          
-          {order.lineItems.length === 0 ? (
+
+          {displayOrder.lineItems.length === 0 ? (
             <p className="text-muted-foreground text-xs text-center py-3">
               No line items
             </p>
           ) : (
             <LineItemsTable
-              items={order.lineItems}
-              orderId={order.id}
+              items={displayOrder.lineItems}
+              orderId={displayOrder.id}
               onImageClick={openImageModal}
               onRefetch={refetch}
             />
           )}
-          
+
           {/* Add Line Item Button */}
           <div className="pt-3">
             <Button
@@ -2105,35 +2058,37 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       </Card>
 
       {/* Payment Summary */}
-      <Card className="bg-card/50 border-border">
-        <CardHeader className="py-2 px-3">
-          <CardTitle className="text-sm font-medium">Payment Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="py-3">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm max-w-xs">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="text-right">{formatCurrency(calculatedTotal - order.salesTax)}</span>
+      {!isCreateMode && (
+        <Card className="bg-card/50 border-border">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm font-medium">Payment Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="py-3">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm max-w-xs">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-right">{formatCurrency(calculatedTotal - displayOrder.salesTax)}</span>
 
-            <span className="text-muted-foreground">Tax</span>
-            <span className="text-right">{formatCurrency(order.salesTax)}</span>
+              <span className="text-muted-foreground">Tax</span>
+              <span className="text-right">{formatCurrency(displayOrder.salesTax)}</span>
 
-            <span className="text-muted-foreground font-medium pt-1 border-t border-border">Total</span>
-            <span className="text-right font-medium pt-1 border-t border-border">{formatCurrency(calculatedTotal)}</span>
+              <span className="text-muted-foreground font-medium pt-1 border-t border-border">Total</span>
+              <span className="text-right font-medium pt-1 border-t border-border">{formatCurrency(calculatedTotal)}</span>
 
-            <span className="text-muted-foreground">Paid</span>
-            <span className="text-right text-green-400">{formatCurrency(paid)}</span>
+              <span className="text-muted-foreground">Paid</span>
+              <span className="text-right text-green-400">{formatCurrency(paid)}</span>
 
-            <span className="text-muted-foreground">Outstanding</span>
-            <span className={`text-right ${balance > 0 ? 'text-yellow-400 font-medium' : 'text-green-400'}`}>
-              {formatCurrency(balance)}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+              <span className="text-muted-foreground">Outstanding</span>
+              <span className={`text-right ${balance > 0 ? 'text-yellow-400 font-medium' : 'text-green-400'}`}>
+                {formatCurrency(balance)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Production Files - Collapsible */}
-      {(() => {
-        const productionFiles = order.artworkFiles.filter(f => f.source === 'productionFile');
+      {!isCreateMode && (() => {
+        const productionFiles = displayOrder.artworkFiles.filter(f => f.source === 'productionFile');
         const imageFiles = productionFiles.filter(f => isImageFile(f.name));
         const pdfFiles = productionFiles.filter(f => getFileExtension(f.name) === 'pdf');
         const otherFiles = productionFiles.filter(f => !isImageFile(f.name) && getFileExtension(f.name) !== 'pdf');
@@ -2233,30 +2188,48 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       })()}
 
       {/* Production Notes */}
-      {order.productionNotes && (
+      {(isCreateMode || displayOrder.productionNotes) && (
         <Card className="bg-card border-border">
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-sm font-medium">Production Notes</CardTitle>
           </CardHeader>
           <CardContent className="py-3">
-            <div
-              className="text-xs text-muted-foreground prose prose-sm prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: order.productionNotes }}
-            />
+            {isCreateMode ? (
+              <Textarea
+                value={newOrder.productionNotes}
+                onChange={(e) => setNewOrder(prev => ({ ...prev, productionNotes: e.target.value }))}
+                placeholder="Add production notes (artwork instructions, print specs, etc.)"
+                className="min-h-[80px] text-xs"
+              />
+            ) : (
+              <div
+                className="text-xs text-muted-foreground prose prose-sm prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: displayOrder.productionNotes || '' }}
+              />
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* Order Notes */}
-      {order.notes && (
+      {(isCreateMode || displayOrder.notes) && (
         <Card className="bg-card border-border">
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-sm font-medium">Notes</CardTitle>
           </CardHeader>
           <CardContent className="py-3">
-            <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-              {order.notes}
-            </p>
+            {isCreateMode ? (
+              <Textarea
+                value={newOrder.notes}
+                onChange={(e) => setNewOrder(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Add general notes about this order"
+                className="min-h-[80px] text-xs"
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                {displayOrder.notes}
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
