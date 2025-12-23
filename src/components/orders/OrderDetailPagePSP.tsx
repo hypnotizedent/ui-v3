@@ -70,11 +70,33 @@ export function OrderDetailPagePSP({
   }, [order])
 
   const handleSave = async () => {
+    if (!order) return
+
     setSaving(true)
     try {
-      // TODO: Implement save API call
-      toast.success('Changes saved')
+      // Update order-level fields
+      const response = await fetch(`${API_BASE}/api/orders/${visualId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_nickname: nickname || null,
+          due_date: dueDate || null,
+          notes: customerNotes || null,
+          production_notes: internalNotes || null,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save order')
+      }
+
+      // Line items would need separate API calls (not yet implemented)
+      // TODO: Implement PUT /api/orders/:id/line-items/:id for each modified line item
+
+      toast.success('Order saved')
+      refetch()
     } catch (err) {
+      console.error('Save error:', err)
       toast.error('Failed to save changes')
     } finally {
       setSaving(false)
