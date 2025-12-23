@@ -745,21 +745,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
     }
   }, [items]);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('LineItemsTable - Items:', items);
-    console.log('LineItemsTable - Items with imprints:', items.filter(i => i.imprints && i.imprints.length > 0));
-    console.log('LineItemsTable - Items with mockups:', items.filter(i => i.mockup));
-    console.log('LineItemsTable - Expanded items:', Array.from(expandedItems));
-    // Log imprint mockups specifically
-    items.forEach(item => {
-      if (item.imprints && item.imprints.length > 0) {
-        item.imprints.forEach(imp => {
-          console.log(`🖼️ UI - Imprint ${imp.id} mockups:`, imp.mockups);
-        });
-      }
-    });
-  }, [items, expandedItems]);
+  // Debug logging moved after visibleSizeColumns declaration
   
   // All size columns organized by category with config mapping
   const ALL_SIZE_COLUMNS = [
@@ -823,15 +809,20 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
     };
   };
 
-  // Check if any line item has any size value > 0
-  const hasSizeBreakdown = items.some(item => {
-    const sizes = mapSizesToDisplay(item.sizes);
-    return Object.values(sizes).some(qty => qty > 0);
-  });
-
   // Get visible columns based on config + auto-show columns with data
   const getVisibleSizeColumns = () => {
-    if (!hasSizeBreakdown) return [];
+    // Check if any line item has any size value > 0
+    const hasSizeBreakdown = items.some(item => {
+      const sizes = mapSizesToDisplay(item.sizes);
+      return Object.values(sizes).some(qty => qty > 0);
+    });
+
+    // Only hide ALL size columns if no items have size data AND no sizes enabled in config
+    const hasEnabledSizes = Object.values(currentColumnConfig.sizes.adult).some(v => v) ||
+                            Object.values(currentColumnConfig.sizes.youth).some(v => v) ||
+                            Object.values(currentColumnConfig.sizes.baby).some(v => v);
+
+    if (!hasSizeBreakdown && !hasEnabledSizes) return [];
 
     // Check which columns have data in any line item
     const columnsWithData = new Set<string>();
@@ -854,7 +845,14 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
   };
 
   const visibleSizeColumns = getVisibleSizeColumns();
-  
+
+  // Debug logging for size columns
+  useEffect(() => {
+    console.log('🔍 LineItemsTable - Items with sizes:', items.map(i => ({ id: i.id, sizes: i.sizes, totalQty: i.totalQuantity })));
+    console.log('🔍 LineItemsTable - Column config:', currentColumnConfig);
+    console.log('🔍 LineItemsTable - Visible size columns:', visibleSizeColumns.map(c => c.label));
+  }, [items, currentColumnConfig, visibleSizeColumns]);
+
   const toggleExpanded = (itemId: number) => {
     setExpandedItems((prev) => {
       const next = new Set(prev);
