@@ -67,7 +67,7 @@ function App() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
 
-  console.log('App loaded - Spark UI v2.9.1', {
+  console.log('App loaded - Spark UI v2.9.2', {
     ordersCount: apiOrders?.length || 0,
     customersCount: apiCustomers?.length || 0,
     ordersError,
@@ -282,7 +282,7 @@ function App() {
             </svg>
             <div className="flex flex-col">
               <span className="font-bold text-lg tracking-wide leading-none">MINT PRINTS</span>
-              <span className="text-[8px] text-muted-foreground mt-0.5">v2.9.1</span>
+              <span className="text-[8px] text-muted-foreground mt-0.5">v2.9.2</span>
             </div>
           </div>
         </div>
