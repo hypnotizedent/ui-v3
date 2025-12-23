@@ -12,7 +12,6 @@ import {
   CaretRight,
   ArrowClockwise,
   Warning,
-  FileText,
   Palette,
   TShirt,
   CheckCircle
@@ -25,7 +24,7 @@ interface OrdersListProps {
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses', icon: Package },
-  { value: 'quote', label: 'Quotes', icon: FileText },
+  // Quotes are on separate Quotes page - removed from Orders filter
   { value: 'art', label: 'Art', icon: Palette },
   { value: 'screenprint', label: 'Screenprint', icon: TShirt },
   { value: 'embroidery', label: 'Embroidery', icon: TShirt },
@@ -45,6 +44,7 @@ export function OrdersList({ onViewOrder }: OrdersListProps) {
     limit: PAGE_SIZE,
     page,  // API uses page parameter (1-indexed)
     status: statusFilter,
+    excludeQuotes: true,  // Filter out quote statuses - those go on Quotes page
   });
 
   // Client-side search filtering

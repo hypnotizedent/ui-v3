@@ -55,6 +55,14 @@ export interface ProductionStats {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works'
 
+// Quote statuses that should appear on Quotes page, not Orders page
+const QUOTE_STATUSES = [
+  'QUOTE',
+  'Quote Out For Approval - Email',
+  'Quote Out For Approval - Viewed',
+  'DRAFT'
+]
+
 // =============================================================================
 // useProductionStats - Fetch production stats from API
 // =============================================================================
@@ -153,6 +161,7 @@ export function useOrdersList(options?: {
   limit?: number
   page?: number  // 1-indexed page number (API uses page, not offset)
   status?: string
+  excludeQuotes?: boolean  // Filter out quote statuses (for Orders page)
 }) {
   const [orders, setOrders] = useState<OrderListItem[]>([])
   const [total, setTotal] = useState(0)
@@ -167,6 +176,8 @@ export function useOrdersList(options?: {
       if (options?.limit) params.set('limit', String(options.limit))
       if (options?.page) params.set('page', String(options.page))  // API uses page, not offset
       if (options?.status && options.status !== 'all') params.set('status', options.status)
+      // Add exclude_quotes param for API-side filtering
+      if (options?.excludeQuotes) params.set('exclude_quotes', 'true')
 
       const response = await fetch(`${API_BASE_URL}/api/orders?${params}`)
       if (!response.ok) {
@@ -175,7 +186,7 @@ export function useOrdersList(options?: {
       const data = await response.json()
 
       // Map API response to our type
-      const mappedOrders: OrderListItem[] = (data.orders || []).map((o: any) => ({
+      let mappedOrders: OrderListItem[] = (data.orders || []).map((o: any) => ({
         id: o.id,
         visual_id: o.visual_id || String(o.id),
         order_nickname: o.order_nickname || o.nickname || null,
@@ -187,20 +198,97 @@ export function useOrdersList(options?: {
         artwork_count: o.artwork_count || 0,
       }))
 
+      // Client-side filter for excludeQuotes (in case API doesn't support it)
+      if (options?.excludeQuotes) {
+        mappedOrders = mappedOrders.filter(o => !QUOTE_STATUSES.includes(o.printavo_status_name))
+      }
+
       setOrders(mappedOrders)
-      setTotal(data.total || mappedOrders.length)
+      // Adjust total if filtering client-side
+      setTotal(options?.excludeQuotes ? mappedOrders.length : (data.total || mappedOrders.length))
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch orders'))
     } finally {
       setLoading(false)
     }
-  }, [options?.limit, options?.page, options?.status])
+  }, [options?.limit, options?.page, options?.status, options?.excludeQuotes])
 
   useEffect(() => {
     load()
   }, [load])
 
   return { orders, total, loading, error, refetch: load }
+}
+
+// =============================================================================
+// useQuotesList - Fetch orders with quote statuses (for Quotes page)
+// =============================================================================
+
+export function useQuotesList(options?: {
+  limit?: number
+  page?: number
+  search?: string
+}) {
+  const [quotes, setQuotes] = useState<OrderListItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      // Fetch a larger batch to filter client-side for quotes
+      // We need to fetch more since we're filtering client-side
+      const params = new URLSearchParams()
+      params.set('limit', String(500))  // Fetch more to find quotes
+      if (options?.page) params.set('page', String(options.page))
+
+      const response = await fetch(`${API_BASE_URL}/api/orders?${params}`)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      // Map and filter to only quote statuses
+      let mappedQuotes: OrderListItem[] = (data.orders || [])
+        .map((o: any) => ({
+          id: o.id,
+          visual_id: o.visual_id || String(o.id),
+          order_nickname: o.order_nickname || o.nickname || null,
+          status: o.status || 'unknown',
+          printavo_status_name: o.printavo_status_name || o.status || '',
+          customer_name: o.customer_name || 'Unknown',
+          total_amount: parseFloat(o.total_amount) || parseFloat(o.total) || 0,
+          due_date: o.due_date || null,
+          artwork_count: o.artwork_count || 0,
+        }))
+        .filter((o: OrderListItem) => QUOTE_STATUSES.includes(o.printavo_status_name))
+
+      // Apply search filter if provided
+      if (options?.search) {
+        const searchLower = options.search.toLowerCase()
+        mappedQuotes = mappedQuotes.filter(q =>
+          q.visual_id.toLowerCase().includes(searchLower) ||
+          q.customer_name.toLowerCase().includes(searchLower) ||
+          (q.order_nickname && q.order_nickname.toLowerCase().includes(searchLower))
+        )
+      }
+
+      setQuotes(mappedQuotes)
+      setTotal(mappedQuotes.length)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch quotes'))
+    } finally {
+      setLoading(false)
+    }
+  }, [options?.limit, options?.page, options?.search])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { quotes, total, loading, error, refetch: load }
 }
 
 // =============================================================================
