@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MagnifyingGlass, Plus, User } from '@phosphor-icons/react';
-import { Card } from '@/components/ui/card';
+import { MagnifyingGlass, User } from '@phosphor-icons/react';
 
 const API_BASE = 'https://mintprints-api.ronny.works';
 
@@ -58,39 +57,32 @@ export function CustomerSelector({ selected, onSelect, onCreateNew }: CustomerSe
 
   if (selected) {
     return (
-      <Card className="bg-card border-border p-4">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" weight="bold" />
-            </div>
-            <div>
-              <h3 className="font-medium text-foreground">{selected.name}</h3>
-              {selected.company && (
-                <p className="text-sm text-muted-foreground">{selected.company}</p>
-              )}
-              {selected.email && (
-                <p className="text-sm text-primary">{selected.email}</p>
-              )}
-            </div>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <User className="w-4 h-4 text-primary" weight="bold" />
           </div>
-          <button
-            onClick={() => onSelect(null)}
-            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-          >
-            Change
-          </button>
+          <div>
+            <span className="font-medium text-sm text-foreground">{selected.name}</span>
+            {selected.company && (
+              <span className="text-xs text-muted-foreground ml-2">· {selected.company}</span>
+            )}
+          </div>
         </div>
-      </Card>
+        <button
+          onClick={() => onSelect(null)}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Change
+        </button>
+      </div>
     );
   }
 
   return (
     <div ref={containerRef} className="relative">
-      <Card className="bg-card border-border p-4">
-        <label className="block text-sm text-muted-foreground mb-2">Select Customer</label>
-
-        <div className="relative">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
           <MagnifyingGlass
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
             weight="bold"
@@ -101,52 +93,44 @@ export function CustomerSelector({ selected, onSelect, onCreateNew }: CustomerSe
             value={search}
             onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
             onFocus={() => setIsOpen(true)}
-            placeholder="Search customers by name, company, or email..."
-            className="w-full bg-secondary border border-input rounded-lg pl-10 pr-4 py-2.5 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+            placeholder="Search customers..."
+            className="w-full bg-secondary border border-input rounded-lg pl-10 pr-4 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
           />
         </div>
+        <button
+          onClick={() => onCreateNew()}
+          className="px-3 py-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+        >
+          + New
+        </button>
+      </div>
 
-        {isOpen && (search.length >= 2 || results.length > 0) && (
-          <div className="mt-2 bg-popover rounded-lg border border-border max-h-60 overflow-y-auto shadow-lg">
-            {loading ? (
-              <div className="p-3 text-muted-foreground text-sm">Searching...</div>
-            ) : results.length > 0 ? (
-              results.map(customer => (
-                <div
-                  key={customer.id}
-                  onClick={() => {
-                    onSelect(customer);
-                    setIsOpen(false);
-                    setSearch('');
-                  }}
-                  className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-0 transition-colors"
-                >
-                  <div className="font-medium text-foreground">{customer.name}</div>
-                  {customer.company && (
-                    <div className="text-sm text-muted-foreground">{customer.company}</div>
-                  )}
-                  {customer.email && (
-                    <div className="text-xs text-primary">{customer.email}</div>
-                  )}
-                </div>
-              ))
-            ) : search.length >= 2 ? (
-              <div className="p-3 text-muted-foreground text-sm">No customers found</div>
-            ) : null}
-
-            <div
-              onClick={() => {
-                onCreateNew();
-                setIsOpen(false);
-              }}
-              className="p-3 hover:bg-muted cursor-pointer border-t border-border flex items-center gap-2 text-primary transition-colors"
-            >
-              <Plus className="w-4 h-4" weight="bold" />
-              Create New Customer
-            </div>
-          </div>
-        )}
-      </Card>
+      {isOpen && (search.length >= 2 || results.length > 0) && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-popover rounded-lg border border-border max-h-60 overflow-y-auto shadow-lg z-50">
+          {loading ? (
+            <div className="p-3 text-muted-foreground text-sm">Searching...</div>
+          ) : results.length > 0 ? (
+            results.map(customer => (
+              <div
+                key={customer.id}
+                onClick={() => {
+                  onSelect(customer);
+                  setIsOpen(false);
+                  setSearch('');
+                }}
+                className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-0 transition-colors"
+              >
+                <div className="font-medium text-foreground text-sm">{customer.name}</div>
+                {customer.company && (
+                  <div className="text-xs text-muted-foreground">{customer.company}</div>
+                )}
+              </div>
+            ))
+          ) : search.length >= 2 ? (
+            <div className="p-3 text-muted-foreground text-sm">No customers found</div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

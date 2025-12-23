@@ -437,7 +437,14 @@ export function useOrderDetail(visualId: string | null) {
             category: li.category || null,
             unitCost: parseFloat(li.unitCost) || parseFloat(li.unit_cost) || 0,
             totalQuantity: li.totalQuantity || li.total_quantity || 0,
-            totalCost: parseFloat(li.totalCost) || parseFloat(li.total_cost) || 0,
+            totalCost: (() => {
+              const cost = parseFloat(li.totalCost) || parseFloat(li.total_cost) || 0;
+              if (cost > 0) return cost;
+              // Calculate from quantity * unit cost if totalCost is missing
+              const qty = li.totalQuantity || li.total_quantity || 0;
+              const unit = parseFloat(li.unitCost) || parseFloat(li.unit_cost) || 0;
+              return qty * unit;
+            })(),
             sizes: {
               // Baby/Toddler
               '6m': li.sizes?.['6m'] || li.size_6_m || 0,
