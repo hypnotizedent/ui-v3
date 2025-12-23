@@ -36,6 +36,7 @@ import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/li
 import type { PSPLineItem } from '@/lib/printshoppro-types'
 import { convertToLineItem, generateId, calculateLineItemTotal, calculateSizesTotal } from '@/lib/printshoppro-types'
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers'
+import { convertToOrder } from '@/lib/quote-api'
 import { toast } from 'sonner'
 
 const API_BASE = 'https://mintprints-api.ronny.works'
@@ -45,6 +46,7 @@ interface OrderDetailPagePSPProps {
   onBack: () => void
   onViewCustomer: (customerId: string) => void
   mode?: 'order' | 'quote'
+  onConvertSuccess?: (orderId: string) => void
 }
 
 export function OrderDetailPagePSP({
@@ -52,6 +54,7 @@ export function OrderDetailPagePSP({
   onBack,
   onViewCustomer,
   mode = 'order',
+  onConvertSuccess,
 }: OrderDetailPagePSPProps) {
   const { order, loading, error, refetch } = useOrderDetail(visualId)
   const [lineItems, setLineItems] = useState<PSPLineItem[]>([])
@@ -60,14 +63,17 @@ export function OrderDetailPagePSP({
   const [customerNotes, setCustomerNotes] = useState('')
   const [internalNotes, setInternalNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [converting, setConverting] = useState(false)
 
-  // Convert API line items to PrintShopPro format
+  // Convert API line items to PrintShopPro format and populate form fields
   useEffect(() => {
     if (order?.lineItems) {
       const converted = order.lineItems.map(item => convertToLineItem(item))
       setLineItems(converted)
       setNickname(order.orderNickname || '')
       setDueDate(order.dueDate || '')
+      setCustomerNotes(order.notes || '')
+      setInternalNotes(order.productionNotes || '')
     }
   }, [order])
 
@@ -102,6 +108,24 @@ export function OrderDetailPagePSP({
       toast.error('Failed to save changes')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleConvertToOrder = async () => {
+    if (!order) return
+
+    setConverting(true)
+    try {
+      const result = await convertToOrder(order.id)
+      toast.success(`Converted to Order #${result.visual_id}`)
+      if (onConvertSuccess) {
+        onConvertSuccess(result.visual_id)
+      }
+    } catch (err) {
+      console.error('Convert error:', err)
+      toast.error('Failed to convert quote to order')
+    } finally {
+      setConverting(false)
     }
   }
 
@@ -298,8 +322,8 @@ export function OrderDetailPagePSP({
             </Button>
 
             {isQuote && (
-              <Button onClick={() => toast.info('Convert to order coming soon')}>
-                Convert to Order
+              <Button onClick={handleConvertToOrder} disabled={converting}>
+                {converting ? 'Converting...' : 'Convert to Order'}
               </Button>
             )}
           </div>
