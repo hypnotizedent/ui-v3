@@ -1311,9 +1311,6 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
                       </td>
                       <td colSpan={100} className="px-3 py-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mr-1">
-                            Decorations:
-                          </span>
                           {hasImprints ? (
                             <>
                               {item.imprints.map((imprint) => (
