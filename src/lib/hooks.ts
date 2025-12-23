@@ -664,6 +664,8 @@ export function useCustomerDetail(customerId: string | null) {
 
     setLoading(true)
     setError(null)
+    setCustomer(null)
+    setOrders([])
     try {
       // Fetch all customers and find by ID (since there's no direct endpoint)
       const response = await fetch(`${API_BASE_URL}/api/customers?limit=5000`)
