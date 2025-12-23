@@ -54,7 +54,10 @@ import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from
 import { SizeBreakdown } from '@/lib/types';
 import { ImageModal } from '@/components/shared/ImageModal';
 import { ManageColumnsModal, ColumnConfig, DEFAULT_COLUMN_CONFIG } from './ManageColumnsModal';
+import { CustomerSelector } from './CustomerSelector';
 import { toast } from 'sonner';
+
+const API_BASE = 'https://mintprints-api.ronny.works';
 
 // Component for rendering PDF thumbnail with fallback
 function PdfThumbnail({ 
@@ -1419,19 +1422,54 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
   );
 }
 
+interface NewOrderCustomer {
+  id: number;
+  name: string;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+}
+
+interface NewOrderState {
+  customer: NewOrderCustomer | null;
+  nickname: string;
+  notes: string;
+  productionNotes: string;
+  dueDate: string;
+  status: string;
+}
+
 interface OrderDetailPageProps {
   visualId: string;
   onViewCustomer: (customerId: string) => void;
-  mode?: 'order' | 'quote';
+  mode?: 'order' | 'quote' | 'create';
   onConvertSuccess?: (orderId: string) => void;
+  onCreateSuccess?: (orderId: string) => void;
 }
 
-export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onConvertSuccess }: OrderDetailPageProps) {
-  // Use different hooks based on mode
+export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onConvertSuccess, onCreateSuccess }: OrderDetailPageProps) {
+  // Check if we're in create mode
+  const isCreateMode = mode === 'create';
+
+  // Use different hooks based on mode (skip fetching in create mode)
   const orderHook = useOrderDetail(mode === 'order' ? visualId : null);
   const quoteHook = useQuoteDetail(mode === 'quote' ? visualId : null);
 
-  const { order, loading, error, refetch } = mode === 'order' ? orderHook : quoteHook;
+  const { order, loading, error, refetch } = isCreateMode
+    ? { order: null, loading: false, error: null, refetch: () => {} }
+    : mode === 'order' ? orderHook : quoteHook;
+
+  // State for create mode
+  const [newOrder, setNewOrder] = useState<NewOrderState>({
+    customer: null,
+    nickname: '',
+    notes: '',
+    productionNotes: '',
+    dueDate: '',
+    status: 'DRAFT',
+  });
+  const [saving, setSaving] = useState(false);
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [converting, setConverting] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({
@@ -1503,6 +1541,47 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       toast.error('Failed to save customer');
     } finally {
       setSavingCustomer(false);
+    }
+  };
+
+  // Handle save draft (create mode)
+  const handleSaveDraft = async () => {
+    if (!newOrder.customer) {
+      toast.error('Please select a customer');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_id: newOrder.customer.id,
+          status: newOrder.status || 'DRAFT',
+          order_nickname: newOrder.nickname || null,
+          notes: newOrder.notes || '',
+          production_notes: newOrder.productionNotes || '',
+          due_date: newOrder.dueDate || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create order');
+      }
+
+      const data = await response.json();
+      toast.success(`Order #${data.order?.visual_id || data.id} created`);
+
+      if (onCreateSuccess) {
+        onCreateSuccess(String(data.order?.visual_id || data.order?.id || data.id));
+      }
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create order');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1591,6 +1670,171 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       console.error('Add line item error:', err);
     }
   };
+
+  // Render create mode UI
+  if (isCreateMode) {
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">New Order</h2>
+            <p className="text-sm text-muted-foreground">Create a new order or quote</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleSaveDraft}
+              disabled={saving || !newOrder.customer}
+              className="gap-2"
+            >
+              {saving ? (
+                <CircleNotch className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
+              Save Order
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-4">
+          {/* Main content */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Customer Selection */}
+            <CustomerSelector
+              selected={newOrder.customer}
+              onSelect={(customer) => setNewOrder(prev => ({ ...prev, customer }))}
+              onCreateNew={() => setShowCreateCustomer(true)}
+            />
+
+            {/* Order Details */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium">Order Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm text-muted-foreground block mb-1.5">Job Name / Nickname</label>
+                  <Input
+                    value={newOrder.nickname}
+                    onChange={(e) => setNewOrder(prev => ({ ...prev, nickname: e.target.value }))}
+                    placeholder="e.g., Company T-Shirts, Event Merch..."
+                    className="bg-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground block mb-1.5">Due Date</label>
+                  <Input
+                    type="date"
+                    value={newOrder.dueDate}
+                    onChange={(e) => setNewOrder(prev => ({ ...prev, dueDate: e.target.value }))}
+                    className="bg-secondary"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground block mb-1.5">Customer Notes</label>
+                  <Textarea
+                    value={newOrder.notes}
+                    onChange={(e) => setNewOrder(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Notes visible to customer..."
+                    className="bg-secondary min-h-[80px]"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground block mb-1.5">Production Notes (Internal)</label>
+                  <Textarea
+                    value={newOrder.productionNotes}
+                    onChange={(e) => setNewOrder(prev => ({ ...prev, productionNotes: e.target.value }))}
+                    placeholder="Internal production notes..."
+                    className="bg-secondary min-h-[80px]"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Line Items placeholder */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-medium">Line Items</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Save the order first, then add line items</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-4">
+            {/* Status */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium">Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select
+                  value={newOrder.status}
+                  onValueChange={(value) => setNewOrder(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger className="bg-secondary">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                    <SelectItem value="QUOTE">Quote</SelectItem>
+                    <SelectItem value="Quote Out For Approval - Email">Quote Sent</SelectItem>
+                    <SelectItem value="PAYMENT NEEDED">Payment Needed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            {/* Summary */}
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium">Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Line Items</span>
+                  <span>0</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-medium">
+                  <span>Total</span>
+                  <span>$0.00</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Create Customer Dialog - placeholder */}
+        <Dialog open={showCreateCustomer} onOpenChange={setShowCreateCustomer}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Customer</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 text-center text-muted-foreground">
+              <p>Customer creation coming soon.</p>
+              <p className="text-sm mt-2">For now, create customers in Printavo.</p>
+            </div>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setShowCreateCustomer(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

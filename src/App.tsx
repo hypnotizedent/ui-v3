@@ -7,7 +7,7 @@ import { Dashboard } from '@/components/dashboard/Dashboard';
 import { OrdersList } from '@/components/orders/OrdersList';
 import { OrderDetailPage } from '@/components/orders/OrderDetailPage';
 import { QuotesListPage } from '@/components/quotes/QuotesListPage';
-import { createQuote } from '@/lib/quote-api';
+// createQuote import removed - using unified order creation flow
 // QuoteBuilderPage replaced by OrderDetailPage with mode="quote"
 import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
@@ -67,7 +67,7 @@ function App() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
 
-  console.log('App loaded - Spark UI v2.7.0', {
+  console.log('App loaded - Spark UI v2.8.0', {
     ordersCount: apiOrders?.length || 0,
     customersCount: apiCustomers?.length || 0,
     ordersError,
@@ -171,18 +171,10 @@ function App() {
     setCurrentView('quote-builder');
   };
 
-  const handleNewQuote = async () => {
-    try {
-      // Create a new draft quote via API
-      const newQuote = await createQuote({});
-      setSelectedQuoteId(String(newQuote.id));
-      setCurrentView('quote-builder');
-    } catch (err) {
-      console.error('Failed to create quote:', err);
-      // Still navigate but without a quote ID - will show error state
-      setSelectedQuoteId(null);
-      setCurrentView('quotes');
-    }
+  const handleNewOrder = () => {
+    // Navigate to create mode - no API call yet, just open empty form
+    setSelectedOrderId('new');
+    setCurrentView('order-detail');
   };
 
   const handleBack = () => {
@@ -225,14 +217,19 @@ function App() {
         return selectedOrderId ? (
           <OrderDetailPage
             visualId={selectedOrderId}
+            mode={selectedOrderId === 'new' ? 'create' : 'order'}
             onViewCustomer={handleViewCustomer}
+            onCreateSuccess={(orderId) => {
+              // After creation, navigate to the new order
+              setSelectedOrderId(orderId);
+            }}
           />
         ) : null;
       case 'quotes':
         return (
           <QuotesListPage
             onViewQuote={handleViewQuote}
-            onNewQuote={handleNewQuote}
+            onNewQuote={handleNewOrder}
           />
         );
       case 'quote-builder':
@@ -285,7 +282,7 @@ function App() {
             </svg>
             <div className="flex flex-col">
               <span className="font-bold text-lg tracking-wide leading-none">MINT PRINTS</span>
-              <span className="text-[8px] text-muted-foreground mt-0.5">v2.7.0</span>
+              <span className="text-[8px] text-muted-foreground mt-0.5">v2.8.0</span>
             </div>
           </div>
         </div>
@@ -416,11 +413,11 @@ function App() {
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="default" size="sm" className="gap-2 h-8" onClick={handleNewQuote}>
+              <Button variant="default" size="sm" className="gap-2 h-8" onClick={handleNewOrder}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                New Quote
+                New Order
               </Button>
             </div>
           </div>
