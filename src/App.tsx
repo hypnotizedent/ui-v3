@@ -392,15 +392,15 @@ function App() {
               )}
               <GlobalSearch
                 orders={(apiOrders || []).map(o => ({
-                  id: o.id,
+                  id: parseInt(o.id, 10) || 0,
                   visual_id: o.visual_id,
-                  order_nickname: o.order_nickname || null,
-                  customer_name: o.customer?.name || 'Unknown',
+                  order_nickname: o.nickname || null,
+                  customer_name: o.customer?.name || o.customer_name || 'Unknown',
                   status: o.status,
-                  total_amount: parseFloat(o.total) || 0,
+                  total_amount: o.total || 0,
                 }))}
                 customers={(apiCustomers || []).map(c => ({
-                  id: c.id,
+                  id: parseInt(c.id, 10) || 0,
                   name: c.name,
                   company: c.company || null,
                   email: c.email || null,
