@@ -707,12 +707,11 @@ export function useCustomerDetail(customerId: string | null) {
       }
       setCustomer(customerData)
 
-      // Fetch orders and filter by customer name
-      const ordersResponse = await fetch(`${API_BASE_URL}/api/orders?limit=100&search=${encodeURIComponent(customerData.name)}`)
+      // Fetch orders filtered by customer_id
+      const ordersResponse = await fetch(`${API_BASE_URL}/api/orders?customer_id=${found.id}&limit=100`)
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json()
         const customerOrders: OrderListItem[] = (ordersData.orders || [])
-          .filter((o: any) => o.customer_name === customerData.name)
           .map((o: any) => ({
             id: o.id,
             visual_id: o.visual_id || String(o.id),
