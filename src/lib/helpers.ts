@@ -94,7 +94,8 @@ export function getAPIStatusColor(status: string): string {
 
 // Human-readable status labels
 export function getAPIStatusLabel(status: string): string {
-  const normalized = status.toLowerCase().replace(/[_\s]+/g, '_');
+  if (!status) return 'New';
+  const normalized = status.toLowerCase().replace(/[-_\s]+/g, '_');
   const labels: Record<string, string> = {
     // Category-based
     'quote': 'Quote',
@@ -104,23 +105,35 @@ export function getAPIStatusLabel(status: string): string {
     'dtg': 'DTG',
     'fulfillment': 'Fulfill',
     'complete': 'Done',
-    // Printavo status names
+    // Printavo status names (exact matches from API)
     'new': 'New',
     'art_approval': 'Art',
     'artwork_approved': 'Approved',
     'payment_needed': 'Payment',
+    'invoice_paid': 'Paid',
+    'materials_pending': 'Materials',
     'in_production': 'Production',
+    'sp_production': 'Screen',
+    'sp___production': 'Screen',
     'screen_print_production': 'Screen',
+    'sp___need_to_burn_screens': 'Screens',
     'embroidery_production': 'Emb',
+    'emb_production': 'Emb',
+    'emb___production': 'Emb',
     'dtg_production': 'DTG',
+    'dtg___production': 'DTG',
     'ready': 'Ready',
     'ready_for_pickup': 'Pickup',
+    'ready_for_pick_up': 'Pickup',
     'shipped': 'Shipped',
     'delivered': 'Done',
     'on_hold': 'Hold',
     'cancelled': 'Cancelled',
+    'quote_out_for_approval___email': 'Quote Sent',
+    'quote_sent': 'Quote Sent',
+    'unknown': 'New',
   };
-  return labels[normalized] || status.replace(/_/g, ' ');
+  return labels[normalized] || status.replace(/[-_]/g, ' ');
 }
 
 export function getTierColor(tier: CustomerTier): string {

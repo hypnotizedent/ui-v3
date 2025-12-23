@@ -725,7 +725,7 @@ export function useCustomerDetail(customerId: string | null) {
             id: o.id,
             visual_id: o.visual_id || String(o.id),
             order_nickname: o.order_nickname || o.nickname || null,
-            status: o.status || 'unknown',
+            status: o.printavo_status_name || o.status || 'New',
             printavo_status_name: o.printavo_status_name || o.status || '',
             customer_name: o.customer_name || 'Unknown',
             total_amount: parseFloat(o.total_amount) || parseFloat(o.total) || 0,
