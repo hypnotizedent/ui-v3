@@ -67,7 +67,7 @@ function App() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
 
-  console.log('App loaded - Spark UI v2.6.0', {
+  console.log('App loaded - Spark UI v2.7.0', {
     ordersCount: apiOrders?.length || 0,
     customersCount: apiCustomers?.length || 0,
     ordersError,

@@ -1,13 +1,13 @@
 # Feature Tracker - ui-v3
 
 > Last Updated: December 22, 2025
-> Current Version: v2.6.0
+> Current Version: v2.7.0
 
 ---
 
 ## Upcoming Versions
 
-### v2.6.1 - Line Item CRUD
+### v2.7.1 - Line Item CRUD
 
 | Feature | Plan Doc | Priority | Status |
 |---------|----------|----------|--------|
@@ -16,20 +16,13 @@
 
 **API Dependencies**: See `HANDOFF_RONNY_OPS_API.md`
 
-### v2.7.0 - Edit & Polish
-
-| Feature | Plan Doc | Priority | Status |
-|---------|----------|----------|--------|
-| Edit Persistence | `PLAN_NEXT_FEATURES.md` | MEDIUM | Pending API verify |
-| Cmd+K shortcut | `PLAN_NEXT_FEATURES.md` | LOW | Ready |
-| Customer address display | `AUDIT_UI_QA_DEC22.md` | LOW | Ready |
-
 ---
 
 ## Done
 
 | Version | Features | Date |
 |---------|----------|------|
+| v2.7.0 | Cmd+K search shortcut, customer edit modal, address display | Dec 22, 2025 |
 | v2.6.0 | Artwork upload with drag-drop (line items) | Dec 22, 2025 |
 | v2.5.0 | Imprint CRUD (add/edit/delete wired to API) | Dec 22, 2025 |
 | v2.4.0 | Unified global search with typeahead dropdown | Dec 22, 2025 |

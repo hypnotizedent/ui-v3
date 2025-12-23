@@ -279,6 +279,8 @@ export interface OrderDetailCustomer {
   email: string | null
   phone: string | null
   company: string | null
+  city: string | null
+  state: string | null
 }
 
 export interface OrderDetailArtwork {
@@ -373,6 +375,8 @@ export function useOrderDetail(visualId: string | null) {
           email: data.customer?.email || null,
           phone: data.customer?.phone || null,
           company: data.customer?.company || null,
+          city: data.customer?.city || null,
+          state: data.customer?.state || null,
         },
         customerPo: data.customerPo || data.customer_po || null,
         notes: data.notes || null,

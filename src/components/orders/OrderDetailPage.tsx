@@ -1433,6 +1433,14 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
 
   const { order, loading, error, refetch } = mode === 'order' ? orderHook : quoteHook;
   const [converting, setConverting] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+  });
+  const [savingCustomer, setSavingCustomer] = useState(false);
 
   // Helper to check if this is a quote
   const isQuote: boolean = mode === 'quote' || (order !== null && 'isQuote' in order && order.isQuote === true);
@@ -1453,6 +1461,48 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       console.error('Convert error:', err);
     } finally {
       setConverting(false);
+    }
+  };
+
+  // Handle customer edit
+  const handleEditCustomer = () => {
+    if (!order) return;
+    setCustomerForm({
+      name: order.customer.name || '',
+      email: order.customer.email || '',
+      phone: order.customer.phone || '',
+      company: order.customer.company || '',
+    });
+    setEditingCustomer(true);
+  };
+
+  const handleSaveCustomer = async () => {
+    if (!order) return;
+
+    setSavingCustomer(true);
+    try {
+      const response = await fetch(`https://mintprints-api.ronny.works/api/customers/${order.customer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: customerForm.name.split(' ')[0] || customerForm.name,
+          last_name: customerForm.name.split(' ').slice(1).join(' ') || '',
+          email: customerForm.email,
+          phone: customerForm.phone,
+          company: customerForm.company,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save');
+
+      toast.success('Customer updated');
+      setEditingCustomer(false);
+      refetch();
+    } catch (error) {
+      console.error('Failed to save customer:', error);
+      toast.error('Failed to save customer');
+    } finally {
+      setSavingCustomer(false);
     }
   };
 
@@ -1705,6 +1755,13 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
                     <span className="text-muted-foreground text-xs">{order.customer.company}</span>
                   </>
                 )}
+                <button
+                  onClick={handleEditCustomer}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                  title="Edit customer"
+                >
+                  <PencilSimple size={12} weight="bold" />
+                </button>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
                 {order.customer.email && (
@@ -1717,6 +1774,14 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
                   <a href={`tel:${order.customer.phone}`} className="hover:text-foreground">
                     {order.customer.phone}
                   </a>
+                )}
+                {(order.customer.city || order.customer.state) && (
+                  <>
+                    {(order.customer.email || order.customer.phone) && <span>·</span>}
+                    <span>
+                      {[order.customer.city, order.customer.state].filter(Boolean).join(', ')}
+                    </span>
+                  </>
                 )}
               </div>
             </div>
@@ -1960,6 +2025,58 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
         onOpenChange={setAddLineItemOpen}
         onAdd={handleAddLineItem}
       />
+
+      {/* Customer Edit Dialog */}
+      <Dialog open={editingCustomer} onOpenChange={setEditingCustomer}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Name</label>
+              <Input
+                value={customerForm.name}
+                onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                placeholder="Customer name"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Email</label>
+              <Input
+                type="email"
+                value={customerForm.email}
+                onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Phone</label>
+              <Input
+                value={customerForm.phone}
+                onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                placeholder="Phone number"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Company</label>
+              <Input
+                value={customerForm.company}
+                onChange={(e) => setCustomerForm({ ...customerForm, company: e.target.value })}
+                placeholder="Company name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCustomer(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveCustomer} disabled={savingCustomer}>
+              {savingCustomer ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

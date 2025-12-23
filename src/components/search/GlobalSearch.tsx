@@ -185,6 +185,20 @@ export function GlobalSearch({
     }
   }, [selectedIndex, results.length]);
 
+  // Global keyboard shortcut: Cmd+K (Mac) or Ctrl+K (Windows)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setIsFocused(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   // Calculate flat index for keyboard navigation
   const getFlatIndex = (type: string, indexInGroup: number): number => {
     let offset = 0;
@@ -212,8 +226,11 @@ export function GlobalSearch({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           onKeyDown={handleKeyDown}
-          className="pl-9 h-9 bg-card border-border"
+          className="pl-9 pr-12 h-9 bg-card border-border"
         />
+        <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+          <span className="text-xs">⌘</span>K
+        </kbd>
       </div>
 
       {showDropdown && (
