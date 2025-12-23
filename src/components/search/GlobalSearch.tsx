@@ -255,7 +255,7 @@ export function GlobalSearch({
                           data-index={flatIdx}
                           onClick={() => handleSelect(result)}
                           className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-                            isSelected ? 'bg-secondary' : 'hover:bg-muted'
+                            isSelected ? 'bg-primary/20 text-primary' : 'hover:bg-muted'
                           }`}
                         >
                           <Package size={16} className="text-primary flex-shrink-0" weight="duotone" />
@@ -295,7 +295,7 @@ export function GlobalSearch({
                           data-index={flatIdx}
                           onClick={() => handleSelect(result)}
                           className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-                            isSelected ? 'bg-secondary' : 'hover:bg-muted'
+                            isSelected ? 'bg-primary/20 text-primary' : 'hover:bg-muted'
                           }`}
                         >
                           <User size={16} className="text-emerald-500 flex-shrink-0" weight="duotone" />
@@ -334,7 +334,7 @@ export function GlobalSearch({
                           data-index={flatIdx}
                           onClick={() => handleSelect(result)}
                           className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
-                            isSelected ? 'bg-secondary' : 'hover:bg-muted'
+                            isSelected ? 'bg-primary/20 text-primary' : 'hover:bg-muted'
                           }`}
                         >
                           <FileText size={16} className="text-blue-500 flex-shrink-0" weight="duotone" />
