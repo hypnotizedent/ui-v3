@@ -48,7 +48,8 @@ import {
   X,
   Upload,
   Plus,
-  CircleNotch
+  CircleNotch,
+  ChatText
 } from '@phosphor-icons/react';
 import { formatCurrency, formatDate, getAPIStatusColor, getAPIStatusLabel } from '@/lib/helpers';
 import { SizeBreakdown } from '@/lib/types';
@@ -57,42 +58,40 @@ import { ManageColumnsModal, ColumnConfig, DEFAULT_COLUMN_CONFIG } from './Manag
 import { CustomerSelector } from './CustomerSelector';
 // ImprintCard is defined locally in this file (line ~2249)
 import { MoreActionsMenu } from './MoreActionsMenu';
-import { CreateLabelModal } from './CreateLabelModal';
-import { RecordPaymentModal } from './RecordPaymentModal';
 import { toast } from 'sonner';
 
 const API_BASE = 'https://mintprints-api.ronny.works';
 
 // Component for rendering PDF thumbnail with fallback
-function PdfThumbnail({
-  thumbnailUrl,
-  pdfUrl,
-  name,
+function PdfThumbnail({ 
+  thumbnailUrl, 
+  pdfUrl, 
+  name, 
   size = 'large',
-  className = ''
-}: {
-  thumbnailUrl: string | null | undefined;
-  pdfUrl: string;
-  name: string;
+  className = '' 
+}: { 
+  thumbnailUrl: string | null | undefined; 
+  pdfUrl: string; 
+  name: string; 
   size?: 'small' | 'large';
   className?: string;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-
+  
   // Reset state when thumbnailUrl changes
   useEffect(() => {
     setThumbnailFailed(false);
     setImgLoaded(false);
   }, [thumbnailUrl]);
-
+  
   const iconSize = size === 'small' ? 20 : 28;
-  const dimensions = size === 'small'
+  const dimensions = size === 'small' 
     ? 'w-16 h-16'
     : 'w-24 h-24';
-
+  
   const hasThumbnail = thumbnailUrl && thumbnailUrl.trim() !== '' && !thumbnailFailed;
-
+  
   // If we have a valid thumbnail URL, try to show the image
   if (hasThumbnail) {
     return (
@@ -127,7 +126,7 @@ function PdfThumbnail({
       </a>
     );
   }
-
+  
   // Fallback to styled "View PDF" button with icon
   return (
     <a
@@ -166,15 +165,15 @@ function isImageFile(filename: string): boolean {
 // Helper to get file icon
 function getFileIcon(filename: string) {
   const ext = getFileExtension(filename);
-
+  
   if (ext === 'pdf') {
     return <FilePdf className="w-5 h-5 text-red-400" weight="fill" />;
   }
-
+  
   if (isImageFile(filename)) {
     return <FileImage className="w-5 h-5 text-blue-400" weight="fill" />;
   }
-
+  
   return <File className="w-5 h-5 text-muted-foreground" weight="bold" />;
 }
 
@@ -485,8 +484,9 @@ function ArtworkUpload({ orderId, lineItemId, currentMockup, onUploadComplete, o
   // No mockup - show upload zone
   return (
     <div
-      className={`${sizeClass} border border-dashed rounded flex items-center justify-center cursor-pointer transition-colors ${isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50 hover:bg-muted/30'
-        }`}
+      className={`${sizeClass} border border-dashed rounded flex items-center justify-center cursor-pointer transition-colors ${
+        isDragging ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/50 hover:bg-muted/30'
+      }`}
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
@@ -744,8 +744,8 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
   const currentColumnConfig = columnConfig || DEFAULT_COLUMN_CONFIG;
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [editingImprintCell, setEditingImprintCell] = useState<EditingImprintCell | null>(null);
-  const [editedItems, setEditedItems] = useState<Record<string, Partial<OrderDetailLineItem>>>({});
-  const [editedImprints, setEditedImprints] = useState<Record<number, Partial<LineItemImprint>>>({});
+  const [editedItems, setEditedItems] = useState<Record<string, Partial<OrderDetailLineItem>>>({}); 
+  const [editedImprints, setEditedImprints] = useState<Record<number, Partial<LineItemImprint>>>({}); 
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set(items.map(i => i.id)));
 
   // Auto-expand items when they load/change (to show imprints by default)
@@ -756,7 +756,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
   }, [items]);
 
   // Debug logging moved after visibleSizeColumns declaration
-
+  
   // All size columns organized by category with config mapping
   const ALL_SIZE_COLUMNS = [
     // Baby/Toddler
@@ -829,8 +829,8 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
 
     // Only hide ALL size columns if no items have size data AND no sizes enabled in config
     const hasEnabledSizes = Object.values(currentColumnConfig.sizes.adult).some(v => v) ||
-      Object.values(currentColumnConfig.sizes.youth).some(v => v) ||
-      Object.values(currentColumnConfig.sizes.baby).some(v => v);
+                            Object.values(currentColumnConfig.sizes.youth).some(v => v) ||
+                            Object.values(currentColumnConfig.sizes.baby).some(v => v);
 
     if (!hasSizeBreakdown && !hasEnabledSizes) return [];
 
@@ -874,7 +874,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
       const val = edited[field as keyof typeof edited];
       return val !== undefined && val !== null ? val as (string | number) : '';
     }
-
+    
     if (field === 'styleNumber') return item.styleNumber || '';
     if (field === 'color') return item.color || '';
     if (field === 'description') return item.description || '';
@@ -893,7 +893,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
 
   const handleCellChange = (value: string) => {
     if (!editingCell) return;
-
+    
     setEditedItems((prev) => ({
       ...prev,
       [editingCell.itemId]: {
@@ -903,7 +903,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
           : value,
       },
     }));
-
+    
     setEditingCell({ ...editingCell, value });
   };
 
@@ -944,7 +944,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
       const val = edited[field as keyof typeof edited];
       return val !== undefined && val !== null ? val as (string | number) : '';
     }
-
+    
     if (field === 'location') return imprint.location || '';
     if (field === 'decorationType') return imprint.decorationType || '';
     if (field === 'description') return imprint.description || '';
@@ -961,7 +961,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
 
   const handleImprintCellChange = (value: string) => {
     if (!editingImprintCell) return;
-
+    
     setEditedImprints((prev) => ({
       ...prev,
       [editingImprintCell.imprintId]: {
@@ -971,7 +971,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
           : value,
       },
     }));
-
+    
     setEditingImprintCell({ ...editingImprintCell, value });
   };
 
@@ -1069,12 +1069,12 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
     const isEditing = editingCell?.itemId === String(item.id) && editingCell?.field === field;
     const isEmpty = value === '' || value === null || (typeof value === 'number' && value === 0);
     const displayValue = field === 'unitCost' ? formatCurrency(Number(value)) : (isEmpty ? '-' : String(value));
-
+    
     const alignmentClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
     const paddingClass = field.startsWith('size-') ? 'px-2' : 'px-3';
-
+    
     return (
-      <td
+      <td 
         className={`${paddingClass} py-1.5 align-top cursor-pointer hover:bg-primary/5 transition-colors group relative ${alignmentClass}`}
         onClick={() => !isEditing && handleCellClick(String(item.id), field, value)}
       >
@@ -1095,9 +1095,9 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
             <span className={`flex-1 ${field.startsWith('size-') && typeof value === 'number' && value === 0 ? 'text-muted-foreground/30' : 'text-foreground'} ${field.startsWith('size-') && typeof value === 'number' && value > 0 ? 'font-medium' : ''}`}>
               {displayValue}
             </span>
-            <PencilSimple
-              className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-              weight="bold"
+            <PencilSimple 
+              className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" 
+              weight="bold" 
             />
           </div>
         )}
@@ -1110,11 +1110,11 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
     const isEditing = editingImprintCell?.imprintId === imprint.id && editingImprintCell?.field === field;
     const isEmpty = value === '' || value === null || (typeof value === 'number' && value === 0);
     const displayValue = isEmpty ? '-' : String(value);
-
+    
     const alignmentClass = align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left';
-
+    
     return (
-      <td
+      <td 
         colSpan={colSpan}
         className={`px-3 py-1.5 align-top cursor-pointer hover:bg-primary/5 transition-colors group relative ${alignmentClass}`}
         onClick={() => !isEditing && handleImprintCellClick(imprint.id, field, value)}
@@ -1136,9 +1136,9 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
             <span className={`flex-1 ${isEmpty ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>
               {displayValue}
             </span>
-            <PencilSimple
-              className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-              weight="bold"
+            <PencilSimple 
+              className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" 
+              weight="bold" 
             />
           </div>
         )}
@@ -1199,7 +1199,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
               const sizes = mapSizesToDisplay(item.sizes);
               const editedSizes = editedItems[String(item.id)] || {};
               const currentSizes = { ...sizes, ...editedSizes };
-
+              
               // Calculate total qty from visible size columns (for editing scenarios)
               const sizeColumnsQty = visibleSizeColumns.reduce((sum, col) => {
                 const sizeKey = `size-${col.label}`;
@@ -1217,11 +1217,11 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
                 : totalQty * Number(unitCost);
               const isExpanded = expandedItems.has(item.id);
               const hasImprints = item.imprints && item.imprints.length > 0;
-
+              
               // Check if this is the first item in a group
               const isFirstInGroup = idx === 0 || items[idx - 1].groupId !== item.groupId;
               const isInGroup = item.groupId !== null;
-
+              
               return (
                 <>
                   {/* Group Header Row */}
@@ -1237,7 +1237,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
                       </td>
                     </tr>
                   )}
-
+                  
                   {/* Line Item Row */}
                   <tr key={item.id} className={`border-b border-border hover:bg-muted/10 transition-colors ${isInGroup ? 'bg-muted/5' : ''}`}>
                     <td className="px-3 py-1.5 align-top">
@@ -1303,7 +1303,7 @@ function LineItemsTable({ items, orderId, onImageClick, onRefetch }: LineItemsTa
                       </div>
                     </td>
                   </tr>
-
+                  
                   {/* Imprint Cards Row */}
                   {isExpanded && (
                     <tr className="bg-muted/20 border-b border-border/50">
@@ -1380,15 +1380,12 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   // Check if we're in create mode
   const isCreateMode = mode === 'create';
 
-  // Label Modal State
-  const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
-
   // Use different hooks based on mode (skip fetching in create mode)
   const orderHook = useOrderDetail(mode === 'order' ? visualId : null);
   const quoteHook = useQuoteDetail(mode === 'quote' ? visualId : null);
 
   const { order, loading, error, refetch } = isCreateMode
-    ? { order: null, loading: false, error: null, refetch: () => { } }
+    ? { order: null, loading: false, error: null, refetch: () => {} }
     : mode === 'order' ? orderHook : quoteHook;
 
   // State for create mode
@@ -1403,6 +1400,7 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   const [saving, setSaving] = useState(false);
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [converting, setConverting] = useState(false);
+  const [sendingSms, setSendingSms] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({
     name: '',
@@ -1431,6 +1429,42 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       console.error('Convert error:', err);
     } finally {
       setConverting(false);
+    }
+  };
+
+  // Handle SMS notification
+  const handleSendSms = async (type: 'ready' | 'payment' | 'shipped') => {
+    if (!order) return;
+
+    if (!order.customer.phone) {
+      toast.error('No phone number on file for this customer');
+      return;
+    }
+
+    setSendingSms(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/orders/${order.id}/notify-sms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to send SMS');
+      }
+
+      const labels = {
+        ready: 'Ready for Pickup',
+        payment: 'Payment Needed',
+        shipped: 'Shipped'
+      };
+      toast.success(`SMS sent: ${labels[type]}`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send SMS');
+      console.error('SMS error:', err);
+    } finally {
+      setSendingSms(false);
     }
   };
 
@@ -1608,8 +1642,6 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   const [modalIndex, setModalIndex] = useState(0);
   const [columnConfig, setColumnConfig] = useKV<ColumnConfig>('order-column-config', DEFAULT_COLUMN_CONFIG);
   const [addLineItemOpen, setAddLineItemOpen] = useState(false);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [sendingInvoice, setSendingInvoice] = useState(false);
   const [inlineNewItem, setInlineNewItem] = useState<{
     description: string;
     styleNumber: string;
@@ -1627,35 +1659,6 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
     setModalImages(images);
     setModalIndex(index);
     setModalOpen(true);
-  };
-
-  // Send Invoice handler
-  const handleSendInvoice = async () => {
-    if (!order) return;
-
-    if (!order.customer?.email) {
-      toast.error('Customer has no email address');
-      return;
-    }
-
-    setSendingInvoice(true);
-    try {
-      const response = await fetch(`${API_BASE}/api/orders/${order.id}/invoice/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to send invoice');
-      }
-
-      toast.success(`Invoice sent to ${order.customer.email}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to send invoice');
-    } finally {
-      setSendingInvoice(false);
-    }
   };
 
   const handleAddLineItem = async (lineItem: Partial<OrderDetailLineItem>): Promise<boolean> => {
@@ -1872,10 +1875,46 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
                 {converting ? 'Converting...' : 'Convert'}
               </Button>
             )}
+            {!isCreateMode && !isQuote && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={sendingSms}
+                    className="h-7 gap-1.5"
+                  >
+                    {sendingSms ? (
+                      <CircleNotch size={14} className="animate-spin" />
+                    ) : (
+                      <ChatText size={14} weight="bold" />
+                    )}
+                    SMS
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleSendSms('ready')}>
+                    Ready for Pickup
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSendSms('payment')}>
+                    Payment Needed
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSendSms('shipped')}>
+                    Shipped
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {!isCreateMode && (
               <MoreActionsMenu
                 onPrint={() => window.print()}
-                onEmail={handleSendInvoice}
+                onEmail={() => {
+                  if (displayOrder.customer.email) {
+                    window.location.href = `mailto:${displayOrder.customer.email}?subject=Order ${displayOrder.orderNumber}`;
+                  } else {
+                    toast.error('No customer email on file');
+                  }
+                }}
               />
             )}
           </div>
@@ -2128,33 +2167,6 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
                     <span>{formatCurrency(balance)}</span>
                   </div>
                 </div>
-                {/* Payment Action Buttons */}
-                <div className="mt-3 pt-2 border-t border-border space-y-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full h-7 text-xs gap-1.5"
-                    onClick={() => setPaymentModalOpen(true)}
-                    disabled={balance <= 0}
-                  >
-                    <span className="text-green-500">$</span>
-                    Record Payment
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full h-7 text-xs gap-1.5"
-                    onClick={handleSendInvoice}
-                    disabled={sendingInvoice || !displayOrder.customer?.email}
-                  >
-                    {sendingInvoice ? (
-                      <CircleNotch size={12} className="animate-spin" />
-                    ) : (
-                      <FileText size={12} />
-                    )}
-                    {sendingInvoice ? 'Sending...' : 'Send Invoice'}
-                  </Button>
-                </div>
               </CardContent>
             </Card>
 
@@ -2267,18 +2279,6 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
         onOpenChange={setAddLineItemOpen}
         onAdd={handleAddLineItem}
       />
-
-      {/* Record Payment Modal */}
-      {order && (
-        <RecordPaymentModal
-          open={paymentModalOpen}
-          onOpenChange={setPaymentModalOpen}
-          orderId={order.id}
-          orderNumber={order.orderNumber}
-          balanceDue={order.amountOutstanding}
-          onSuccess={() => refetch()}
-        />
-      )}
 
       {/* Customer Edit Dialog */}
       <Dialog open={editingCustomer} onOpenChange={setEditingCustomer}>
@@ -2415,22 +2415,22 @@ function ImprintCard({ imprint, onImageClick, onDelete, isLineItemEditing = fals
   const [isEditing, setIsEditing] = useState(false);
   const [editedImprint, setEditedImprint] = useState(imprint);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-
+  
   const handleEdit = () => {
     setIsEditing(true);
     setEditedImprint(imprint);
   };
-
+  
   const handleSave = () => {
     toast.success('Imprint updated');
     setIsEditing(false);
   };
-
+  
   const handleCancel = () => {
     setEditedImprint(imprint);
     setIsEditing(false);
   };
-
+  
   const handleDelete = () => {
     toast.success('Imprint deleted');
   };
@@ -2439,7 +2439,7 @@ function ImprintCard({ imprint, onImageClick, onDelete, isLineItemEditing = fals
     toast.success(`${files.length} mockup${files.length > 1 ? 's' : ''} uploaded successfully`);
     // In a real implementation, this would upload the files and update the imprint
   };
-
+  
   return (
     <div className="p-2 bg-card/50 rounded border border-border/50 space-y-1.5 relative group">
       {/* Edit/Delete controls */}
@@ -2447,18 +2447,18 @@ function ImprintCard({ imprint, onImageClick, onDelete, isLineItemEditing = fals
         <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
           {isEditing ? (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="h-6 w-6 text-green-500 hover:text-green-400 hover:bg-green-500/10"
                 onClick={handleSave}
                 title="Save changes"
               >
                 <Check size={14} weight="bold" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="h-6 w-6 text-destructive hover:bg-destructive/10"
                 onClick={handleCancel}
                 title="Cancel editing"
@@ -2468,18 +2468,18 @@ function ImprintCard({ imprint, onImageClick, onDelete, isLineItemEditing = fals
             </>
           ) : (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="h-6 w-6"
                 onClick={handleEdit}
                 title="Edit imprint"
               >
                 <PencilSimple size={14} weight="bold" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="h-6 w-6 text-destructive hover:bg-destructive/10"
                 onClick={handleDelete}
                 title="Delete imprint"
@@ -2490,7 +2490,7 @@ function ImprintCard({ imprint, onImageClick, onDelete, isLineItemEditing = fals
           )}
         </div>
       )}
-
+      
       <div className="flex items-start gap-2">
         <Stamp className="w-3.5 h-3.5 text-primary/60 mt-0.5 flex-shrink-0" weight="duotone" />
         <div className="flex-1 min-w-0 pr-12">
@@ -2538,7 +2538,7 @@ function ImprintCard({ imprint, onImageClick, onDelete, isLineItemEditing = fals
           )}
         </div>
       </div>
-
+      
       {/* Mockups for this imprint */}
       <div className="pl-5 pt-1">
         <div className="flex items-center justify-between mb-1">
@@ -2620,10 +2620,10 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
   const [manageColumnsOpen, setManageColumnsOpen] = useState(false);
   const [mockupUploadOpen, setMockupUploadOpen] = useState(false);
   const [addImprintOpen, setAddImprintOpen] = useState(false);
-
+  
   const sizes = isEditing ? editedSizes : mapSizesToGrid(item.sizes);
   const total = Object.values(sizes).reduce((sum, qty) => sum + qty, 0);
-
+  
   const handleDuplicate = async () => {
     try {
       const response = await fetch(`https://mintprints-api.ronny.works/api/orders/${orderId}/line-items`, {
@@ -2691,13 +2691,13 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
       console.error('Update error:', err);
     }
   };
-
+  
   const handleCancel = () => {
     setEditedItem(item);
     setEditedSizes(mapSizesToGrid(item.sizes));
     setIsEditing(false);
   };
-
+  
   const handleSizeChange = (size: string, value: string) => {
     const numValue = parseInt(value) || 0;
     setEditedSizes(prev => ({ ...prev, [size]: numValue }));
@@ -2749,18 +2749,18 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
         <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
           {isEditing ? (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="h-7 w-7 text-green-500 hover:text-green-400 hover:bg-green-500/10"
                 onClick={handleSave}
                 title="Save changes"
               >
                 <Check size={18} weight="bold" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              <Button 
+                variant="ghost" 
+                size="icon" 
                 className="h-7 w-7 text-destructive hover:bg-destructive/10"
                 onClick={handleCancel}
                 title="Cancel editing"
@@ -2866,8 +2866,8 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
               )}
             </div>
           </div>
-
-
+          
+          
           <div className="text-right">
             {isEditing ? (
               <div className="space-y-1">
@@ -2892,7 +2892,7 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
               </>
             )}
           </div>
-
+          
           {/* Mockup Thumbnail - Right Side */}
           {allLineItemMockups.length > 0 && allLineItemMockups[0] && (
             isPdfUrl(allLineItemMockups[0].url) ? (
@@ -2937,10 +2937,11 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
                 />
               ) : (
                 <span
-                  className={`px-1.5 py-0.5 rounded ${sizes[size] > 0
-                    ? 'bg-primary/20 text-primary font-medium'
-                    : 'text-muted-foreground/50'
-                    }`}
+                  className={`px-1.5 py-0.5 rounded ${
+                    sizes[size] > 0
+                      ? 'bg-primary/20 text-primary font-medium'
+                      : 'text-muted-foreground/50'
+                  }`}
                 >
                   {sizes[size]}
                 </span>
@@ -2966,14 +2967,14 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
           <Printer className="w-3 h-3" weight="bold" />
           Imprints
         </p>
-
+        
         {/* Imprint Details with Mockups */}
         {item.imprints && item.imprints.length > 0 ? (
           <div className="mt-2 space-y-1.5">
             {item.imprints.map((imprint) => (
-              <ImprintCard
-                key={imprint.id}
-                imprint={imprint}
+              <ImprintCard 
+                key={imprint.id} 
+                imprint={imprint} 
                 onImageClick={onImageClick}
                 isLineItemEditing={isEditing}
               />
@@ -2987,7 +2988,7 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
             <span className="text-xs text-muted-foreground">No imprints</span>
           </div>
         )}
-
+        
         {/* Add Imprint Button */}
         {!isEditing && (
           <div className="pt-1">
@@ -3024,14 +3025,6 @@ function LineItemCard({ item, index, orderId, orderStatus, onImageClick, columnC
         config={columnConfig}
         onChange={onConfigChange}
       />
-
-      {order && (
-        <CreateLabelModal
-          open={isLabelModalOpen}
-          onOpenChange={setIsLabelModalOpen}
-          order={order}
-        />
-      )}
     </>
   );
 }
