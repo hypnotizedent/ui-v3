@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Users, ChartLine, ArrowLeft, FileText, Sparkle } from '@phosphor-icons/react';
+import { Package, Users, ChartLine, ArrowLeft, FileText, Sparkle, TShirt } from '@phosphor-icons/react';
 import { Transaction, View, OrderStatus, ImprintMethod } from '@/lib/types';
 import { useOrders, useCustomers } from '@/lib/hooks';
 import { type OrderStatus as ApiOrderStatus } from '@/lib/api-adapter';
@@ -13,6 +13,7 @@ import { QuotesListPage } from '@/components/quotes/QuotesListPage';
 import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
 import ReportsPage from '@/pages/ReportsPage';
+import { ProductCatalogPage } from '@/components/products/ProductCatalogPage';
 import { Button } from '@/components/ui/button';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
 
@@ -261,6 +262,8 @@ function App() {
         ) : null;
       case 'reports':
         return <ReportsPage />;
+      case 'products':
+        return <ProductCatalogPage />;
       default:
         return null;
     }
@@ -321,7 +324,17 @@ function App() {
             <Users weight="bold" className="w-4 h-4" />
             Customers
           </Button>
-          
+
+          <Button
+            variant={currentView === 'products' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setCurrentView('products')}
+            className="w-full justify-start gap-2 h-8"
+          >
+            <TShirt weight="bold" className="w-4 h-4" />
+            Products
+          </Button>
+
           <Button
             variant={currentView === 'reports' ? 'secondary' : 'ghost'}
             size="sm"

@@ -135,4 +135,35 @@ export interface Transaction {
   notes: string;
 }
 
-export type View = 'dashboard' | 'orders' | 'order-detail' | 'quotes' | 'quote-builder' | 'customers' | 'customer-detail' | 'reports';
+export type View = 'dashboard' | 'orders' | 'order-detail' | 'quotes' | 'quote-builder' | 'customers' | 'customer-detail' | 'reports' | 'products';
+
+// Supplier product types
+export type SupplierName = 'ss_activewear' | 'as_colour' | 'sanmar' | 'all';
+
+export interface SupplierProduct {
+  supplier: string;
+  supplier_sku: string;
+  style_code: string;
+  brand: string;
+  title: string;
+  description?: string;
+  category?: string;
+  subcategory?: string;
+  base_price: number | null;
+  piece_price?: number | null;
+  case_price?: number | null;
+  case_qty?: number | null;
+  color: string;
+  color_hex?: string;
+  size: string;
+  image_url: string | null;
+  gtin?: string;
+  status?: string;
+  inventory: {
+    total: number;
+    warehouses?: Array<{
+      name: string;
+      qty: number;
+    }>;
+  };
+}
