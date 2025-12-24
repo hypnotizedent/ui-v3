@@ -49,12 +49,21 @@ A comprehensive print shop management dashboard for tracking customers, orders, 
 - **Progression**: View profile → See order history → Click order → Navigate to order detail
 - **Success criteria**: Order history shows correctly, total spend calculates accurately
 
+### Version Control & History
+- **Functionality**: Track and manage complete version history for orders, customers, and artwork files
+- **Purpose**: Audit trail, change tracking, ability to revert to previous states
+- **Trigger**: Navigate to Settings page (gear icon)
+- **Progression**: Select entity type (Orders/Customers/Artwork) → Choose entity → View version timeline → Compare versions → Revert if needed
+- **Success criteria**: All versions are tracked with timestamps, user attribution, field changes are identified, revert functionality works correctly
+
 ## Edge Case Handling
 
 - **Empty states**: Show helpful messages when no orders/customers exist with call-to-action
 - **Missing artwork**: Display placeholder state for imprints without uploaded artwork
 - **Zero quantities**: Size cells with 0 display muted, non-zero are emphasized
 - **Long names**: Truncate with ellipsis, full name on hover via tooltip
+- **No version history**: Display demo data generator to help users understand version control features
+- **Version conflicts**: Each version maintains complete data snapshot to prevent data loss
 
 ## Design Direction
 
@@ -100,19 +109,22 @@ Subtle, functional animations that enhance clarity without slowing workflows - q
 
 - **Components**:
   - Card: Order cards, customer cards, stat cards
-  - Badge: Status indicators, tier badges, method badges
+  - Badge: Status indicators, tier badges, method badges, version badges
   - Table: Orders list, customers list, line items
-  - Tabs: Navigation between views
+  - Tabs: Navigation between views, version control entity types
   - Input: Search fields
   - Select: Status filter, tier filter
-  - ScrollArea: Long lists within cards
+  - ScrollArea: Long lists within cards, version history timeline
   - Separator: Section dividers
   - Tooltip: Truncated text reveals
+  - Popover: Version history quick view
 
 - **Customizations**:
   - Size breakdown grid component for XS-3XL quantities
   - Imprint location badge with method indicator
   - Payment timeline component
+  - Version history badge with popover
+  - Version timeline component with diff viewer
 
 - **States**:
   - Buttons: Default (slate), hover (lighter), active (emerald)

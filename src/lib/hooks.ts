@@ -1011,3 +1011,152 @@ export function useQuoteDetail(quoteId: string | null) {
 
 // Re-export QuoteAsOrder type
 export type { QuoteAsOrder }
+
+// =============================================================================
+// PRODUCT SEARCH TYPES
+// =============================================================================
+
+export interface SupplierProduct {
+  supplier: string
+  supplier_sku: string
+  style_code: string
+  brand: string
+  title: string
+  description?: string
+  category?: string
+  subcategory?: string
+  base_price: number | null
+  piece_price?: number | null
+  case_price?: number | null
+  case_qty?: number | null
+  color: string
+  color_hex?: string
+  size: string
+  image_url: string | null
+  gtin?: string
+  status?: string
+  inventory: {
+    total: number
+    warehouses?: Array<{
+      name: string
+      qty: number
+    }>
+  }
+}
+
+export interface SupplierStatus {
+  name: string
+  ok: boolean
+  message: string
+}
+
+// =============================================================================
+// useProductSearch - Search products across suppliers
+// =============================================================================
+
+export function useProductSearch(options?: {
+  query?: string
+  supplier?: 'all' | 'ss_activewear' | 'as_colour' | 'sanmar'
+  category?: string
+  color?: string
+  limit?: number
+}) {
+  const [products, setProducts] = useState<SupplierProduct[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  const search = useCallback(async (searchQuery?: string) => {
+    const query = searchQuery || options?.query
+    if (!query || query.trim().length < 2) {
+      setProducts([])
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      params.set('q', query.trim())
+      if (options?.supplier && options.supplier !== 'all') {
+        params.set('supplier', options.supplier)
+      }
+      if (options?.category) params.set('category', options.category)
+      if (options?.color) params.set('color', options.color)
+      if (options?.limit) params.set('limit', String(options.limit))
+
+      const response = await fetch(`${API_BASE_URL}/api/products/search?${params}`)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      // Map API response to our type
+      const mappedProducts: SupplierProduct[] = (data.products || []).map((p: any) => ({
+        supplier: p.supplier || 'unknown',
+        supplier_sku: p.supplier_sku || p.sku || '',
+        style_code: p.style_code || p.styleCode || '',
+        brand: p.brand || '',
+        title: p.title || p.name || '',
+        description: p.description || '',
+        category: p.category || '',
+        subcategory: p.subcategory || '',
+        base_price: p.base_price ?? p.piece_price ?? null,
+        piece_price: p.piece_price ?? null,
+        case_price: p.case_price ?? null,
+        case_qty: p.case_qty ?? null,
+        color: p.color || '',
+        color_hex: p.color_hex || '',
+        size: p.size || '',
+        image_url: p.image_url || null,
+        gtin: p.gtin || '',
+        status: p.status || '',
+        inventory: {
+          total: p.inventory?.total || 0,
+          warehouses: p.inventory?.warehouses || [],
+        },
+      }))
+
+      setProducts(mappedProducts)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to search products'))
+      setProducts([])
+    } finally {
+      setLoading(false)
+    }
+  }, [options?.supplier, options?.category, options?.color, options?.limit])
+
+  return { products, loading, error, search }
+}
+
+// =============================================================================
+// useSupplierStatus - Check supplier connection status
+// =============================================================================
+
+export function useSupplierStatus() {
+  const [suppliers, setSuppliers] = useState<SupplierStatus[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/suppliers/test`)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+      setSuppliers(data.suppliers || [])
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch supplier status'))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { suppliers, loading, error, refetch: load }
+}
