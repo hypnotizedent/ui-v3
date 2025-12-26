@@ -18,6 +18,7 @@ import SettingsPage from '@/pages/SettingsPage';
 import { ProductCatalogPage } from '@/components/products/ProductCatalogPage';
 import { Button } from '@/components/ui/button';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
+import { AIAssistant } from '@/components/ai/AIAssistant';
 
 // Map API status to component status
 function mapApiStatus(status: ApiOrderStatus): OrderStatus {
@@ -323,6 +324,8 @@ function App() {
         return <ProductCatalogPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'ai-assistant':
+        return <AIAssistant />;
       default:
         return null;
     }
@@ -425,6 +428,16 @@ function App() {
           >
             <ChartLine weight="bold" className="w-4 h-4" />
             Reports
+          </Button>
+
+          <Button
+            variant={currentView === 'ai-assistant' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => handleNavClick('ai-assistant')}
+            className="w-full justify-start gap-2 h-8"
+          >
+            <Brain weight="bold" className="w-4 h-4" />
+            AI Assistant
           </Button>
         </nav>
         
