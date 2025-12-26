@@ -1632,9 +1632,14 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   };
 
   // Status options matching Printavo statuses from API
-  const STATUS_OPTIONS = [
+  // Quote-stage statuses (before conversion to order)
+  const QUOTE_STATUSES = [
     { value: 'QUOTE', label: 'Quote' },
     { value: 'Quote Out For Approval - Email', label: 'Quote Sent' },
+  ];
+
+  // Order-stage statuses (after quote approved/converted)
+  const ORDER_STATUSES = [
     { value: 'PAYMENT NEEDED', label: 'Payment Needed' },
     { value: 'INVOICE PAID', label: 'Invoice Paid' },
     { value: 'MATERIALS PENDING', label: 'Materials Pending' },
@@ -1644,6 +1649,9 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
     { value: 'READY FOR PICK UP', label: 'Ready for Pickup' },
     { value: 'COMPLETE', label: 'Complete' },
   ];
+
+  // Filter status options based on whether this is a quote or order
+  const STATUS_OPTIONS = isQuote ? QUOTE_STATUSES : ORDER_STATUSES;
 
   const [statusUpdating, setStatusUpdating] = useState(false);
 
