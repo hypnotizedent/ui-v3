@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { CurrencyDollar, CircleNotch } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works';
+const API_BASE = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works';
 
 interface RecordPaymentModalProps {
     open: boolean;

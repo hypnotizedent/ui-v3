@@ -10,6 +10,7 @@ import { OrdersList } from '@/components/orders/OrdersList';
 import { OrderDetailPage } from '@/components/orders/OrderDetailPage';
 import { OrderDetailPagePSP } from '@/components/orders/OrderDetailPagePSP';
 import { QuotesListPage } from '@/components/quotes/QuotesListPage';
+import { QuoteRequestsListPage } from '@/components/quote-requests/QuoteRequestsListPage';
 import { CustomersListPage } from '@/components/customers/CustomersListPage';
 import { CustomerDetailPage } from '@/components/customers/CustomerDetailPage';
 import ReportsPage from '@/pages/ReportsPage';
@@ -70,6 +71,7 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+  const [selectedQuoteRequestId, setSelectedQuoteRequestId] = useState<number | null>(null);
 
   // Show auth loading state
   if (authLoading) {
@@ -185,6 +187,34 @@ function App() {
     setCurrentView('quote-builder');
   };
 
+  const handleViewQuoteRequest = (requestId: number) => {
+    setSelectedQuoteRequestId(requestId);
+    // For now, just show in list - could expand to detail view later
+  };
+
+  const handleGenerateQuote = async (requestId: number) => {
+    try {
+      const API_BASE = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works';
+      const response = await fetch(`${API_BASE}/api/quote-requests/${requestId}/generate-quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`Quote ${data.quote.quote_number} generated!\n\nTotal: $${data.quote.total}\nExpires: ${new Date(data.quote.expires_at).toLocaleDateString()}`);
+        // Refresh the list
+        setCurrentView('quote-requests');
+      } else {
+        alert(`Failed to generate quote: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Generate quote error:', error);
+      alert('Failed to generate quote. Please try again.');
+    }
+  };
+
   const handleNewOrder = () => {
     // Navigate to create mode - no API call yet, just open empty form
     setSelectedOrderId('new');
@@ -254,6 +284,13 @@ function App() {
           <QuotesListPage
             onViewQuote={handleViewQuote}
             onNewQuote={handleNewOrder}
+          />
+        );
+      case 'quote-requests':
+        return (
+          <QuoteRequestsListPage
+            onViewRequest={handleViewQuoteRequest}
+            onGenerateQuote={handleGenerateQuote}
           />
         );
       case 'quote-builder':
@@ -334,6 +371,16 @@ function App() {
           >
             <FileText weight="bold" className="w-4 h-4" />
             Quotes
+          </Button>
+
+          <Button
+            variant={currentView === 'quote-requests' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => { setCurrentView('quote-requests'); setSelectedQuoteRequestId(null); }}
+            className="w-full justify-start gap-2 h-8"
+          >
+            <Envelope weight="bold" className="w-4 h-4" />
+            Quote Requests
           </Button>
 
           <Button

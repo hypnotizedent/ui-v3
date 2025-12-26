@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, CurrencyDollar, TrendUp, TrendDown, Receipt, Trash } from '@phosphor-icons/react';
 import { AddExpenseModal } from './AddExpenseModal';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works';
+const API_BASE = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works';
 
 interface Expense {
     id: number;

@@ -41,7 +41,7 @@ interface ProductCatalogPageProps {
   onAddToOrder?: (product: SupplierProduct, quantity: number) => void;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works';
+const API_BASE = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works';
 
 export function ProductCatalogPage({ onAddToOrder }: ProductCatalogPageProps) {
   const [searchQuery, setSearchQuery] = useState('');

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { X } from '@phosphor-icons/react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works';
+const API_BASE = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works';
 
 const CATEGORIES = [
     'Blanks',

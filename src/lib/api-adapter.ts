@@ -13,7 +13,7 @@
 // CONFIGURATION
 // =============================================================================
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works'
+const API_BASE_URL = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works'
 
 // Set to true to use local dev data instead of API
 const USE_DEV_DATA = import.meta.env.VITE_USE_DEV_DATA === 'true'

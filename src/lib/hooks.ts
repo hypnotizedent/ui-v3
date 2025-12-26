@@ -53,7 +53,7 @@ export interface ProductionStats {
 // Constants
 // =============================================================================
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works'
+const API_BASE_URL = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works'
 
 // Quote statuses that should appear on Quotes page, not Orders page
 const QUOTE_STATUSES = [
@@ -289,6 +289,106 @@ export function useQuotesList(options?: {
   }, [load])
 
   return { quotes, total, loading, error, refetch: load }
+}
+
+// =============================================================================
+// Quote Request Types (Customer-submitted requests)
+// =============================================================================
+
+export interface QuoteRequest {
+  id: number
+  quote_number: string
+  quote_id: number | null
+  customer_id: number | null
+  customer_name: string | null
+  customer_email: string | null
+  product_type: string | null
+  decoration_method: string | null
+  quantity: number | null
+  placements: string[]
+  colors: number | null
+  notes: string | null
+  due_date: string | null
+  budget_min: number | null
+  budget_max: number | null
+  artwork_ready: boolean
+  contact_name: string | null
+  contact_phone: string | null
+  status: 'pending' | 'reviewed' | 'quoted' | 'sent' | 'approved' | 'declined' | 'rejected' | 'converted'
+  estimated_price: number | null
+  reviewed_by: string | null
+  created_at: string
+  updated_at: string | null
+}
+
+// =============================================================================
+// useQuoteRequestsList - Fetch customer quote requests from API
+// =============================================================================
+
+export function useQuoteRequestsList(options?: {
+  limit?: number
+  status?: string
+}) {
+  const [requests, setRequests] = useState<QuoteRequest[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (options?.status && options.status !== 'all') {
+        params.set('status', options.status)
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/quotes?${params}`)
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      const data = await response.json()
+
+      // Map API response to our type
+      const mappedRequests: QuoteRequest[] = (data.data || []).map((r: any) => ({
+        id: r.id,
+        quote_number: r.quote_number || `QR-${r.id}`,
+        customer_id: r.customer_id,
+        customer_name: r.customer_name || r.contact_name || 'Unknown',
+        customer_email: r.customer_email || r.contact_email,
+        product_type: r.product_type,
+        decoration_method: r.decoration_method,
+        quantity: r.quantity,
+        placements: Array.isArray(r.placements) ? r.placements : (r.placements ? JSON.parse(r.placements) : []),
+        colors: r.colors,
+        notes: r.notes,
+        due_date: r.due_date,
+        budget_min: r.budget_min ? parseFloat(r.budget_min) : null,
+        budget_max: r.budget_max ? parseFloat(r.budget_max) : null,
+        artwork_ready: r.artwork_ready || false,
+        contact_name: r.contact_name,
+        contact_phone: r.contact_phone,
+        status: r.status || 'pending',
+        estimated_price: r.estimated_price ? parseFloat(r.estimated_price) : null,
+        reviewed_by: r.reviewed_by,
+        created_at: r.created_at,
+        updated_at: r.updated_at,
+      }))
+
+      setRequests(mappedRequests)
+      setTotal(mappedRequests.length)
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch quote requests'))
+    } finally {
+      setLoading(false)
+    }
+  }, [options?.status])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return { requests, total, loading, error, refetch: load }
 }
 
 // =============================================================================
@@ -966,7 +1066,7 @@ export function useOrderPayments(orderId: string | null) {
 // useQuoteDetail - Fetch single quote by ID and transform to OrderDetail shape
 // =============================================================================
 
-const API_BASE_URL_V2 = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works'
+const API_BASE_URL_V2 = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works'
 
 export function useQuoteDetail(quoteId: string | null) {
   const [order, setOrder] = useState<QuoteAsOrder | null>(null)

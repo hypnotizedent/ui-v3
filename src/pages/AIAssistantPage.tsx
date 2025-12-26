@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PaperPlaneRight, Robot, Spinner, ThumbsUp, ThumbsDown } from '@phosphor-icons/react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://mintprints-api.ronny.works';
+const API_BASE = import.meta.env.VITE_DASHBOARD_API_URL || 'https://mintprints-api.ronny.works';
 
 interface Message {
     role: 'user' | 'assistant' | 'system';
