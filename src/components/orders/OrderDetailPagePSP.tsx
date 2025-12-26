@@ -411,7 +411,7 @@ export function OrderDetailPagePSP({
           // Collect all mockups from line items and imprints
           const allMockups: Array<{ id: string; url: string; name: string; thumbnail_url?: string | null; source: string }> = []
 
-          order.lineItems.forEach((item, itemIndex) => {
+          order.lineItems?.forEach((item, itemIndex) => {
             // Line item level mockup
             if (item.mockup) {
               allMockups.push({
@@ -420,8 +420,8 @@ export function OrderDetailPagePSP({
               })
             }
             // Imprint level mockups
-            item.imprints.forEach((imprint) => {
-              imprint.mockups.forEach((mockup) => {
+            item.imprints?.forEach((imprint) => {
+              imprint.mockups?.forEach((mockup) => {
                 allMockups.push({
                   ...mockup,
                   source: `${imprint.location || 'Imprint'} - ${item.description || item.styleNumber || 'Item'}`

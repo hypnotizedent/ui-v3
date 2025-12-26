@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Users, ChartLine, ArrowLeft, FileText, Sparkle, TShirt, Gear, SignOut } from '@phosphor-icons/react';
+import { Package, Users, ChartLine, ArrowLeft, FileText, Sparkle, TShirt, Gear, SignOut, Envelope, List, X } from '@phosphor-icons/react';
 import { useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { Transaction, View, OrderStatus, ImprintMethod } from '@/lib/types';
@@ -72,6 +72,7 @@ function App() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [selectedQuoteRequestId, setSelectedQuoteRequestId] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Show auth loading state
   if (authLoading) {
@@ -329,10 +330,23 @@ function App() {
   
   const showBackButton = currentView === 'order-detail' || currentView === 'customer-detail' || currentView === 'quote-builder';
   
+  const handleNavClick = (view: View) => {
+    setCurrentView(view);
+    setSidebarOpen(false); // Close sidebar on mobile after navigation
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-52 border-r border-border bg-card/30 flex flex-col fixed h-screen">
+      <aside className={`w-52 border-r border-border bg-card/30 flex flex-col fixed h-screen z-50 transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div className="px-3 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <Sparkle size={28} weight="fill" className="text-primary" />
@@ -341,10 +355,10 @@ function App() {
         </div>
         
         <nav className="flex-1 px-2 py-2 space-y-0.5">
-          <Button 
+          <Button
             variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setCurrentView('dashboard')}
+            onClick={() => handleNavClick('dashboard')}
             className="w-full justify-start gap-2 h-8"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -352,11 +366,11 @@ function App() {
             </svg>
             Home
           </Button>
-          
+
           <Button
             variant={currentView === 'orders' || currentView === 'order-detail' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => { setCurrentView('orders'); setSelectedOrderId(null); }}
+            onClick={() => { handleNavClick('orders'); setSelectedOrderId(null); }}
             className="w-full justify-start gap-2 h-8"
           >
             <Package weight="bold" className="w-4 h-4" />
@@ -366,7 +380,7 @@ function App() {
           <Button
             variant={currentView === 'quotes' || currentView === 'quote-builder' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => { setCurrentView('quotes'); setSelectedQuoteId(null); }}
+            onClick={() => { handleNavClick('quotes'); setSelectedQuoteId(null); }}
             className="w-full justify-start gap-2 h-8"
           >
             <FileText weight="bold" className="w-4 h-4" />
@@ -376,7 +390,7 @@ function App() {
           <Button
             variant={currentView === 'quote-requests' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => { setCurrentView('quote-requests'); setSelectedQuoteRequestId(null); }}
+            onClick={() => { handleNavClick('quote-requests'); setSelectedQuoteRequestId(null); }}
             className="w-full justify-start gap-2 h-8"
           >
             <Envelope weight="bold" className="w-4 h-4" />
@@ -386,7 +400,7 @@ function App() {
           <Button
             variant={currentView === 'customers' || currentView === 'customer-detail' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => { setCurrentView('customers'); setSelectedCustomerId(null); }}
+            onClick={() => { handleNavClick('customers'); setSelectedCustomerId(null); }}
             className="w-full justify-start gap-2 h-8"
           >
             <Users weight="bold" className="w-4 h-4" />
@@ -396,7 +410,7 @@ function App() {
           <Button
             variant={currentView === 'products' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setCurrentView('products')}
+            onClick={() => handleNavClick('products')}
             className="w-full justify-start gap-2 h-8"
           >
             <TShirt weight="bold" className="w-4 h-4" />
@@ -406,7 +420,7 @@ function App() {
           <Button
             variant={currentView === 'reports' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => setCurrentView('reports')}
+            onClick={() => handleNavClick('reports')}
             className="w-full justify-start gap-2 h-8"
           >
             <ChartLine weight="bold" className="w-4 h-4" />
@@ -434,11 +448,11 @@ function App() {
             >
               <SignOut weight="bold" className="w-5 h-5" />
             </Button>
-            <Button 
+            <Button
               variant={currentView === 'settings' ? 'secondary' : 'ghost'}
               size="sm"
               className="h-8 w-8 p-0"
-              onClick={() => setCurrentView('settings')}
+              onClick={() => handleNavClick('settings')}
             >
               <Gear weight="bold" className="w-5 h-5" />
             </Button>
@@ -447,10 +461,23 @@ function App() {
       </aside>
 
       {/* Content */}
-      <div className="flex-1 ml-52">
+      <div className="flex-1 ml-0 md:ml-52">
         <header className="border-b border-border bg-background/50 backdrop-blur-sm sticky top-0 z-50">
           <div className="px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {/* Mobile hamburger menu */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 md:hidden"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                {sidebarOpen ? (
+                  <X weight="bold" className="w-5 h-5" />
+                ) : (
+                  <List weight="bold" className="w-5 h-5" />
+                )}
+              </Button>
               {showBackButton && (
                 <Button 
                   variant="ghost" 

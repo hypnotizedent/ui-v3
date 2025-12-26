@@ -1401,6 +1401,7 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const [converting, setConverting] = useState(false);
   const [sendingSms, setSendingSms] = useState(false);
+  const [sendingInvoice, setSendingInvoice] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerForm, setCustomerForm] = useState({
     name: '',
@@ -1465,6 +1466,37 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
       console.error('SMS error:', err);
     } finally {
       setSendingSms(false);
+    }
+  };
+
+  // Handle send invoice
+  const handleSendInvoice = async () => {
+    if (!order) return;
+
+    if (!order.customer.email) {
+      toast.error('No email address on file for this customer');
+      return;
+    }
+
+    setSendingInvoice(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/orders/${order.id}/invoice/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send invoice');
+      }
+
+      toast.success(`Invoice sent to ${order.customer.email}`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send invoice');
+      console.error('Send invoice error:', err);
+    } finally {
+      setSendingInvoice(false);
     }
   };
 
@@ -1915,6 +1947,8 @@ export function OrderDetailPage({ visualId, onViewCustomer, mode = 'order', onCo
                     toast.error('No customer email on file');
                   }
                 }}
+                onSendInvoice={handleSendInvoice}
+                sendingInvoice={sendingInvoice}
               />
             )}
           </div>

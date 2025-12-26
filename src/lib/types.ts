@@ -135,7 +135,7 @@ export interface Transaction {
   notes: string;
 }
 
-export type View = 'dashboard' | 'orders' | 'order-detail' | 'quotes' | 'quote-builder' | 'customers' | 'customer-detail' | 'reports' | 'products' | 'settings';
+export type View = 'dashboard' | 'orders' | 'order-detail' | 'quotes' | 'quote-builder' | 'quote-requests' | 'customers' | 'customer-detail' | 'reports' | 'products' | 'settings';
 
 // Supplier product types
 export type SupplierName = 'ss_activewear' | 'as_colour' | 'sanmar' | 'all';

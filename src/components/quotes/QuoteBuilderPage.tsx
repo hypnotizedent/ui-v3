@@ -13,9 +13,10 @@ import {
   User,
   Package,
   FileText,
-  CalendarBlank,
-  CircleNotch
+  CircleNotch,
+  CheckCircle
 } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 import { fetchQuote, createQuote, updateQuote, Quote } from '@/lib/quote-api';
 
 interface QuoteBuilderPageProps {
@@ -49,7 +50,7 @@ export function QuoteBuilderPage({ quoteId, onBack }: QuoteBuilderPageProps) {
     try {
       const data = await fetchQuote(id);
       setQuote(data);
-      setNotes(data.notes || '');
+      setNotes(data.internal_notes || '');
     } catch (err) {
       setError('Failed to load quote');
       console.error('Error loading quote:', err);
@@ -65,20 +66,21 @@ export function QuoteBuilderPage({ quoteId, onBack }: QuoteBuilderPageProps) {
       if (isNewQuote) {
         // Create new quote
         const newQuote = await createQuote({
-          notes: notes || undefined,
-          due_date: dueDate || undefined,
+          internal_notes: notes || undefined,
         });
         setQuote(newQuote);
+        toast.success(`Quote ${newQuote.quote_number} created!`);
       } else if (quote) {
         // Update existing quote
         const updated = await updateQuote(quote.id, {
-          notes: notes || undefined,
-          due_date: dueDate || undefined,
+          internal_notes: notes || undefined,
         });
         setQuote(updated);
+        toast.success('Quote saved');
       }
     } catch (err) {
       setError('Failed to save quote');
+      toast.error('Failed to save quote');
       console.error('Error saving quote:', err);
     } finally {
       setSaving(false);
@@ -87,7 +89,7 @@ export function QuoteBuilderPage({ quoteId, onBack }: QuoteBuilderPageProps) {
 
   // Calculate totals from quote data
   const subtotal = parseFloat(quote?.subtotal || '0');
-  const discount = parseFloat(quote?.discount_amount || '0');
+  const discount = parseFloat(quote?.discount || '0');
   const total = parseFloat(quote?.total || '0');
 
   if (loading) {

@@ -1,8 +1,9 @@
 import { Order, Customer } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase } from '@phosphor-icons/react';
+import { Briefcase, Package, Users, ClockCounterClockwise, CheckCircle } from '@phosphor-icons/react';
 import { formatCurrency } from '@/lib/helpers';
+import { useProductionStats } from '@/lib/hooks';
 
 interface DashboardProps {
   orders: Order[];
@@ -12,9 +13,16 @@ interface DashboardProps {
 }
 
 export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }: DashboardProps) {
+  const { stats, loading: statsLoading } = useProductionStats();
+
   const activeJobs = orders.filter(o =>
     o.status !== 'COMPLETE' && o.status !== 'QUOTE'
   );
+
+  // Calculate active production count from stats
+  const activeProduction = stats
+    ? stats.screenprint + stats.embroidery + stats.dtg + stats.fulfillment + stats.art
+    : 0;
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -33,22 +41,58 @@ export function Dashboard({ orders, customers, onViewOrder, onNavigateToOrders }
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-2">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Orders</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? '...' : (stats?.total || 0).toLocaleString()}
+                </p>
+              </div>
+              <Package weight="duotone" className="w-8 h-8 text-primary/60" />
+            </div>
           </CardContent>
         </Card>
 
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-2">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">In Production</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? '...' : activeProduction.toLocaleString()}
+                </p>
+              </div>
+              <ClockCounterClockwise weight="duotone" className="w-8 h-8 text-amber-500/60" />
+            </div>
           </CardContent>
         </Card>
 
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-2">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Completed</p>
+                <p className="text-2xl font-bold">
+                  {statsLoading ? '...' : (stats?.complete || 0).toLocaleString()}
+                </p>
+              </div>
+              <CheckCircle weight="duotone" className="w-8 h-8 text-emerald-500/60" />
+            </div>
           </CardContent>
         </Card>
 
         <Card className="bg-card/50 border-border/50 hover:border-border transition-colors">
-          <CardContent className="p-2">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Customers</p>
+                <p className="text-2xl font-bold">
+                  {customers.length > 0 ? customers.length.toLocaleString() : '...'}
+                </p>
+              </div>
+              <Users weight="duotone" className="w-8 h-8 text-blue-500/60" />
+            </div>
           </CardContent>
         </Card>
       </div>

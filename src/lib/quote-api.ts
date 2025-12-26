@@ -18,8 +18,10 @@ export interface Quote {
   subtotal: string;
   tax_amount: string;
   discount_amount: string;
+  discount: string;
   total: string;
-  notes: string | null;
+  internal_notes: string | null;
+  customer_notes: string | null;
   created_at: string;
   updated_at: string;
   line_items?: QuoteLineItem[];
@@ -38,8 +40,9 @@ export interface QuoteLineItem {
 
 export interface CreateQuoteData {
   customer_id?: number;
-  notes?: string;
-  due_date?: string;
+  internal_notes?: string;
+  customer_notes?: string;
+  valid_days?: number;
 }
 
 export interface CreateLineItemData {
