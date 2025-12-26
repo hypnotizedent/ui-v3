@@ -31,6 +31,8 @@ import {
   ArrowClockwise,
   Image,
   FilePdf,
+  CaretDown,
+  CaretRight,
 } from '@phosphor-icons/react'
 import { useOrderDetail, type OrderDetail, type OrderDetailLineItem } from '@/lib/hooks'
 import type { PSPLineItem } from '@/lib/printshoppro-types'
@@ -40,6 +42,43 @@ import { convertToOrder } from '@/lib/quote-api'
 import { toast } from 'sonner'
 
 const API_BASE = 'https://mintprints-api.ronny.works'
+
+// Collapsible notes component - collapsed by default if empty, expanded if has content
+interface CollapsibleNotesProps {
+  title: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}
+
+function CollapsibleNotes({ title, value, onChange, placeholder }: CollapsibleNotesProps) {
+  const [isOpen, setIsOpen] = useState(!!value) // Open if has content
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+      >
+        {isOpen ? <CaretDown size={14} /> : <CaretRight size={14} />}
+        {title}
+        {!value && <span className="text-xs text-muted-foreground/60 ml-1">(empty)</span>}
+      </button>
+      {isOpen && (
+        <div className="px-3 pb-3 border-t border-border">
+          <Textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            rows={2}
+            className="resize-none mt-2"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface OrderDetailPagePSPProps {
   visualId: string
@@ -508,30 +547,18 @@ export function OrderDetailPagePSP({
                   onChange={(e) => setDueDate(e.target.value)}
                 />
               </div>
-              <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">
-                  Customer Notes
-                </label>
-                <Textarea
-                  value={customerNotes}
-                  onChange={(e) => setCustomerNotes(e.target.value)}
-                  placeholder="Rush order needed for company event"
-                  rows={2}
-                  className="resize-none"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">
-                  Internal Notes
-                </label>
-                <Textarea
-                  value={internalNotes}
-                  onChange={(e) => setInternalNotes(e.target.value)}
-                  placeholder="VIP customer - priority production"
-                  rows={2}
-                  className="resize-none"
-                />
-              </div>
+              <CollapsibleNotes
+                title="Customer Notes"
+                value={customerNotes}
+                onChange={setCustomerNotes}
+                placeholder="Rush order needed for company event"
+              />
+              <CollapsibleNotes
+                title="Internal Notes"
+                value={internalNotes}
+                onChange={setInternalNotes}
+                placeholder="VIP customer - priority production"
+              />
             </div>
           </div>
 
